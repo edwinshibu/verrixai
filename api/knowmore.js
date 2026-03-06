@@ -30,9 +30,7 @@ module.exports = async function handler(req, res) {
   if (!dbRes.ok && dbRes.status !== 409) {
     return res.status(500).json({ error: 'Failed to save your details. Please try again.' });
   }
-  if (dbRes.status === 409) {
-    return res.status(409).json({ error: 'This email is already registered.' });
-  }
+  // If 409 (already registered), continue anyway and resend the email
 
   const emailHtml = `<!DOCTYPE html>
 <html>

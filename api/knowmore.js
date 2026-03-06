@@ -169,7 +169,7 @@ module.exports = async function handler(req, res) {
 
           <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
             <tr><td align="center">
-              <a href="https://verrixai.vercel.app" style="display:inline-block;background:#1A3A2A;color:#FFFFFF;font-family:Georgia,serif;font-size:16px;font-weight:500;text-decoration:none;padding:18px 48px;border-radius:12px;letter-spacing:0.02em;">
+              <a href="https://verrixai.com" style="display:inline-block;background:#1A3A2A;color:#FFFFFF;font-family:Georgia,serif;font-size:16px;font-weight:500;text-decoration:none;padding:18px 48px;border-radius:12px;letter-spacing:0.02em;">
                 Try VerrixAI free — no card required →
               </a>
             </td></tr>
@@ -193,7 +193,7 @@ module.exports = async function handler(req, res) {
 
         <tr><td align="center" style="padding-bottom:40px;">
           <p style="font-size:11px;color:#B8B8AA;margin:0;line-height:1.7;">
-            You received this because you requested more information at <a href="https://verrixai.vercel.app" style="color:#B8963E;text-decoration:none;">verrixai.vercel.app</a>.<br/>
+            You received this because you requested more information at <a href="https://verrixai.com" style="color:#B8963E;text-decoration:none;">verrixai.com</a>.<br/>
             &copy; VerrixAI. All rights reserved.
           </p>
         </td></tr>

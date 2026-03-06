@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VerrixAI — Pricing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #F7F6F2; --surface: #FFFFFF; --ink: #1A1A18; --ink-muted: #6B6B62;
+    --accent: #1A3A2A; --accent-light: #2E5C42; --gold: #B8963E; --gold-light: #D4AF60;
+    --border: #E2E0D8; --radius: 14px;
+    --shadow: 0 4px 24px rgba(26,26,24,0.07); --shadow-lg: 0 12px 48px rgba(26,26,24,0.11);
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+
+  /* NAV */
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 16px 48px; background: rgba(247,246,242,0.92); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); }
+  .logo { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; letter-spacing: -0.3px; color: var(--ink); text-decoration: none; }
+  .logo span { color: var(--gold); }
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+  .btn-nav { padding: 8px 20px; border-radius: 999px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: 1px solid var(--border); background: var(--surface); color: var(--ink); text-decoration: none; display: inline-flex; align-items: center; }
+  .btn-nav:hover { border-color: var(--ink); }
+  .btn-nav.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn-nav.primary:hover { background: var(--accent-light); }
+
+  /* HERO */
+  .pricing-hero { padding: 140px 24px 64px; text-align: center; max-width: 640px; margin: 0 auto; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; background: #EAF2EC; color: var(--accent-light); font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 14px; border-radius: 999px; margin-bottom: 24px; }
+  .pricing-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(32px, 4vw, 48px); font-weight: 500; line-height: 1.2; letter-spacing: -0.02em; margin-bottom: 16px; }
+  .pricing-hero h1 em { font-style: italic; color: var(--gold); }
+  .pricing-hero p { font-size: 16px; color: var(--ink-muted); font-weight: 300; line-height: 1.7; }
+
+  /* PLANS GRID */
+  .plans-section { max-width: 1040px; margin: 0 auto 80px; padding: 0 24px; }
+  .plans-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; align-items: start; }
+
+  .plan-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 32px 28px 28px; position: relative; transition: box-shadow 0.25s, transform 0.25s; }
+  .plan-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+  .plan-card.featured { border: 2px solid var(--accent); box-shadow: var(--shadow-lg); transform: translateY(-6px); }
+  .plan-card.featured:hover { transform: translateY(-8px); }
+
+  .featured-badge { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: var(--accent); color: white; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 14px; border-radius: 999px; white-space: nowrap; }
+
+  .plan-name { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 500; margin-bottom: 6px; }
+  .plan-desc { font-size: 13px; color: var(--ink-muted); margin-bottom: 24px; line-height: 1.5; min-height: 40px; }
+
+  .plan-price { margin-bottom: 24px; }
+  .price-amount { font-family: 'Playfair Display', serif; font-size: 40px; font-weight: 500; line-height: 1; letter-spacing: -0.02em; }
+  .price-amount .currency { font-size: 20px; vertical-align: super; margin-right: 2px; font-weight: 400; }
+  .price-period { font-size: 13px; color: var(--ink-muted); margin-top: 4px; }
+  .price-free { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 500; color: var(--ink-muted); }
+
+  .plan-scans { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--bg); border-radius: 8px; margin-bottom: 24px; font-size: 13px; font-weight: 500; }
+  .plan-scans .scan-count { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 600; color: var(--accent); }
+  .plan-card.featured .plan-scans { background: #EAF2EC; }
+
+  .plan-features { list-style: none; margin-bottom: 28px; display: flex; flex-direction: column; gap: 10px; }
+  .plan-features li { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--ink-muted); line-height: 1.4; }
+  .feat-check { width: 16px; height: 16px; border-radius: 50%; background: #EAF2EC; color: var(--accent-light); font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .plan-card.featured .feat-check { background: var(--accent); color: white; }
+  .feat-check.muted { background: var(--border); color: var(--ink-muted); }
+
+  .btn-plan { width: 100%; padding: 13px; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; letter-spacing: 0.01em; border: none; }
+  .btn-plan.outline { background: none; border: 1px solid var(--border); color: var(--ink); }
+  .btn-plan.outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-plan.solid { background: var(--accent); color: white; }
+  .btn-plan.solid:hover { background: var(--accent-light); }
+  .btn-plan.gold { background: var(--gold); color: white; }
+  .btn-plan.gold:hover { background: var(--gold-light); }
+  .btn-plan.enterprise { background: var(--ink); color: white; }
+  .btn-plan.enterprise:hover { background: #333; }
+
+  /* COMPARE TABLE */
+  .compare-section { max-width: 860px; margin: 0 auto 100px; padding: 0 24px; }
+  .compare-header { text-align: center; margin-bottom: 40px; }
+  .compare-header h2 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 500; margin-bottom: 8px; }
+  .compare-header p { font-size: 14px; color: var(--ink-muted); }
+
+  .compare-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow); }
+  .compare-table th { padding: 16px 20px; font-size: 12px; font-weight: 600; text-align: left; background: var(--bg); color: var(--ink-muted); letter-spacing: 0.04em; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+  .compare-table th:not(:first-child) { text-align: center; }
+  .compare-table td { padding: 14px 20px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .compare-table td:not(:first-child) { text-align: center; }
+  .compare-table tr:last-child td { border-bottom: none; }
+  .compare-table tr:hover td { background: #FDFBF5; }
+  .feat-name { font-weight: 500; color: var(--ink); }
+  .feat-sub { font-size: 11px; color: var(--ink-muted); font-weight: 400; display: block; }
+  .check-yes { color: var(--accent-light); font-size: 16px; }
+  .check-no { color: var(--border); font-size: 16px; }
+  .check-val { font-weight: 500; font-size: 13px; }
+  .col-featured { background: #F5FAF6; }
+
+  /* FAQ */
+  .faq-section { max-width: 640px; margin: 0 auto 100px; padding: 0 24px; }
+  .faq-header { text-align: center; margin-bottom: 40px; }
+  .faq-header h2 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 500; margin-bottom: 8px; }
+  .faq-item { border-bottom: 1px solid var(--border); }
+  .faq-q { width: 100%; background: none; border: none; padding: 18px 0; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; color: var(--ink); text-align: left; gap: 16px; }
+  .faq-q:hover { color: var(--accent); }
+  .faq-arrow { font-size: 11px; color: var(--ink-muted); transition: transform 0.2s; flex-shrink: 0; }
+  .faq-item.open .faq-arrow { transform: rotate(180deg); }
+  .faq-a { display: none; padding: 0 0 18px; font-size: 13px; color: var(--ink-muted); line-height: 1.7; }
+  .faq-item.open .faq-a { display: block; animation: fadeUp 0.2s ease; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+  /* CTA */
+  .cta-section { background: var(--accent); padding: 64px 24px; text-align: center; margin-bottom: 0; }
+  .cta-section h2 { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 500; color: white; margin-bottom: 12px; }
+  .cta-section p { font-size: 15px; color: rgba(255,255,255,0.7); margin-bottom: 28px; font-weight: 300; }
+  .btn-cta { display: inline-flex; align-items: center; gap: 8px; padding: 14px 32px; background: var(--gold); color: white; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+  .btn-cta:hover { background: var(--gold-light); transform: translateY(-1px); }
+
+  footer { border-top: 1px solid var(--border); padding: 28px 48px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--ink-muted); background: var(--surface); }
+  .footer-logo { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 500; color: var(--ink); text-decoration: none; }
+  .footer-logo span { color: var(--gold); }
+
+  @media (max-width: 860px) {
+    .plans-grid { grid-template-columns: repeat(2, 1fr); }
+    .plan-card.featured { transform: none; }
+    nav { padding: 14px 20px; }
+  }
+  @media (max-width: 560px) {
+    .plans-grid { grid-template-columns: 1fr; }
+    .compare-table { font-size: 12px; }
+    footer { flex-direction: column; gap: 10px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="logo">Verrix<span>AI</span></a>
+  <div class="nav-right">
+    <a href="index.html" class="btn-nav">← Back to app</a>
+    <a href="index.html" class="btn-nav primary">Get started free</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="pricing-hero">
+  <div class="eyebrow">✦ Simple, transparent pricing</div>
+  <h1>Start free.<br>Scale when you're <em>ready</em>.</h1>
+  <p>Every plan includes AI-powered document analysis, risk flagging, and plain-English summaries. No hidden fees.</p>
+</div>
+
+<!-- PLANS -->
+<div class="plans-section">
+  <div class="plans-grid">
+
+    <!-- FREE -->
+    <div class="plan-card">
+      <div class="plan-name">Free</div>
+      <div class="plan-desc">Try VerrixAI with no commitment. Perfect for occasional use.</div>
+      <div class="plan-price">
+        <div class="price-free">$0</div>
+        <div class="price-period">No credit card needed</div>
+      </div>
+      <div class="plan-scans">
+        <span class="scan-count">1</span>
+        <span>scan without account · <strong>3</strong> with account</span>
+      </div>
+      <ul class="plan-features">
+        <li><span class="feat-check">✓</span> Full AI document analysis</li>
+        <li><span class="feat-check">✓</span> Risk flagging</li>
+        <li><span class="feat-check">✓</span> Key points extraction</li>
+        <li><span class="feat-check">✓</span> Plain-English summary</li>
+        <li><span class="feat-check muted">✓</span> <span style="color:var(--border)">Priority support</span></li>
+      </ul>
+      <button class="btn-plan outline" onclick="window.location.href='index.html'">Get started free</button>
+    </div>
+
+    <!-- PRO -->
+    <div class="plan-card featured">
+      <div class="featured-badge">Most Popular</div>
+      <div class="plan-name">Pro</div>
+      <div class="plan-desc">For individuals and small teams reviewing documents regularly.</div>
+      <div class="plan-price">
+        <div class="price-amount"><span class="currency">$</span>9</div>
+        <div class="price-period">per month, billed monthly</div>
+      </div>
+      <div class="plan-scans">
+        <span class="scan-count">200</span>
+        <span>scans per month</span>
+      </div>
+      <ul class="plan-features">
+        <li><span class="feat-check">✓</span> Everything in Free</li>
+        <li><span class="feat-check">✓</span> 200 scans / month</li>
+        <li><span class="feat-check">✓</span> PDF, DOCX & TXT support</li>
+        <li><span class="feat-check">✓</span> Priority processing</li>
+        <li><span class="feat-check">✓</span> Email support</li>
+      </ul>
+      <button class="btn-plan solid" onclick="alert('Payment coming soon! We\'ll notify you when Pro launches.')">Coming soon</button>
+    </div>
+
+    <!-- PRO 2 -->
+    <div class="plan-card">
+      <div class="plan-name">Pro 2</div>
+      <div class="plan-desc">For power users and growing teams with high document volume.</div>
+      <div class="plan-price">
+        <div class="price-amount"><span class="currency">$</span>15</div>
+        <div class="price-period">per month, billed monthly</div>
+      </div>
+      <div class="plan-scans">
+        <span class="scan-count">500</span>
+        <span>scans per month</span>
+      </div>
+      <ul class="plan-features">
+        <li><span class="feat-check">✓</span> Everything in Pro</li>
+        <li><span class="feat-check">✓</span> 500 scans / month</li>
+        <li><span class="feat-check">✓</span> Batch document upload</li>
+        <li><span class="feat-check">✓</span> Priority support</li>
+        <li><span class="feat-check">✓</span> Early access to new features</li>
+      </ul>
+      <button class="btn-plan gold" onclick="alert('Payment coming soon! We\'ll notify you when Pro 2 launches.')">Coming soon</button>
+    </div>
+
+    <!-- ENTERPRISE -->
+    <div class="plan-card">
+      <div class="plan-name">Enterprise</div>
+      <div class="plan-desc">Custom solutions for law firms, enterprises, and high-volume teams.</div>
+      <div class="plan-price">
+        <div class="price-free" style="font-size:28px;margin-top:6px;">Custom</div>
+        <div class="price-period">Tailored to your needs</div>
+      </div>
+      <div class="plan-scans">
+        <span class="scan-count">∞</span>
+        <span>Unlimited scans</span>
+      </div>
+      <ul class="plan-features">
+        <li><span class="feat-check">✓</span> Everything in Pro 2</li>
+        <li><span class="feat-check">✓</span> Unlimited scans</li>
+        <li><span class="feat-check">✓</span> Custom integrations</li>
+        <li><span class="feat-check">✓</span> Dedicated account manager</li>
+        <li><span class="feat-check">✓</span> SLA & compliance docs</li>
+      </ul>
+      <button class="btn-plan enterprise" onclick="window.location.href='mailto:hello@verrixai.com?subject=Enterprise Enquiry'">Contact us</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- COMPARE TABLE -->
+<div class="compare-section">
+  <div class="compare-header">
+    <h2>Compare plans</h2>
+    <p>Everything you need to choose the right plan.</p>
+  </div>
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>Free</th>
+        <th class="col-featured">Pro</th>
+        <th>Pro 2</th>
+        <th>Enterprise</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="feat-name">Monthly scans</span></td>
+        <td><span class="check-val">3</span></td>
+        <td class="col-featured"><span class="check-val">200</span></td>
+        <td><span class="check-val">500</span></td>
+        <td><span class="check-val">Unlimited</span></td>
+      </tr>
+      <tr>
+        <td><span class="feat-name">PDF support</span></td>
+        <td><span class="check-yes">✓</span></td>
+        <td class="col-featured"><span class="check-yes">✓</span></td>
+        <td><span class="check-yes">✓</span></td>
+        <td><span class="check-yes">✓</span></td>
+      </tr>
+      <tr>
+        <td><span class="feat-name">Risk flagging</span></td>
+        <td><span class="check-yes">✓</span></td>
+        <td class="col-featured"><span class="check-yes">✓</span></td>
+        <td><span class="check-yes">✓</span></td>
+        <td><span class="check-yes">✓</span></td>
+      </tr>
+      <tr>
+        <td><span class="feat-name">Plain-English summary</span></td>
+        <td><span class="check-yes">✓</span></td>
+        <td class="col-featured"><span class="check-yes">✓</span></td>
+        <td><span class="check-yes">✓</span></td>
+        <td><span class="check-yes">✓</span></td>
+      </tr>
+      <tr>
+        <td><span class="feat-name">Zero data retention</span></td>
+        <td><span class="check-yes">✓</span></td>
+        <td class="col-featured"><span class="check-yes">✓</span></td>
+        <td><span class="check-yes">✓</span></td>
+        <td><span class="check-yes">✓</span></td>
+      </tr>
+      <tr>
+        <td><span class="feat-name">Priority processing</span></td>
+        <td><span class="check-no">—</span></td>
+        <td class="col-featured"><span class="check-yes">✓</span></td>
+        <td><span class="check-yes">✓</span></td>
+        <td><span class="check-yes">✓</span></td>
+      </tr>
+      <tr>
+        <td><span class="feat-name">Batch upload</span></td>
+        <td><span class="check-no">—</span></td>
+        <td class="col-featured"><span class="check-no">—</span></td>
+        <td><span class="check-yes">✓</span></td>
+        <td><span class="check-yes">✓</span></td>
+      </tr>
+      <tr>
+        <td><span class="feat-name">Custom integrations</span></td>
+        <td><span class="check-no">—</span></td>
+        <td class="col-featured"><span class="check-no">—</span></td>
+        <td><span class="check-no">—</span></td>
+        <td><span class="check-yes">✓</span></td>
+      </tr>
+      <tr>
+        <td><span class="feat-name">Support</span></td>
+        <td>Community</td>
+        <td class="col-featured">Email</td>
+        <td>Priority</td>
+        <td>Dedicated</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- FAQ -->
+<div class="faq-section">
+  <div class="faq-header">
+    <h2>Frequently asked questions</h2>
+  </div>
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">Is my document data stored anywhere? <span class="faq-arrow">▾</span></button>
+    <div class="faq-a">No. VerrixAI analyses your document in real time and never stores the content on any server. Your data is purged immediately after each session — not even we can access it after the fact.</div>
+  </div>
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">What counts as one scan? <span class="faq-arrow">▾</span></button>
+    <div class="faq-a">One scan is one document analysis. Whether you upload a 1-page NDA or a 50-page enterprise agreement, it counts as a single scan.</div>
+  </div>
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">Can I upgrade or downgrade at any time? <span class="faq-arrow">▾</span></button>
+    <div class="faq-a">Yes. You can change your plan at any time. Upgrades take effect immediately and downgrades apply at the next billing cycle.</div>
+  </div>
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">Is this a replacement for a lawyer? <span class="faq-arrow">▾</span></button>
+    <div class="faq-a">No. VerrixAI helps you understand documents faster, but it is not legal advice. For binding decisions, always consult a qualified solicitor or legal professional.</div>
+  </div>
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">When will paid plans be available? <span class="faq-arrow">▾</span></button>
+    <div class="faq-a">We're working on it! Paid plans are coming soon. Create a free account now and we'll notify you the moment Pro and Pro 2 launch.</div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-section">
+  <h2>Start for free today</h2>
+  <p>No credit card. No commitment. Just clarity.</p>
+  <a href="index.html" class="btn-cta">Analyse your first document →</a>
+</div>
+
+<footer>
+  <a href="index.html" class="footer-logo">Verrix<span>AI</span></a>
+  <div>Not legal advice. Always consult a qualified solicitor for binding decisions.</div>
+</footer>
+
+<script>
+function toggleFaq(btn) {
+  const item = btn.closest('.faq-item');
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+</script>
+</body>
+</html>

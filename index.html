@@ -253,8 +253,9 @@
 <!-- NAV -->
 <nav>
   <div class="logo">Verrix<span>AI</span></div>
-  <div class="nav-center">🔒 Never stored or shared · Encrypted in transit</div>
   <div class="nav-right">
+    <!-- Security text -->
+    <span style="font-size:11px;color:var(--ink-muted);font-weight:500;white-space:nowrap;">🔒 Never stored or shared</span>
     <!-- Scan counter -->
     <div class="scan-pill" id="scanPill" style="display:none">
       <div class="scan-pips" id="scanPips"></div>
@@ -262,13 +263,13 @@
     </div>
     <!-- Guest buttons -->
     <div id="navGuest" style="display:flex;gap:8px;">
-      <a href="pricing.html" class="btn-nav">Pricing</a>
+      <a href="pricing.html" class="btn-nav" style="text-decoration:none;">Pricing</a>
       <button class="btn-nav" onclick="openModal('login')">Sign in</button>
       <button class="btn-nav primary" onclick="openModal('signup')">Create account</button>
     </div>
     <!-- Logged-in user -->
     <div id="navUser" style="display:none;align-items:center;gap:8px;">
-      <a href="pricing.html" class="btn-nav" style="font-size:13px;">Pricing</a>
+      <a href="pricing.html" class="btn-nav" style="font-size:13px;text-decoration:none;">Pricing</a>
       <div class="user-chip">
         <div class="user-avatar" id="userAvatar">?</div>
         <span id="userEmailLabel" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;"></span>
@@ -494,7 +495,7 @@
         <span class="privacy-icon">🛡️</span>
         <div class="privacy-text">
           <strong>Your document was never stored or shared.</strong>
-          Your document was processed securely and deleted immediately after analysis. It was never saved to any server or shared with any third party.
+          It was processed securely and deleted immediately after analysis. Nothing is saved to any server.
         </div>
       </div>
     </div>

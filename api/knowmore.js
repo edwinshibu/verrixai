@@ -261,6 +261,7 @@ module.exports = async function handler(req, res) {
     },
     body: JSON.stringify({
       from:    'VerrixAI <info@verrixai.com>',
+      reply_to: 'noreply@verrixai.com',
       to:      safeEmail,
       subject: `Here is everything about VerrixAI, ${safeName}`,
       html:    emailHtml

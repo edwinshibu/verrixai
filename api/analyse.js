@@ -1,66 +1,87 @@
-module.exports = async function handler(req, res) {
-  // CORS: restrict to your domain only
-  const allowedOrigins = ['https://verrixai.com', 'https://www.verrixai.com'];
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
+const ALLOWED_ORIGIN = 'https://verrixai.com';
+const MAX_TEXT_LENGTH = 50000;
+const ALLOWED_MODEL   = 'claude-sonnet-4-20250514';
+const MAX_TOKENS      = 1500;
+
+// Simple in-memory rate limiter (per IP, resets on cold start)
+const rateLimitMap = new Map();
+const RATE_LIMIT  = 10;         // max requests
+const RATE_WINDOW = 60 * 1000;  // per 60 seconds
+
+function isRateLimited(ip) {
+  const now   = Date.now();
+  const entry = rateLimitMap.get(ip) || { count: 0, start: now };
+  if (now - entry.start > RATE_WINDOW) {
+    rateLimitMap.set(ip, { count: 1, start: now });
+    return false;
   }
+  if (entry.count >= RATE_LIMIT) return true;
+  entry.count++;
+  rateLimitMap.set(ip, entry);
+  return false;
+}
+
+module.exports = async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Vary', 'Origin');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'POST')   return res.status(405).json({ error: 'Method not allowed' });
+
+  // Rate limiting by IP
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
+    || req.socket?.remoteAddress
+    || 'unknown';
+  if (isRateLimited(ip)) {
+    return res.status(429).json({ error: 'Too many requests. Please wait a moment and try again.' });
+  }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
 
-  // Input validation
-  const { messages } = req.body;
-  if (!messages || !Array.isArray(messages) || messages.length === 0) {
-    return res.status(400).json({ error: 'Invalid request.' });
+  // Validate request body structure
+  const body = req.body;
+  if (!body || !body.messages || !Array.isArray(body.messages)) {
+    return res.status(400).json({ error: 'Invalid request format.' });
   }
 
-  // Only allow user role messages
-  for (const msg of messages) {
-    if (msg.role !== 'user') {
-      return res.status(400).json({ error: 'Invalid message format.' });
-    }
-  }
+  const userMessage = body.messages.find(m => m.role === 'user');
+  if (!userMessage) return res.status(400).json({ error: 'No user message provided.' });
 
-  // Body size limit: reject documents over 150KB
-  const bodySize = JSON.stringify(req.body).length;
-  if (bodySize > 150000) {
-    return res.status(413).json({ error: 'Document is too large. Please use a smaller document.' });
-  }
-
-  // Rate limiting: max 10 requests per IP per minute
-  const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket?.remoteAddress || 'unknown';
-  const now = Date.now();
-  if (!global._rateLimitStore) global._rateLimitStore = {};
-  if (!global._rateLimitStore[ip]) global._rateLimitStore[ip] = [];
-  global._rateLimitStore[ip] = global._rateLimitStore[ip].filter(t => now - t < 60000);
-  if (global._rateLimitStore[ip].length >= 10) {
-    return res.status(429).json({ error: 'Too many requests. Please wait a moment and try again.' });
-  }
-  global._rateLimitStore[ip].push(now);
-
-  // Extract only the last user message content — never pass raw req.body to Anthropic
-  const userMessage = messages[messages.length - 1];
+  // Validate and sanitise content
   let userContent = userMessage.content;
 
-  if (Array.isArray(userContent)) {
-    // File upload: allow text + document blocks only, max 2 blocks
-    userContent = userContent
-      .filter(block => block.type === 'text' || block.type === 'document')
-      .slice(0, 2);
-  } else if (typeof userContent === 'string') {
-    userContent = userContent.slice(0, 100000);
+  if (typeof userContent === 'string') {
+    if (userContent.length > MAX_TEXT_LENGTH) {
+      return res.status(400).json({ error: 'Document too large. Please reduce the size and try again.' });
+    }
+  } else if (Array.isArray(userContent)) {
+    // PDF + text array
+    const textPart = userContent.find(p => p.type === 'text');
+    if (textPart?.text?.length > MAX_TEXT_LENGTH) {
+      return res.status(400).json({ error: 'Document too large. Please reduce the size and try again.' });
+    }
+    const docPart = userContent.find(p => p.type === 'document');
+    if (docPart) {
+      if (!docPart.source?.data || typeof docPart.source.data !== 'string') {
+        return res.status(400).json({ error: 'Invalid document format.' });
+      }
+      // Reject base64 payloads over ~10MB
+      if (docPart.source.data.length > 13_000_000) {
+        return res.status(400).json({ error: 'Document too large.' });
+      }
+      // Only allow PDF media type
+      if (docPart.source.media_type !== 'application/pdf') {
+        return res.status(400).json({ error: 'Only PDF documents are supported.' });
+      }
+    }
   } else {
     return res.status(400).json({ error: 'Invalid content format.' });
   }
 
   try {
+    // Build request ourselves — never forward client body directly
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -69,9 +90,9 @@ module.exports = async function handler(req, res) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514', // locked server-side
-        max_tokens: 1500,                  // locked server-side
-        messages: [{ role: 'user', content: userContent }]
+        model:      ALLOWED_MODEL,
+        max_tokens: MAX_TOKENS,
+        messages:   [{ role: 'user', content: userContent }]
       }),
     });
 

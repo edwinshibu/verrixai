@@ -271,7 +271,7 @@
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">×</button>
     <h2 id="modalTitle">Create account</h2>
-    <p class="modal-sub" id="modalSub">Get <strong>3 free scans</strong> — no credit card needed.</p>
+    <p class="modal-sub" id="modalSub">Get <strong>10 free scans</strong> — no credit card needed.</p>
     <div class="modal-error" id="modalError"></div>
     <div class="modal-success" id="modalSuccess"></div>
     <div class="form-field">
@@ -302,7 +302,7 @@
       <div class="pm-plan">
         <div class="pm-plan-name">Free</div>
         <div class="pm-price"><div class="pm-price-val">$0</div><div class="pm-price-sub">No credit card</div></div>
-        <div class="pm-scans">3 scans total</div>
+        <div class="pm-scans">3 guest · 10 with account</div>
         <ul class="pm-feats"><li>Full AI analysis</li><li>Risk flagging</li><li>Key points</li><li>Plain-English summary</li></ul>
         <button class="btn-pm outline" onclick="closePricingModal()">Current plan</button>
       </div>
@@ -310,15 +310,15 @@
         <div class="pm-featured-tag">Most Popular</div>
         <div class="pm-plan-name">Pro</div>
         <div class="pm-price"><div class="pm-price-val"><span class="cur">$</span>9</div><div class="pm-price-sub">per month</div></div>
-        <div class="pm-scans">200 scans / mo</div>
-        <ul class="pm-feats"><li>Everything in Free</li><li>200 scans per month</li><li>Priority processing</li><li>Email support</li></ul>
+        <div class="pm-scans">300 scans / mo</div>
+        <ul class="pm-feats"><li>Everything in Free</li><li>300 scans per month</li><li>Priority processing</li><li>Email support</li></ul>
         <button class="btn-pm solid" onclick="alert('Coming soon! We\'ll notify you when Pro launches.')">Coming soon</button>
       </div>
       <div class="pm-plan">
         <div class="pm-plan-name">Pro 2</div>
         <div class="pm-price"><div class="pm-price-val"><span class="cur">$</span>15</div><div class="pm-price-sub">per month</div></div>
-        <div class="pm-scans">500 scans / mo</div>
-        <ul class="pm-feats"><li>Everything in Pro</li><li>500 scans per month</li><li>Batch document upload</li><li>Priority support</li></ul>
+        <div class="pm-scans">700 scans / mo</div>
+        <ul class="pm-feats"><li>Everything in Pro</li><li>700 scans per month</li><li>Batch document upload</li><li>Priority support</li></ul>
         <button class="btn-pm gold-btn" onclick="alert('Coming soon! We\'ll notify you when Pro 2 launches.')">Coming soon</button>
       </div>
       <div class="pm-plan">
@@ -343,8 +343,8 @@
   <div class="trust-strip">
     <div class="trust-item"><span class="trust-dot"></span> Never stored</div>
     <div class="trust-item"><span class="trust-dot"></span> AES-256 encrypted in transit</div>
-    <div class="trust-item"><span class="trust-dot"></span> 1 free scan, no account required</div>
-    <div class="trust-item"><span class="trust-dot"></span> 3 scans free with account</div>
+    <div class="trust-item"><span class="trust-dot"></span> 3 free scans, no account required</div>
+    <div class="trust-item"><span class="trust-dot"></span> 10 scans free with account</div>
   </div>
 </section>
 
@@ -484,8 +484,8 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ─── STATE ───────────────────────────────────────────────────
-const GUEST_LIMIT = 1;
-const USER_LIMIT  = 3;
+const GUEST_LIMIT = 3;
+const USER_LIMIT  = 10;
 let currentUser   = null;
 let userProfile   = null;
 let guestUsed     = parseInt(localStorage.getItem('verrix_guest') || '0');
@@ -577,7 +577,7 @@ function showUpgradeWall() {
   wall.style.display = 'block';
   if (!currentUser) {
     document.getElementById('upgradeTitle').textContent = "You've used your free scan";
-    document.getElementById('upgradeMsg').textContent   = "Create a free account to unlock 3 more scans instantly — no credit card needed.";
+    document.getElementById('upgradeMsg').textContent   = "Create a free account to unlock 10 scans instantly — no credit card needed.";
     acts.innerHTML = `<button class="btn-upgrade primary" onclick="openModal('signup')">Create free account</button>
                       <button class="btn-upgrade secondary" onclick="openModal('login')">Sign in</button>
                       <button class="btn-upgrade secondary" onclick="openPricingModal()">View pricing</button>`;
@@ -606,7 +606,7 @@ function openModal(mode) {
   document.getElementById('authPassword').value = '';
   const isSignup = mode === 'signup';
   document.getElementById('modalTitle').textContent       = isSignup ? 'Create account' : 'Welcome back';
-  document.getElementById('modalSub').innerHTML           = isSignup ? 'Get <strong>3 free scans</strong> — no credit card needed.' : 'Sign in to access your scans.';
+  document.getElementById('modalSub').innerHTML           = isSignup ? 'Get <strong>10 free scans</strong> — no credit card needed.' : 'Sign in to access your scans.';
   document.getElementById('authSubmitBtn').textContent    = isSignup ? 'Create account' : 'Sign in';
   document.getElementById('modalSwitch').innerHTML        = isSignup
     ? "Already have an account? <a onclick=\"switchModal('login')\">Sign in</a>"

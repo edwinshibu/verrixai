@@ -36,12 +36,14 @@
 
   /* PLANS GRID */
   .plans-section { max-width: 1040px; margin: 0 auto 80px; padding: 0 24px; }
-  .plans-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; align-items: start; }
+  .plans-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; align-items: stretch; }
 
-  .plan-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 32px 28px 28px; position: relative; transition: box-shadow 0.25s, transform 0.25s; }
+  .plan-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 32px 28px 28px; position: relative; transition: box-shadow 0.25s, transform 0.25s; display: flex; flex-direction: column; }
   .plan-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
   .plan-card.featured { border: 2px solid var(--accent); box-shadow: var(--shadow-lg); transform: translateY(-6px); }
   .plan-card.featured:hover { transform: translateY(-8px); }
+  .plan-features { list-style: none; margin-bottom: 28px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  .btn-plan { width: 100%; padding: 13px; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; letter-spacing: 0.01em; border: none; margin-top: auto; }
 
   .featured-badge { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: var(--accent); color: white; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 14px; border-radius: 999px; white-space: nowrap; }
 
@@ -58,13 +60,11 @@
   .plan-scans .scan-count { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 600; color: var(--accent); }
   .plan-card.featured .plan-scans { background: #EAF2EC; }
 
-  .plan-features { list-style: none; margin-bottom: 28px; display: flex; flex-direction: column; gap: 10px; }
+  .plan-btn-spacer { flex: 1; }
   .plan-features li { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--ink-muted); line-height: 1.4; }
   .feat-check { width: 16px; height: 16px; border-radius: 50%; background: #EAF2EC; color: var(--accent-light); font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
   .plan-card.featured .feat-check { background: var(--accent); color: white; }
   .feat-check.muted { background: var(--border); color: var(--ink-muted); }
-
-  .btn-plan { width: 100%; padding: 13px; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; letter-spacing: 0.01em; border: none; }
   .btn-plan.outline { background: none; border: 1px solid var(--border); color: var(--ink); }
   .btn-plan.outline:hover { border-color: var(--accent); color: var(--accent); }
   .btn-plan.solid { background: var(--accent); color: white; }
@@ -93,6 +93,20 @@
   .check-no { color: var(--border); font-size: 16px; }
   .check-val { font-weight: 500; font-size: 13px; }
   .col-featured { background: #F5FAF6; }
+
+  /* BILLING TOGGLE */
+  .toggle-wrap { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 32px 0 48px; }
+  .toggle-track { width: 48px; height: 26px; background: var(--border); border-radius: 999px; position: relative; cursor: pointer; transition: background 0.25s; flex-shrink: 0; }
+  .toggle-track.on { background: var(--accent); }
+  .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; background: white; border-radius: 50%; transition: transform 0.25s; box-shadow: 0 1px 4px rgba(0,0,0,0.18); }
+  .toggle-track.on .toggle-thumb { transform: translateX(22px); }
+  .toggle-label { font-size: 14px; font-weight: 500; color: var(--ink-muted); transition: color 0.2s; }
+  .toggle-label.active { color: var(--ink); }
+  .save-tag { background: #EAF2EC; color: var(--accent-light); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; }
+  .price-monthly { display: block; }
+  .price-annual { display: none; }
+  .price-orig { font-size: 12px; color: #BBBBAA; text-decoration: line-through; margin-top: 2px; }
+  .price-saving { font-size: 12px; color: var(--accent-light); font-weight: 600; margin-top: 2px; display: none; }
 
   /* FAQ */
   .faq-section { max-width: 640px; margin: 0 auto 100px; padding: 0 24px; }
@@ -148,6 +162,16 @@
   <p>Every plan includes AI-powered document analysis, risk flagging, and plain-English summaries. No hidden fees.</p>
 </div>
 
+<!-- BILLING TOGGLE -->
+<div class="toggle-wrap">
+  <span class="toggle-label active" id="label-monthly">Monthly</span>
+  <div class="toggle-track" id="billingToggle" onclick="toggleBilling()">
+    <div class="toggle-thumb"></div>
+  </div>
+  <span class="toggle-label" id="label-annual">Annual</span>
+  <span class="save-tag">Save 20%</span>
+</div>
+
 <!-- PLANS -->
 <div class="plans-section">
   <div class="plans-grid">
@@ -155,21 +179,21 @@
     <!-- FREE -->
     <div class="plan-card">
       <div class="plan-name">Free</div>
-      <div class="plan-desc">Try VerrixAI with no commitment. Perfect for occasional use. 3 scans as a guest, 10 with a free account.</div>
+      <div class="plan-desc">Try VerrixAI with no commitment. Perfect for occasional use.</div>
       <div class="plan-price">
         <div class="price-free">$0</div>
         <div class="price-period">No credit card needed</div>
       </div>
       <div class="plan-scans">
-        <span class="scan-count">1</span>
-        <span>scan without account · <strong>3</strong> with account</span>
+        <span class="scan-count">10</span>
+        <span>scans / account</span>
       </div>
       <ul class="plan-features">
         <li><span class="feat-check">✓</span> Full AI document analysis</li>
         <li><span class="feat-check">✓</span> Risk flagging</li>
         <li><span class="feat-check">✓</span> Key points extraction</li>
         <li><span class="feat-check">✓</span> Plain-English summary</li>
-        <li><span class="feat-check muted">✓</span> <span style="color:var(--border)">Priority support</span></li>
+        <li><span class="feat-check muted">—</span> <span style="color:var(--border)">Priority support</span></li>
       </ul>
       <button class="btn-plan outline" onclick="window.location.href='index.html'">Get started free</button>
     </div>
@@ -180,8 +204,16 @@
       <div class="plan-name">Pro</div>
       <div class="plan-desc">For individuals and small teams reviewing documents regularly.</div>
       <div class="plan-price">
-        <div class="price-amount"><span class="currency">$</span>9</div>
-        <div class="price-period">per month, billed monthly</div>
+        <div class="price-monthly">
+          <div class="price-amount"><span class="currency">$</span>9</div>
+          <div class="price-period">per month, billed monthly</div>
+        </div>
+        <div class="price-annual">
+          <div class="price-amount"><span class="currency">$</span>86</div>
+          <div class="price-period">per year <strong style="color:var(--accent-light);">($7/mo)</strong></div>
+          <div class="price-orig">was $108/yr</div>
+          <div class="price-saving">You save $22/year</div>
+        </div>
       </div>
       <div class="plan-scans">
         <span class="scan-count">300</span>
@@ -202,8 +234,16 @@
       <div class="plan-name">Pro 2</div>
       <div class="plan-desc">For power users and growing teams with high document volume.</div>
       <div class="plan-price">
-        <div class="price-amount"><span class="currency">$</span>15</div>
-        <div class="price-period">per month, billed monthly</div>
+        <div class="price-monthly">
+          <div class="price-amount"><span class="currency">$</span>15</div>
+          <div class="price-period">per month, billed monthly</div>
+        </div>
+        <div class="price-annual">
+          <div class="price-amount"><span class="currency">$</span>144</div>
+          <div class="price-period">per year <strong style="color:var(--accent-light);">($12/mo)</strong></div>
+          <div class="price-orig">was $180/yr</div>
+          <div class="price-saving">You save $36/year</div>
+        </div>
       </div>
       <div class="plan-scans">
         <span class="scan-count">700</span>
@@ -373,6 +413,18 @@ function toggleFaq(btn) {
   const isOpen = item.classList.contains('open');
   document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
   if (!isOpen) item.classList.add('open');
+}
+
+let isAnnual = false;
+function toggleBilling() {
+  isAnnual = !isAnnual;
+  const track = document.getElementById('billingToggle');
+  track.classList.toggle('on', isAnnual);
+  document.getElementById('label-monthly').classList.toggle('active', !isAnnual);
+  document.getElementById('label-annual').classList.toggle('active', isAnnual);
+  document.querySelectorAll('.price-monthly').forEach(el => el.style.display = isAnnual ? 'none' : 'block');
+  document.querySelectorAll('.price-annual').forEach(el => el.style.display = isAnnual ? 'block' : 'none');
+  document.querySelectorAll('.price-saving').forEach(el => el.style.display = isAnnual ? 'block' : 'none');
 }
 </script>
 </body>

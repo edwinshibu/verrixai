@@ -414,6 +414,15 @@
         <div class="results-title">Analysis Complete</div>
         <button class="new-btn" onclick="resetTool()">← New Document</button>
       </div>
+
+      <!-- Non-legal warning banner (hidden by default) -->
+      <div id="nonLegalBanner" style="display:none;margin-bottom:20px;padding:14px 18px;background:#FEF9EE;border:1px solid #E8D9B0;border-radius:var(--radius);display:none;align-items:flex-start;gap:12px;">
+        <span style="font-size:18px;flex-shrink:0;">⚠️</span>
+        <div>
+          <strong style="font-size:13px;color:#1A1A18;display:block;margin-bottom:3px;">This doesn't appear to be a legal document</strong>
+          <span style="font-size:12px;color:#6B6B62;line-height:1.6;">VerrixAI is designed for contracts, agreements, terms & conditions, and similar documents. We've done our best to analyse what you uploaded, but results may not be meaningful.</span>
+        </div>
+      </div>
       <div class="result-section open" id="sec-summary">
         <div class="result-section-header" onclick="toggleSection('sec-summary')">
           <span class="section-icon">📋</span><span class="section-label">Document Summary</span><span class="section-toggle">▾</span>
@@ -711,10 +720,18 @@ async function startAnalysis() {
   if (opts.includes('keypoints')) sections.push('KEY_POINTS: JSON array of 4-7 important points as strings.');
   if (opts.includes('simplify'))  sections.push('SIMPLIFIED: Plain-English rewrite, 3-5 sentences, no jargon.');
 
-  const instruction = `You are an expert legal document analyst. Analyse the document and respond ONLY with a valid JSON object (no markdown, no preamble) with keys: ${sections.map(s=>s.split(':')[0]).join(', ')}.
+  const instruction = `You are an expert legal document analyst. Analyse the document and respond ONLY with a valid JSON object (no markdown, no preamble) with these keys: IS_LEGAL, ${sections.map(s=>s.split(':')[0]).join(', ')}.
+
+IS_LEGAL: boolean — true if the document is a legal, contractual, or formal business document (contracts, agreements, terms & conditions, NDAs, privacy policies, leases, invoices, policies, etc.). false if it is something else entirely (e.g. a recipe, story, random text, image description, etc.).
+
+Even if IS_LEGAL is false, still perform the full analysis as best you can.
+
+Rules:
+- IS_LEGAL → boolean true or false
 - RISKS → JSON array: [{"level":"HIGH","title":"...","desc":"..."},...]
 - KEY_POINTS → JSON array of strings
 - SUMMARY, SIMPLIFIED → plain strings
+
 ${sections.join('\n')}`;
 
   let userContent;
@@ -752,6 +769,14 @@ ${sections.join('\n')}`;
 }
 
 function renderResults(r, opts) {
+  // Show warning banner if not a legal document
+  const banner = document.getElementById('nonLegalBanner');
+  if (r.IS_LEGAL === false) {
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+
   if (opts.includes('summary') && r.SUMMARY)
     document.getElementById('body-summary').innerHTML = `<p>${esc(r.SUMMARY)}</p>`;
   if (opts.includes('risks') && r.RISKS) {

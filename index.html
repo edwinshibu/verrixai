@@ -63,7 +63,7 @@
   .modal-success { background: #EAF5EE; color: var(--risk-low); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; display: none; }
   .modal-success.visible { display: block; }
 
-  /* UPGRADE WALL */
+  /* UPGRADE WALL (inline in card) */
   .upgrade-wall { text-align: center; padding: 60px 36px; }
   .upgrade-icon { font-size: 44px; margin-bottom: 16px; }
   .upgrade-wall h3 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 500; margin-bottom: 10px; }
@@ -74,6 +74,50 @@
   .btn-upgrade.primary:hover { background: var(--accent-light); }
   .btn-upgrade.secondary { background: none; border: 1px solid var(--border); color: var(--ink-muted); }
   .btn-upgrade.secondary:hover { border-color: var(--ink); color: var(--ink); }
+
+  /* PRICING MODAL */
+  .pricing-overlay { position: fixed; inset: 0; z-index: 600; background: rgba(26,26,24,0.6); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+  .pricing-overlay.visible { opacity: 1; pointer-events: all; }
+  .pricing-modal { background: var(--surface); border-radius: 24px; width: 100%; max-width: 860px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(26,26,24,0.2); transform: translateY(16px) scale(0.98); transition: transform 0.3s; position: relative; }
+  .pricing-overlay.visible .pricing-modal { transform: translateY(0) scale(1); }
+  .pricing-modal-close { position: absolute; top: 20px; right: 22px; background: var(--bg); border: 1px solid var(--border); border-radius: 50%; width: 32px; height: 32px; font-size: 16px; cursor: pointer; color: var(--ink-muted); display: flex; align-items: center; justify-content: center; z-index: 10; transition: all 0.2s; }
+  .pricing-modal-close:hover { background: var(--ink); color: white; border-color: var(--ink); }
+
+  .pm-header { padding: 40px 40px 0; text-align: center; }
+  .pm-eyebrow { display: inline-flex; align-items: center; gap: 6px; background: #EAF2EC; color: var(--accent-light); font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 12px; border-radius: 999px; margin-bottom: 14px; }
+  .pm-header h2 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 500; margin-bottom: 8px; }
+  .pm-header h2 em { font-style: italic; color: var(--gold); }
+  .pm-header p { font-size: 14px; color: var(--ink-muted); }
+
+  .pm-plans { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 32px 32px 36px; }
+  .pm-plan { border: 1px solid var(--border); border-radius: 16px; padding: 24px 20px; position: relative; transition: all 0.2s; }
+  .pm-plan:hover { box-shadow: 0 8px 24px rgba(26,26,24,0.1); transform: translateY(-2px); }
+  .pm-plan.pm-featured { border: 2px solid var(--accent); background: #FAFDF9; }
+  .pm-featured-tag { position: absolute; top: -11px; left: 50%; transform: translateX(-50%); background: var(--accent); color: white; font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 12px; border-radius: 999px; white-space: nowrap; }
+  .pm-plan-name { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 500; margin-bottom: 4px; }
+  .pm-price { margin: 12px 0; }
+  .pm-price-val { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 500; line-height: 1; }
+  .pm-price-val .cur { font-size: 16px; vertical-align: super; }
+  .pm-price-sub { font-size: 11px; color: var(--ink-muted); margin-top: 3px; }
+  .pm-scans { font-size: 12px; font-weight: 600; color: var(--accent); background: #EAF2EC; padding: 4px 10px; border-radius: 999px; display: inline-block; margin-bottom: 14px; }
+  .pm-plan.pm-featured .pm-scans { background: var(--accent); color: white; }
+  .pm-feats { list-style: none; margin-bottom: 18px; display: flex; flex-direction: column; gap: 7px; }
+  .pm-feats li { font-size: 12px; color: var(--ink-muted); display: flex; gap: 7px; align-items: flex-start; line-height: 1.4; }
+  .pm-feats li::before { content: '✓'; color: var(--accent-light); font-weight: 700; font-size: 11px; flex-shrink: 0; margin-top: 1px; }
+  .pm-plan.pm-featured .pm-feats li::before { color: var(--accent); }
+  .btn-pm { width: 100%; padding: 11px; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; }
+  .btn-pm.outline { background: none; border: 1px solid var(--border); color: var(--ink); }
+  .btn-pm.outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-pm.solid { background: var(--accent); color: white; }
+  .btn-pm.solid:hover { background: var(--accent-light); }
+  .btn-pm.gold-btn { background: var(--gold); color: white; }
+  .btn-pm.gold-btn:hover { background: #C9A44A; }
+  .btn-pm.dark { background: var(--ink); color: white; }
+  .btn-pm.dark:hover { background: #333; }
+
+  .pm-footer { padding: 0 32px 28px; text-align: center; }
+  .pm-footer a { font-size: 13px; color: var(--accent-light); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+  .pm-footer a:hover { color: var(--accent); }
 
   /* HERO */
   .hero { padding: 160px 48px 80px; max-width: 760px; margin: 0 auto; text-align: center; }
@@ -206,11 +250,13 @@
     </div>
     <!-- Guest buttons -->
     <div id="navGuest" style="display:flex;gap:8px;">
+      <a href="pricing.html" class="btn-nav">Pricing</a>
       <button class="btn-nav" onclick="openModal('login')">Sign in</button>
       <button class="btn-nav primary" onclick="openModal('signup')">Create account</button>
     </div>
     <!-- Logged-in user -->
     <div id="navUser" style="display:none;align-items:center;gap:8px;">
+      <a href="pricing.html" class="btn-nav" style="font-size:13px;">Pricing</a>
       <div class="user-chip">
         <div class="user-avatar" id="userAvatar">?</div>
         <span id="userEmailLabel" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;"></span>
@@ -239,6 +285,52 @@
     <button class="btn-submit" id="authSubmitBtn" onclick="handleAuth()">Create account</button>
     <div class="modal-switch" id="modalSwitch">
       Already have an account? <a onclick="switchModal('login')">Sign in</a>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING MODAL -->
+<div class="pricing-overlay" id="pricingModal">
+  <div class="pricing-modal">
+    <button class="pricing-modal-close" onclick="closePricingModal()">×</button>
+    <div class="pm-header">
+      <div class="pm-eyebrow">✦ Upgrade your plan</div>
+      <h2>You've used all your <em>free</em> scans</h2>
+      <p>Choose a plan to keep analysing documents — cancel anytime.</p>
+    </div>
+    <div class="pm-plans">
+      <div class="pm-plan">
+        <div class="pm-plan-name">Free</div>
+        <div class="pm-price"><div class="pm-price-val">$0</div><div class="pm-price-sub">No credit card</div></div>
+        <div class="pm-scans">3 scans total</div>
+        <ul class="pm-feats"><li>Full AI analysis</li><li>Risk flagging</li><li>Key points</li><li>Plain-English summary</li></ul>
+        <button class="btn-pm outline" onclick="closePricingModal()">Current plan</button>
+      </div>
+      <div class="pm-plan pm-featured">
+        <div class="pm-featured-tag">Most Popular</div>
+        <div class="pm-plan-name">Pro</div>
+        <div class="pm-price"><div class="pm-price-val"><span class="cur">$</span>9</div><div class="pm-price-sub">per month</div></div>
+        <div class="pm-scans">200 scans / mo</div>
+        <ul class="pm-feats"><li>Everything in Free</li><li>200 scans per month</li><li>Priority processing</li><li>Email support</li></ul>
+        <button class="btn-pm solid" onclick="alert('Coming soon! We\'ll notify you when Pro launches.')">Coming soon</button>
+      </div>
+      <div class="pm-plan">
+        <div class="pm-plan-name">Pro 2</div>
+        <div class="pm-price"><div class="pm-price-val"><span class="cur">$</span>15</div><div class="pm-price-sub">per month</div></div>
+        <div class="pm-scans">500 scans / mo</div>
+        <ul class="pm-feats"><li>Everything in Pro</li><li>500 scans per month</li><li>Batch document upload</li><li>Priority support</li></ul>
+        <button class="btn-pm gold-btn" onclick="alert('Coming soon! We\'ll notify you when Pro 2 launches.')">Coming soon</button>
+      </div>
+      <div class="pm-plan">
+        <div class="pm-plan-name">Enterprise</div>
+        <div class="pm-price"><div class="pm-price-val" style="font-size:20px;padding-top:8px;">Custom</div><div class="pm-price-sub">Tailored pricing</div></div>
+        <div class="pm-scans">Unlimited scans</div>
+        <ul class="pm-feats"><li>Everything in Pro 2</li><li>Unlimited scans</li><li>Custom integrations</li><li>Dedicated support</li></ul>
+        <button class="btn-pm dark" onclick="window.location.href='mailto:hello@verrixai.com?subject=Enterprise Enquiry'">Contact us</button>
+      </div>
+    </div>
+    <div class="pm-footer">
+      <a href="pricing.html" target="_blank">View full pricing details →</a>
     </div>
   </div>
 </div>
@@ -478,13 +570,24 @@ function showUpgradeWall() {
     document.getElementById('upgradeTitle').textContent = "You've used your free scan";
     document.getElementById('upgradeMsg').textContent   = "Create a free account to unlock 3 more scans instantly — no credit card needed.";
     acts.innerHTML = `<button class="btn-upgrade primary" onclick="openModal('signup')">Create free account</button>
-                      <button class="btn-upgrade secondary" onclick="openModal('login')">Sign in</button>`;
+                      <button class="btn-upgrade secondary" onclick="openModal('login')">Sign in</button>
+                      <button class="btn-upgrade secondary" onclick="openPricingModal()">View pricing</button>`;
   } else {
-    document.getElementById('upgradeTitle').textContent = "You've used all your scans";
-    document.getElementById('upgradeMsg').innerHTML     = "Paid plans are coming soon.<br>We'll let you know the moment they launch.";
-    acts.innerHTML = `<button class="btn-upgrade secondary" onclick="resetTool()">← Back</button>`;
+    // Logged-in, out of scans — go straight to pricing modal
+    wall.style.display = 'none';
+    document.getElementById('inputState').style.display = '';
+    openPricingModal();
   }
 }
+function openPricingModal() {
+  document.getElementById('pricingModal').classList.add('visible');
+}
+function closePricingModal() {
+  document.getElementById('pricingModal').classList.remove('visible');
+}
+document.getElementById('pricingModal').addEventListener('click', e => {
+  if (e.target.id === 'pricingModal') closePricingModal();
+});
 
 // ─── AUTH MODAL ──────────────────────────────────────────────
 function openModal(mode) {

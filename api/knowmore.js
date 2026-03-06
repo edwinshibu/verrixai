@@ -1,29 +1,45 @@
-module.exports = async function handler(req, res) {
-  // CORS: restrict to your domain only
-  const allowedOrigins = ['https://verrixai.com', 'https://www.verrixai.com'];
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
+const ALLOWED_ORIGIN = 'https://verrixai.com';
+const EMAIL_REGEX    = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Simple in-memory rate limiter
+const rateLimitMap = new Map();
+const RATE_LIMIT  = 5;          // max submissions
+const RATE_WINDOW = 60 * 1000;  // per 60 seconds
+
+function isRateLimited(ip) {
+  const now   = Date.now();
+  const entry = rateLimitMap.get(ip) || { count: 0, start: now };
+  if (now - entry.start > RATE_WINDOW) {
+    rateLimitMap.set(ip, { count: 1, start: now });
+    return false;
   }
+  if (entry.count >= RATE_LIMIT) return true;
+  entry.count++;
+  rateLimitMap.set(ip, entry);
+  return false;
+}
+
+function sanitise(str, maxLen = 100) {
+  return String(str).replace(/[<>'"&]/g, '').trim().slice(0, maxLen);
+}
+
+module.exports = async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Vary', 'Origin');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'POST')   return res.status(405).json({ error: 'Method not allowed' });
 
-  // Rate limiting: max 5 submissions per IP per hour
-  const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket?.remoteAddress || 'unknown';
-  const now = Date.now();
-  if (!global._kmRateLimit) global._kmRateLimit = {};
-  if (!global._kmRateLimit[ip]) global._kmRateLimit[ip] = [];
-  global._kmRateLimit[ip] = global._kmRateLimit[ip].filter(t => now - t < 3600000);
-  if (global._kmRateLimit[ip].length >= 5) {
-    return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+  // Rate limiting by IP
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
+    || req.socket?.remoteAddress
+    || 'unknown';
+  if (isRateLimited(ip)) {
+    return res.status(429).json({ error: 'Too many requests. Please try again shortly.' });
   }
-  global._kmRateLimit[ip].push(now);
 
-  const { business_name, email } = req.body;
+  const { business_name, email } = req.body || {};
 
   // Validate required fields
   if (!business_name || !email) {
@@ -31,22 +47,21 @@ module.exports = async function handler(req, res) {
   }
 
   // Validate email format
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
+  if (!EMAIL_REGEX.test(email)) {
     return res.status(400).json({ error: 'Please enter a valid email address.' });
   }
 
-  // Sanitise inputs — strip HTML tags, limit length
-  const safeName = business_name.replace(/[<>'"&]/g, '').slice(0, 100).trim();
-  const safeEmail = email.slice(0, 254).trim().toLowerCase();
-
-  if (!safeName) {
-    return res.status(400).json({ error: 'Please enter a valid business name.' });
-  }
+  // Sanitise inputs before using in email HTML
+  const safeName  = sanitise(business_name, 100);
+  const safeEmail = sanitise(email, 254);
 
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
   const RESEND_KEY   = process.env.RESEND_API_KEY;
+
+  if (!SUPABASE_URL || !SUPABASE_KEY || !RESEND_KEY) {
+    return res.status(500).json({ error: 'Server configuration error.' });
+  }
 
   // Save to Supabase waitlist
   const dbRes = await fetch(`${SUPABASE_URL}/rest/v1/waitlist`, {
@@ -245,10 +260,10 @@ module.exports = async function handler(req, res) {
       'Authorization': `Bearer ${RESEND_KEY}`
     },
     body: JSON.stringify({
-      from: 'VerrixAI <onboarding@resend.dev>',
-      to: safeEmail,
+      from:    'VerrixAI <onboarding@resend.dev>',
+      to:      safeEmail,
       subject: `Here is everything about VerrixAI, ${safeName}`,
-      html: emailHtml
+      html:    emailHtml
     })
   });
 

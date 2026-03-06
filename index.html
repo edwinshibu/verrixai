@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VerrixAI — Understand Every Agreement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #F7F6F2; --surface: #FFFFFF; --ink: #1A1A18; --ink-muted: #6B6B62;
+    --accent: #1A3A2A; --accent-light: #2E5C42; --gold: #B8963E;
+    --border: #E2E0D8; --risk-high: #C0392B; --risk-med: #E67E22; --risk-low: #27AE60;
+    --radius: 12px; --shadow: 0 4px 24px rgba(26,26,24,0.08); --shadow-lg: 0 12px 48px rgba(26,26,24,0.12);
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+
+  /* NAV */
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 16px 48px; background: rgba(247,246,242,0.92); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); gap: 16px; }
+  .logo { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; letter-spacing: -0.3px; color: var(--ink); flex-shrink: 0; }
+  .logo span { color: var(--gold); }
+  .nav-center { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; color: var(--ink-muted); }
+  .nav-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+  .scan-pill { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); font-size: 12px; font-weight: 500; color: var(--ink-muted); }
+  .scan-pips { display: flex; gap: 3px; align-items: center; }
+  .scan-pip { width: 7px; height: 7px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
+  .scan-pip.avail { background: var(--gold); }
+
+  .btn-nav { padding: 8px 18px; border-radius: 999px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: 1px solid var(--border); background: var(--surface); color: var(--ink); }
+  .btn-nav:hover { border-color: var(--ink); }
+  .btn-nav.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn-nav.primary:hover { background: var(--accent-light); }
+  .btn-nav.ghost { background: none; border: none; color: var(--ink-muted); font-size: 12px; padding: 8px 10px; }
+  .btn-nav.ghost:hover { color: var(--ink); }
+  .user-chip { display: flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); font-size: 12px; font-weight: 500; }
+  .user-avatar { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: white; font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(26,26,24,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+  .modal-overlay.visible { opacity: 1; pointer-events: all; }
+  .modal { background: var(--surface); border-radius: 20px; padding: 40px 40px 36px; width: 100%; max-width: 420px; box-shadow: var(--shadow-lg); transform: translateY(12px); transition: transform 0.25s; position: relative; }
+  .modal-overlay.visible .modal { transform: translateY(0); }
+  .modal-close { position: absolute; top: 16px; right: 18px; background: none; border: none; font-size: 22px; cursor: pointer; color: var(--ink-muted); line-height: 1; padding: 4px; }
+  .modal-close:hover { color: var(--ink); }
+  .modal h2 { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 500; margin-bottom: 6px; }
+  .modal-sub { font-size: 14px; color: var(--ink-muted); margin-bottom: 28px; line-height: 1.5; }
+  .modal-sub strong { color: var(--accent-light); }
+  .form-field { margin-bottom: 16px; }
+  .form-field label { display: block; font-size: 11px; font-weight: 500; color: var(--ink-muted); margin-bottom: 6px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .form-field input { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink); background: var(--bg); outline: none; transition: border-color 0.2s; }
+  .form-field input:focus { border-color: var(--gold); background: white; }
+  .btn-submit { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; margin-top: 4px; }
+  .btn-submit:hover { background: var(--accent-light); }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+  .modal-switch { text-align: center; margin-top: 18px; font-size: 13px; color: var(--ink-muted); }
+  .modal-switch a { color: var(--accent-light); cursor: pointer; font-weight: 500; text-decoration: underline; text-underline-offset: 2px; }
+  .modal-error { background: #FDECEA; color: var(--risk-high); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; display: none; }
+  .modal-error.visible { display: block; }
+  .modal-success { background: #EAF5EE; color: var(--risk-low); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; display: none; }
+  .modal-success.visible { display: block; }
+
+  /* UPGRADE WALL */
+  .upgrade-wall { text-align: center; padding: 60px 36px; }
+  .upgrade-icon { font-size: 44px; margin-bottom: 16px; }
+  .upgrade-wall h3 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 500; margin-bottom: 10px; }
+  .upgrade-wall p { font-size: 14px; color: var(--ink-muted); max-width: 320px; margin: 0 auto 28px; line-height: 1.65; }
+  .upgrade-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .btn-upgrade { padding: 12px 28px; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .btn-upgrade.primary { background: var(--accent); color: white; border: none; }
+  .btn-upgrade.primary:hover { background: var(--accent-light); }
+  .btn-upgrade.secondary { background: none; border: 1px solid var(--border); color: var(--ink-muted); }
+  .btn-upgrade.secondary:hover { border-color: var(--ink); color: var(--ink); }
+
+  /* HERO */
+  .hero { padding: 160px 48px 80px; max-width: 760px; margin: 0 auto; text-align: center; }
+  .hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; background: #EAF2EC; color: var(--accent-light); font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 14px; border-radius: 999px; margin-bottom: 28px; }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(36px, 5vw, 58px); font-weight: 500; line-height: 1.15; letter-spacing: -0.02em; color: var(--ink); margin-bottom: 20px; }
+  .hero h1 em { font-style: italic; color: var(--gold); }
+  .hero p { font-size: 17px; color: var(--ink-muted); max-width: 520px; margin: 0 auto 48px; font-weight: 300; line-height: 1.7; }
+  .trust-strip { display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; font-size: 12px; color: var(--ink-muted); font-weight: 400; letter-spacing: 0.02em; margin-bottom: 56px; }
+  .trust-item { display: flex; align-items: center; gap: 6px; }
+  .trust-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+
+  /* MAIN CARD */
+  .main-card { max-width: 860px; margin: 0 auto 80px; padding: 0 24px; animation: fadeUp 0.6s ease both; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow-lg); overflow: hidden; }
+  .card-header { padding: 24px 36px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 500; }
+  .security-badge { display: flex; align-items: center; gap: 8px; background: #EAF2EC; border: 1px solid #C6DEC9; padding: 6px 14px; border-radius: 999px; font-size: 11px; font-weight: 500; color: var(--accent-light); letter-spacing: 0.05em; }
+
+  /* DROP ZONE */
+  .drop-zone { margin: 28px 36px; border: 2px dashed var(--border); border-radius: var(--radius); padding: 52px 24px; text-align: center; cursor: pointer; transition: all 0.25s ease; background: var(--bg); position: relative; }
+  .drop-zone:hover, .drop-zone.drag-over { border-color: var(--gold); background: #FDFBF5; }
+  .drop-icon { font-size: 36px; margin-bottom: 14px; opacity: 0.5; display: block; }
+  .drop-zone h3 { font-family: 'Playfair Display', serif; font-weight: 500; font-size: 17px; margin-bottom: 8px; }
+  .drop-zone p { font-size: 13px; color: var(--ink-muted); }
+  .drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .divider { display: flex; align-items: center; gap: 16px; padding: 0 36px; margin-bottom: 4px; color: var(--ink-muted); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .doc-textarea { margin: 12px 36px 28px; width: calc(100% - 72px); height: 180px; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink); background: var(--surface); resize: vertical; outline: none; transition: border-color 0.2s; line-height: 1.7; }
+  .doc-textarea:focus { border-color: var(--gold); }
+  .doc-textarea::placeholder { color: #B8B8AA; }
+  .options-row { padding: 0 36px 24px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .opt-chip { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; background: var(--surface); user-select: none; }
+  .opt-chip.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .opt-chip:hover:not(.active) { border-color: var(--ink-muted); }
+  .btn-row { padding: 0 36px 32px; }
+  .btn-analyze { width: 100%; padding: 16px 24px; background: var(--accent); color: white; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.25s ease; letter-spacing: 0.02em; }
+  .btn-analyze:hover { background: var(--accent-light); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(26,58,42,0.3); }
+  .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* LOADING */
+  .loading-state { display: none; padding: 48px 36px; text-align: center; }
+  .loading-state.visible { display: block; }
+  .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 20px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-steps { list-style: none; display: flex; flex-direction: column; gap: 8px; max-width: 260px; margin: 0 auto; text-align: left; }
+  .loading-steps li { font-size: 13px; color: var(--ink-muted); display: flex; align-items: center; gap: 10px; }
+  .loading-steps li.done { color: var(--accent-light); }
+  .step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); flex-shrink: 0; transition: background 0.3s; }
+  .loading-steps li.done .step-dot { background: var(--accent-light); }
+  .loading-steps li.active .step-dot { background: var(--gold); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* RESULTS */
+  .results-area { display: none; padding: 0 36px 36px; }
+  .results-area.visible { display: block; animation: fadeUp 0.5s ease both; }
+  .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding-top: 8px; }
+  .results-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 500; }
+  .new-btn { padding: 8px 18px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; color: var(--ink-muted); }
+  .new-btn:hover { border-color: var(--ink); color: var(--ink); }
+  .result-section { margin-bottom: 20px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .result-section-header { padding: 14px 20px; background: var(--bg); display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; border-bottom: 1px solid transparent; }
+  .result-section.open .result-section-header { border-bottom-color: var(--border); }
+  .section-icon { font-size: 16px; }
+  .section-label { font-weight: 500; font-size: 13px; letter-spacing: 0.02em; flex: 1; }
+  .section-toggle { font-size: 11px; color: var(--ink-muted); transition: transform 0.2s; }
+  .result-section.open .section-toggle { transform: rotate(180deg); }
+  .result-section-body { display: none; padding: 20px; font-size: 14px; line-height: 1.75; }
+  .result-section.open .result-section-body { display: block; animation: fadeUp 0.2s ease; }
+  .risk-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .risk-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .risk-badge { padding: 3px 10px; border-radius: 999px; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; flex-shrink: 0; margin-top: 2px; }
+  .risk-badge.high { background: #FDECEA; color: var(--risk-high); }
+  .risk-badge.medium { background: #FEF3E2; color: var(--risk-med); }
+  .risk-badge.low { background: #EAF5EE; color: var(--risk-low); }
+  .risk-text { font-size: 13px; line-height: 1.6; }
+  .risk-text strong { display: block; margin-bottom: 3px; font-weight: 500; }
+  .risk-text span { color: var(--ink-muted); }
+  .key-point { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .key-point:last-child { border-bottom: none; }
+  .kp-bullet { width: 20px; height: 20px; border-radius: 50%; background: #EAF2EC; color: var(--accent-light); font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .simplified-block { background: var(--bg); border-radius: 8px; padding: 16px 20px; font-size: 14px; line-height: 1.8; border-left: 3px solid var(--gold); }
+  .privacy-note { margin-top: 24px; padding: 16px 20px; border: 1px solid #D8E8D8; border-radius: var(--radius); background: #F2F9F3; display: flex; gap: 12px; align-items: flex-start; }
+  .privacy-icon { font-size: 18px; flex-shrink: 0; }
+  .privacy-text { font-size: 12px; color: var(--accent-light); line-height: 1.6; }
+  .privacy-text strong { display: block; margin-bottom: 2px; font-weight: 600; }
+
+  /* HOW IT WORKS */
+  .how-section { max-width: 860px; margin: 0 auto 100px; padding: 0 24px; }
+  .how-header { text-align: center; margin-bottom: 48px; }
+  .how-header h2 { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 500; margin-bottom: 12px; }
+  .how-header p { font-size: 15px; color: var(--ink-muted); }
+  .how-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .how-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 24px; transition: box-shadow 0.25s; }
+  .how-card:hover { box-shadow: var(--shadow); }
+  .how-num { font-family: 'Playfair Display', serif; font-size: 32px; color: var(--gold); font-weight: 500; margin-bottom: 12px; line-height: 1; }
+  .how-card h3 { font-size: 15px; font-weight: 500; margin-bottom: 8px; }
+  .how-card p { font-size: 13px; color: var(--ink-muted); line-height: 1.65; }
+
+  footer { border-top: 1px solid var(--border); padding: 32px 48px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--ink-muted); }
+  .footer-logo { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 500; color: var(--ink); }
+  .footer-logo span { color: var(--gold); }
+
+  @media (max-width: 680px) {
+    nav { padding: 14px 20px; } .nav-center { display: none; }
+    .hero { padding: 120px 20px 60px; }
+    .main-card { padding: 0 12px; }
+    .card-header, .options-row, .btn-row, .results-area { padding-left: 20px; padding-right: 20px; }
+    .drop-zone { margin: 20px; }
+    .doc-textarea { margin-left: 20px; margin-right: 20px; width: calc(100% - 40px); }
+    .divider { padding: 0 20px; }
+    .how-grid { grid-template-columns: 1fr; }
+    footer { flex-direction: column; gap: 12px; text-align: center; }
+    .trust-strip { gap: 16px; }
+    .modal { padding: 32px 24px 28px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Verrix<span>AI</span></div>
+  <div class="nav-center">🔒 Zero data retention · End-to-end encrypted</div>
+  <div class="nav-right">
+    <!-- Scan counter -->
+    <div class="scan-pill" id="scanPill" style="display:none">
+      <div class="scan-pips" id="scanPips"></div>
+      <span id="scanLabel"></span>
+    </div>
+    <!-- Guest buttons -->
+    <div id="navGuest" style="display:flex;gap:8px;">
+      <button class="btn-nav" onclick="openModal('login')">Sign in</button>
+      <button class="btn-nav primary" onclick="openModal('signup')">Create account</button>
+    </div>
+    <!-- Logged-in user -->
+    <div id="navUser" style="display:none;align-items:center;gap:8px;">
+      <div class="user-chip">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <span id="userEmailLabel" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;"></span>
+      </div>
+      <button class="btn-nav ghost" onclick="signOut()">Sign out</button>
+    </div>
+  </div>
+</nav>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <h2 id="modalTitle">Create account</h2>
+    <p class="modal-sub" id="modalSub">Get <strong>3 free scans</strong> — no credit card needed.</p>
+    <div class="modal-error" id="modalError"></div>
+    <div class="modal-success" id="modalSuccess"></div>
+    <div class="form-field">
+      <label>Email address</label>
+      <input type="email" id="authEmail" placeholder="you@example.com" />
+    </div>
+    <div class="form-field" id="passwordField">
+      <label>Password</label>
+      <input type="password" id="authPassword" placeholder="Minimum 6 characters" onkeydown="if(event.key==='Enter')handleAuth()" />
+    </div>
+    <button class="btn-submit" id="authSubmitBtn" onclick="handleAuth()">Create account</button>
+    <div class="modal-switch" id="modalSwitch">
+      Already have an account? <a onclick="switchModal('login')">Sign in</a>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow"><span>✦</span> AI-Powered Document Intelligence</div>
+  <h1>Understand every agreement<br>before you <em>sign</em></h1>
+  <p>Paste any contract, terms & conditions, or legal document. We'll instantly summarise it, flag the risks, and surface what matters — in plain English.</p>
+  <div class="trust-strip">
+    <div class="trust-item"><span class="trust-dot"></span> Never stored</div>
+    <div class="trust-item"><span class="trust-dot"></span> AES-256 encrypted in transit</div>
+    <div class="trust-item"><span class="trust-dot"></span> 1 free scan, no account required</div>
+    <div class="trust-item"><span class="trust-dot"></span> 3 scans free with account</div>
+  </div>
+</section>
+
+<!-- MAIN TOOL CARD -->
+<div class="main-card">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Analyse a Document</div>
+      <div class="security-badge">🔐 Secure Session</div>
+    </div>
+
+    <!-- Input -->
+    <div id="inputState">
+      <div class="drop-zone" id="dropZone">
+        <span class="drop-icon">📄</span>
+        <h3 id="dropLabel">Drop your document here</h3>
+        <p id="dropSub">PDF, DOCX, or TXT accepted</p>
+        <input type="file" id="fileInput" accept=".pdf,.docx,.txt" />
+      </div>
+      <div id="clearFileRow" style="display:none;padding:0 36px;margin-top:-8px;margin-bottom:8px;">
+        <button onclick="clearFile()" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--ink-muted);font-family:'DM Sans',sans-serif;">✕ Remove file and paste instead</button>
+      </div>
+      <div class="divider" id="pasteDivider" style="display:none;">or paste text</div>
+      <textarea class="doc-textarea" id="docText" style="display:none;" placeholder="Paste the full text of your agreement, terms & conditions, privacy policy, or any legal document here…"></textarea>
+      <div id="pasteToggleRow" style="padding:0 36px 20px;text-align:center;">
+        <button onclick="showPaste()" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--ink-muted);font-family:'DM Sans',sans-serif;text-decoration:underline;text-underline-offset:3px;">or paste text instead</button>
+      </div>
+      <div class="options-row">
+        <div class="opt-chip active" data-opt="summary">📋 Summary</div>
+        <div class="opt-chip active" data-opt="risks">⚠️ Risk Flags</div>
+        <div class="opt-chip active" data-opt="keypoints">🔑 Key Points</div>
+        <div class="opt-chip active" data-opt="simplify">✨ Simplify</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-analyze" onclick="startAnalysis()">
+          <span>Analyse Document</span><span>→</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" id="loadingState">
+      <div class="spinner"></div>
+      <p style="font-size:14px;margin-bottom:20px;color:var(--ink-muted)">Analysing your document…</p>
+      <ul class="loading-steps">
+        <li id="step1"><span class="step-dot"></span> Encrypting document locally</li>
+        <li id="step2"><span class="step-dot"></span> Extracting structure & clauses</li>
+        <li id="step3"><span class="step-dot"></span> Identifying risks & obligations</li>
+        <li id="step4"><span class="step-dot"></span> Generating plain-language summary</li>
+        <li id="step5"><span class="step-dot"></span> Finalising report</li>
+      </ul>
+    </div>
+
+    <!-- Upgrade wall -->
+    <div id="upgradeWall" style="display:none;">
+      <div class="upgrade-wall">
+        <div class="upgrade-icon">🔒</div>
+        <h3 id="upgradeTitle">You've used your free scan</h3>
+        <p id="upgradeMsg">Create a free account to get 3 more scans instantly — no credit card needed.</p>
+        <div class="upgrade-actions" id="upgradeActions"></div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-area" id="resultsArea">
+      <div class="results-header">
+        <div class="results-title">Analysis Complete</div>
+        <button class="new-btn" onclick="resetTool()">← New Document</button>
+      </div>
+      <div class="result-section open" id="sec-summary">
+        <div class="result-section-header" onclick="toggleSection('sec-summary')">
+          <span class="section-icon">📋</span><span class="section-label">Document Summary</span><span class="section-toggle">▾</span>
+        </div>
+        <div class="result-section-body" id="body-summary">Loading…</div>
+      </div>
+      <div class="result-section open" id="sec-risks">
+        <div class="result-section-header" onclick="toggleSection('sec-risks')">
+          <span class="section-icon">⚠️</span><span class="section-label">Risk Flags</span><span class="section-toggle">▾</span>
+        </div>
+        <div class="result-section-body" id="body-risks">Loading…</div>
+      </div>
+      <div class="result-section open" id="sec-keypoints">
+        <div class="result-section-header" onclick="toggleSection('sec-keypoints')">
+          <span class="section-icon">🔑</span><span class="section-label">Key Points</span><span class="section-toggle">▾</span>
+        </div>
+        <div class="result-section-body" id="body-keypoints">Loading…</div>
+      </div>
+      <div class="result-section open" id="sec-simplify">
+        <div class="result-section-header" onclick="toggleSection('sec-simplify')">
+          <span class="section-icon">✨</span><span class="section-label">Plain-Language Version</span><span class="section-toggle">▾</span>
+        </div>
+        <div class="result-section-body" id="body-simplify">Loading…</div>
+      </div>
+      <div class="privacy-note">
+        <span class="privacy-icon">🛡️</span>
+        <div class="privacy-text">
+          <strong>Your data never left this session.</strong>
+          This document was analysed securely and has not been stored on any server. Your content is automatically purged the moment you close or refresh this page.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how-section">
+  <div class="how-header">
+    <h2>How it works</h2>
+    <p>Three steps to complete clarity — in under 30 seconds.</p>
+  </div>
+  <div class="how-grid">
+    <div class="how-card"><div class="how-num">01</div><h3>Drop or paste your document</h3><p>Upload a PDF, DOCX, or simply paste the raw text of any agreement or legal document.</p></div>
+    <div class="how-card"><div class="how-num">02</div><h3>AI analyses every clause</h3><p>Our model reads the full document, identifies obligations, risks, and notable terms buried in the fine print.</p></div>
+    <div class="how-card"><div class="how-num">03</div><h3>Get your clear breakdown</h3><p>Receive a plain-English summary, risk flags ranked by severity, and a list of the clauses that matter most.</p></div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">Verrix<span>AI</span></div>
+  <div>Not legal advice. Always consult a qualified solicitor for binding decisions.</div>
+</footer>
+
+<script>
+// ─── SUPABASE INIT ───────────────────────────────────────────
+const SUPABASE_URL = 'https://ivisbawpltxqpsltnmny.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2aXNiYXdwbHR4cXBzbHRubW55Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDM0MDIsImV4cCI6MjA4ODMxOTQwMn0.exgxjgKKs3XzhBG8fpH4tkKJ_zZmrY1VtU_VU9ALVM0';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ─── STATE ───────────────────────────────────────────────────
+const GUEST_LIMIT = 1;
+const USER_LIMIT  = 3;
+let currentUser   = null;
+let userProfile   = null;
+let guestUsed     = parseInt(localStorage.getItem('verrix_guest') || '0');
+let loadedFile    = null;
+let pasteMode     = false;
+let modalMode     = 'signup';
+
+// ─── BOOT ────────────────────────────────────────────────────
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session?.user) await onSignIn(session.user);
+  else renderNavGuest();
+
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session?.user) {
+      await onSignIn(session.user);
+      closeModal();
+    } else if (event === 'SIGNED_OUT') {
+      currentUser = null; userProfile = null;
+      renderNavGuest();
+    }
+  });
+})();
+
+async function onSignIn(user) {
+  currentUser = user;
+  let { data: profile, error } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  if (!profile) {
+    await sb.from('profiles').upsert({ id: user.id, email: user.email, scans_used: 0, scans_limit: USER_LIMIT });
+    ({ data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single());
+  }
+  userProfile = profile;
+  renderNavUser(user);
+  renderScanPill();
+}
+
+// ─── NAV RENDER ──────────────────────────────────────────────
+function renderNavGuest() {
+  document.getElementById('navGuest').style.display = 'flex';
+  document.getElementById('navUser').style.display  = 'none';
+  renderScanPill();
+}
+function renderNavUser(user) {
+  document.getElementById('navGuest').style.display = 'none';
+  document.getElementById('navUser').style.display  = 'flex';
+  document.getElementById('userEmailLabel').textContent = user.email;
+  document.getElementById('userAvatar').textContent = (user.email||'?')[0].toUpperCase();
+  renderScanPill();
+}
+function renderScanPill() {
+  const pill  = document.getElementById('scanPill');
+  const pips  = document.getElementById('scanPips');
+  const label = document.getElementById('scanLabel');
+  pill.style.display = 'flex';
+  const used  = currentUser ? (userProfile?.scans_used || 0) : guestUsed;
+  const total = currentUser ? (userProfile?.scans_limit || USER_LIMIT) : GUEST_LIMIT;
+  const rem   = Math.max(0, total - used);
+  pips.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('span');
+    d.className = 'scan-pip' + (i < used ? '' : ' avail');
+    pips.appendChild(d);
+  }
+  label.textContent = `${rem} scan${rem !== 1 ? 's' : ''} left`;
+}
+
+// ─── SCAN GATE ───────────────────────────────────────────────
+function canScan() {
+  if (currentUser && userProfile) return userProfile.scans_used < (userProfile.scans_limit || USER_LIMIT);
+  return guestUsed < GUEST_LIMIT;
+}
+async function recordScan() {
+  if (currentUser && userProfile) {
+    const next = (userProfile.scans_used || 0) + 1;
+    await sb.from('profiles').update({ scans_used: next }).eq('id', currentUser.id);
+    userProfile.scans_used = next;
+  } else {
+    guestUsed++;
+    localStorage.setItem('verrix_guest', guestUsed);
+  }
+  renderScanPill();
+}
+function showUpgradeWall() {
+  document.getElementById('inputState').style.display  = 'none';
+  document.getElementById('loadingState').classList.remove('visible');
+  document.getElementById('resultsArea').classList.remove('visible');
+  const wall = document.getElementById('upgradeWall');
+  const acts = document.getElementById('upgradeActions');
+  wall.style.display = 'block';
+  if (!currentUser) {
+    document.getElementById('upgradeTitle').textContent = "You've used your free scan";
+    document.getElementById('upgradeMsg').textContent   = "Create a free account to unlock 3 more scans instantly — no credit card needed.";
+    acts.innerHTML = `<button class="btn-upgrade primary" onclick="openModal('signup')">Create free account</button>
+                      <button class="btn-upgrade secondary" onclick="openModal('login')">Sign in</button>`;
+  } else {
+    document.getElementById('upgradeTitle').textContent = "You've used all your scans";
+    document.getElementById('upgradeMsg').innerHTML     = "Paid plans are coming soon.<br>We'll let you know the moment they launch.";
+    acts.innerHTML = `<button class="btn-upgrade secondary" onclick="resetTool()">← Back</button>`;
+  }
+}
+
+// ─── AUTH MODAL ──────────────────────────────────────────────
+function openModal(mode) {
+  modalMode = mode;
+  ['modalError','modalSuccess'].forEach(id => document.getElementById(id).classList.remove('visible'));
+  document.getElementById('authEmail').value = '';
+  document.getElementById('authPassword').value = '';
+  const isSignup = mode === 'signup';
+  document.getElementById('modalTitle').textContent       = isSignup ? 'Create account' : 'Welcome back';
+  document.getElementById('modalSub').innerHTML           = isSignup ? 'Get <strong>3 free scans</strong> — no credit card needed.' : 'Sign in to access your scans.';
+  document.getElementById('authSubmitBtn').textContent    = isSignup ? 'Create account' : 'Sign in';
+  document.getElementById('modalSwitch').innerHTML        = isSignup
+    ? "Already have an account? <a onclick=\"switchModal('login')\">Sign in</a>"
+    : "Don't have an account? <a onclick=\"switchModal('signup')\">Create one free</a>";
+  document.getElementById('authModal').classList.add('visible');
+  setTimeout(() => document.getElementById('authEmail').focus(), 200);
+}
+function closeModal() { document.getElementById('authModal').classList.remove('visible'); }
+function switchModal(m) { openModal(m); }
+document.getElementById('authModal').addEventListener('click', e => { if (e.target.id === 'authModal') closeModal(); });
+
+async function handleAuth() {
+  const email    = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const btn      = document.getElementById('authSubmitBtn');
+  const errEl    = document.getElementById('modalError');
+  const okEl     = document.getElementById('modalSuccess');
+  errEl.classList.remove('visible'); okEl.classList.remove('visible');
+  if (!email || !password) { errEl.textContent = 'Please fill in all fields.'; errEl.classList.add('visible'); return; }
+  btn.disabled = true;
+  btn.textContent = modalMode === 'signup' ? 'Creating account…' : 'Signing in…';
+  try {
+    if (modalMode === 'signup') {
+      const { error } = await sb.auth.signUp({ email, password });
+      if (error) { errEl.textContent = error.message; errEl.classList.add('visible'); }
+      else { okEl.textContent = '✓ Check your email to confirm your account, then sign in.'; okEl.classList.add('visible'); }
+    } else {
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) { errEl.textContent = error.message; errEl.classList.add('visible'); }
+    }
+  } catch(e) { errEl.textContent = 'Something went wrong. Please try again.'; errEl.classList.add('visible'); }
+  btn.disabled = false;
+  btn.textContent = modalMode === 'signup' ? 'Create account' : 'Sign in';
+}
+
+async function signOut() { await sb.auth.signOut(); }
+
+// ─── FILE HANDLING ───────────────────────────────────────────
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag-over'); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+document.getElementById('fileInput').addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+function handleFile(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    loadedFile = { base64: ev.target.result.split(',')[1], mediaType: file.type || 'application/pdf', name: file.name };
+    document.getElementById('dropLabel').textContent = `✓ ${file.name}`;
+    document.getElementById('dropSub').textContent   = 'File ready for analysis';
+    dropZone.style.borderColor = 'var(--gold)'; dropZone.style.background = '#FDFBF5'; dropZone.style.pointerEvents = 'none';
+    document.getElementById('clearFileRow').style.display   = 'block';
+    document.getElementById('pasteToggleRow').style.display = 'none';
+    document.getElementById('pasteDivider').style.display   = 'none';
+    document.getElementById('docText').style.display        = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+function clearFile() {
+  loadedFile = null; pasteMode = false;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('dropLabel').textContent = 'Drop your document here';
+  document.getElementById('dropSub').textContent   = 'PDF, DOCX, or TXT accepted';
+  dropZone.style.borderColor = ''; dropZone.style.background = ''; dropZone.style.pointerEvents = '';
+  document.getElementById('clearFileRow').style.display   = 'none';
+  document.getElementById('pasteToggleRow').style.display = 'block';
+  document.getElementById('pasteDivider').style.display   = 'none';
+  document.getElementById('docText').style.display        = 'none';
+}
+function showPaste() {
+  pasteMode = true;
+  document.getElementById('pasteToggleRow').style.display = 'none';
+  document.getElementById('pasteDivider').style.display   = 'flex';
+  document.getElementById('docText').style.display        = 'block';
+  document.getElementById('docText').focus();
+}
+
+document.querySelectorAll('.opt-chip').forEach(c => c.addEventListener('click', () => c.classList.toggle('active')));
+function getActiveOptions() { return [...document.querySelectorAll('.opt-chip.active')].map(c => c.dataset.opt); }
+
+// ─── LOADING ANIMATION ───────────────────────────────────────
+function animateSteps() {
+  const steps = ['step1','step2','step3','step4','step5']; let i = 0;
+  return new Promise(resolve => {
+    function next() {
+      if (i > 0) { document.getElementById(steps[i-1]).classList.remove('active'); document.getElementById(steps[i-1]).classList.add('done'); }
+      if (i < steps.length) { document.getElementById(steps[i]).classList.add('active'); i++; setTimeout(next, 900); }
+      else resolve();
+    }
+    next();
+  });
+}
+
+// ─── ANALYSIS ────────────────────────────────────────────────
+async function startAnalysis() {
+  if (!canScan()) { showUpgradeWall(); return; }
+  const pasteText = document.getElementById('docText').value.trim();
+  if (!loadedFile && !pasteText) {
+    dropZone.style.borderColor = '#C0392B'; setTimeout(() => dropZone.style.borderColor = '', 2000); return;
+  }
+  const opts = getActiveOptions();
+  document.getElementById('inputState').style.display = 'none';
+  document.getElementById('upgradeWall').style.display = 'none';
+  document.getElementById('loadingState').classList.add('visible');
+  const stepsPromise = animateSteps();
+  await recordScan();
+
+  const sections = [];
+  if (opts.includes('summary'))   sections.push('SUMMARY: 3-5 sentence overview.');
+  if (opts.includes('risks'))     sections.push('RISKS: JSON array [{level,title,desc}] with 3-6 items, level = HIGH/MEDIUM/LOW.');
+  if (opts.includes('keypoints')) sections.push('KEY_POINTS: JSON array of 4-7 important points as strings.');
+  if (opts.includes('simplify'))  sections.push('SIMPLIFIED: Plain-English rewrite, 3-5 sentences, no jargon.');
+
+  const instruction = `You are an expert legal document analyst. Analyse the document and respond ONLY with a valid JSON object (no markdown, no preamble) with keys: ${sections.map(s=>s.split(':')[0]).join(', ')}.
+- RISKS → JSON array: [{"level":"HIGH","title":"...","desc":"..."},...]
+- KEY_POINTS → JSON array of strings
+- SUMMARY, SIMPLIFIED → plain strings
+${sections.join('\n')}`;
+
+  let userContent;
+  if (loadedFile) {
+    if (loadedFile.mediaType === 'application/pdf' || loadedFile.name.endsWith('.pdf')) {
+      userContent = [
+        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: loadedFile.base64 } },
+        { type: 'text', text: instruction }
+      ];
+    } else {
+      userContent = instruction + '\n\nDOCUMENT:\n"""\n' + atob(loadedFile.base64).slice(0, 12000) + '\n"""';
+    }
+  } else {
+    userContent = instruction + '\n\nDOCUMENT:\n"""\n' + pasteText.slice(0, 12000) + '\n"""';
+  }
+
+  let result = null;
+  try {
+    const res  = await fetch('/api/analyse', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1500, messages: [{ role: 'user', content: userContent }] })
+    });
+    const data = await res.json();
+    const raw  = data.content?.map(b => b.text || '').join('').trim();
+    result = JSON.parse(raw.replace(/```json|```/g, '').trim());
+  } catch(e) { console.error(e); }
+
+  await stepsPromise;
+  document.getElementById('loadingState').classList.remove('visible');
+  if (result) renderResults(result, opts); else renderFallback();
+  document.getElementById('resultsArea').classList.add('visible');
+  ['summary','risks','keypoints','simplify'].forEach(s => {
+    document.getElementById(`sec-${s}`).style.display = opts.includes(s) ? '' : 'none';
+  });
+}
+
+function renderResults(r, opts) {
+  if (opts.includes('summary') && r.SUMMARY)
+    document.getElementById('body-summary').innerHTML = `<p>${esc(r.SUMMARY)}</p>`;
+  if (opts.includes('risks') && r.RISKS) {
+    let risks = r.RISKS;
+    if (typeof risks === 'string') { try { risks = JSON.parse(risks); } catch(e){ risks=[]; } }
+    document.getElementById('body-risks').innerHTML = risks.map(r => `
+      <div class="risk-item">
+        <div class="risk-badge ${r.level?.toLowerCase()}">${r.level}</div>
+        <div class="risk-text"><strong>${esc(r.title)}</strong><span>${esc(r.desc)}</span></div>
+      </div>`).join('') || '<p>No significant risks identified.</p>';
+  }
+  if (opts.includes('keypoints') && r.KEY_POINTS) {
+    let pts = r.KEY_POINTS;
+    if (typeof pts === 'string') pts = pts.split('\n').filter(Boolean);
+    document.getElementById('body-keypoints').innerHTML = pts.map((p,i)=>`
+      <div class="key-point"><div class="kp-bullet">${i+1}</div><div>${esc(p)}</div></div>`).join('');
+  }
+  if (opts.includes('simplify') && r.SIMPLIFIED)
+    document.getElementById('body-simplify').innerHTML = `<div class="simplified-block">${esc(r.SIMPLIFIED)}</div>`;
+}
+function renderFallback() {
+  ['summary','risks','keypoints','simplify'].forEach(s => {
+    document.getElementById(`body-${s}`).innerHTML = '<p style="color:var(--ink-muted);font-size:13px;">Unable to process. Please check your connection and try again.</p>';
+  });
+}
+function esc(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function toggleSection(id) { document.getElementById(id).classList.toggle('open'); }
+
+function resetTool() {
+  loadedFile = null; pasteMode = false;
+  ['resultsArea'].forEach(id => document.getElementById(id).classList.remove('visible'));
+  document.getElementById('loadingState').classList.remove('visible');
+  document.getElementById('upgradeWall').style.display = 'none';
+  document.getElementById('inputState').style.display  = '';
+  document.getElementById('docText').value = ''; document.getElementById('docText').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('dropLabel').textContent = 'Drop your document here';
+  document.getElementById('dropSub').textContent   = 'PDF, DOCX, or TXT accepted';
+  dropZone.style.borderColor = ''; dropZone.style.background = ''; dropZone.style.pointerEvents = '';
+  document.getElementById('clearFileRow').style.display   = 'none';
+  document.getElementById('pasteToggleRow').style.display = 'block';
+  document.getElementById('pasteDivider').style.display   = 'none';
+  ['step1','step2','step3','step4','step5'].forEach(s => document.getElementById(s).classList.remove('active','done'));
+}
+</script>
+</body>
+</html>

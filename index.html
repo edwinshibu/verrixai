@@ -217,7 +217,24 @@
   .privacy-text { font-size: 12px; color: var(--accent-light); line-height: 1.6; }
   .privacy-text strong { display: block; margin-bottom: 2px; font-weight: 600; }
 
-  /* HOW IT WORKS */
+  /* KNOW MORE SECTION */
+  .knowmore-section { max-width: 680px; margin: 0 auto 100px; padding: 0 24px; text-align: center; }
+  .knowmore-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 52px 48px; box-shadow: var(--shadow); }
+  .knowmore-eyebrow { display: inline-flex; align-items: center; gap: 8px; background: #EAF2EC; color: var(--accent-light); font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 14px; border-radius: 999px; margin-bottom: 20px; }
+  .knowmore-card h2 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 500; margin-bottom: 12px; line-height: 1.3; }
+  .knowmore-card h2 em { font-style: italic; color: var(--gold); }
+  .knowmore-card p { font-size: 15px; color: var(--ink-muted); margin-bottom: 32px; line-height: 1.7; font-weight: 300; }
+  .knowmore-form { display: flex; flex-direction: column; gap: 12px; max-width: 400px; margin: 0 auto; }
+  .knowmore-input { width: 100%; padding: 13px 18px; border: 1px solid var(--border); border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink); background: var(--bg); outline: none; transition: border-color 0.2s; }
+  .knowmore-input:focus { border-color: var(--gold); background: white; }
+  .knowmore-input::placeholder { color: #B8B8AA; }
+  .btn-knowmore { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; letter-spacing: 0.02em; }
+  .btn-knowmore:hover { background: var(--accent-light); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(26,58,42,0.25); }
+  .btn-knowmore:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+  .knowmore-msg { font-size: 13px; padding: 10px 14px; border-radius: 8px; display: none; margin-top: 4px; }
+  .knowmore-msg.success { background: #EAF5EE; color: var(--risk-low); display: block; }
+  .knowmore-msg.error { background: #FDECEA; color: var(--risk-high); display: block; }
+  .knowmore-note { font-size: 11px; color: var(--ink-muted); margin-top: 14px; }
   .how-section { max-width: 860px; margin: 0 auto 100px; padding: 0 24px; }
   .how-header { text-align: center; margin-bottom: 48px; }
   .how-header h2 { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 500; margin-bottom: 12px; }
@@ -516,13 +533,81 @@
   </div>
 </div>
 
+<!-- KNOW MORE SECTION -->
+<div class="knowmore-section">
+  <div class="knowmore-card">
+    <div class="knowmore-eyebrow">✦ For businesses</div>
+    <h2>Want to know <em>more</em>?</h2>
+    <p>Enter your business name and email and we'll send you everything about VerrixAI — features, pricing, and how it can save your team time reviewing documents.</p>
+    <div class="knowmore-form">
+      <input class="knowmore-input" id="kmBusiness" type="text" placeholder="Business name" />
+      <input class="knowmore-input" id="kmEmail" type="email" placeholder="Business email" />
+      <button class="btn-knowmore" id="kmBtn" onclick="submitKnowMore()">Send me the details →</button>
+      <div class="knowmore-msg" id="kmMsg"></div>
+    </div>
+    <p class="knowmore-note">🔒 No spam. We'll send one email with everything you need.</p>
+  </div>
+</div>
+
 <footer>
   <div class="footer-logo">Verrix<span>AI</span></div>
   <div>Not legal advice. Always consult a qualified solicitor for binding decisions.</div>
 </footer>
 
 <script>
-// ─── SUPABASE INIT ───────────────────────────────────────────
+// ─── KNOW MORE ───────────────────────────────────────────────
+async function submitKnowMore() {
+  const business_name = document.getElementById('kmBusiness').value.trim();
+  const email         = document.getElementById('kmEmail').value.trim();
+  const btn           = document.getElementById('kmBtn');
+  const msg           = document.getElementById('kmMsg');
+
+  msg.className = 'knowmore-msg';
+  msg.textContent = '';
+
+  if (!business_name || !email) {
+    msg.className = 'knowmore-msg error';
+    msg.textContent = 'Please enter both your business name and email.';
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    msg.className = 'knowmore-msg error';
+    msg.textContent = 'Please enter a valid email address.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  try {
+    const res  = await fetch('/api/knowmore', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ business_name, email })
+    });
+    const data = await res.json();
+
+    if (res.status === 409) {
+      msg.className = 'knowmore-msg error';
+      msg.textContent = 'This email has already been registered.';
+      btn.disabled = false;
+      btn.textContent = 'Send me the details →';
+      return;
+    }
+    if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+
+    msg.className = 'knowmore-msg success';
+    msg.textContent = `Done! Check your inbox at ${email} — we've sent everything over.`;
+    document.getElementById('kmBusiness').value = '';
+    document.getElementById('kmEmail').value = '';
+    btn.textContent = '✓ Sent!';
+  } catch(e) {
+    msg.className = 'knowmore-msg error';
+    msg.textContent = e.message || 'Something went wrong. Please try again.';
+    btn.disabled = false;
+    btn.textContent = 'Send me the details →';
+  }
+}
 const SUPABASE_URL = 'https://ivisbawpltxqpsltnmny.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2aXNiYXdwbHR4cXBzbHRubW55Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDM0MDIsImV4cCI6MjA4ODMxOTQwMn0.exgxjgKKs3XzhBG8fpH4tkKJ_zZmrY1VtU_VU9ALVM0';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);

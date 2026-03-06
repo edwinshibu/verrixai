@@ -251,17 +251,76 @@
   .footer-logo span { color: var(--gold); }
 
   @media (max-width: 680px) {
-    nav { padding: 14px 20px; } .nav-center { display: none; }
-    .hero { padding: 120px 20px 60px; }
-    .main-card { padding: 0 12px; }
-    .card-header, .options-row, .btn-row, .results-area { padding-left: 20px; padding-right: 20px; }
-    .drop-zone { margin: 20px; }
-    .doc-textarea { margin-left: 20px; margin-right: 20px; width: calc(100% - 40px); }
+    /* NAV */
+    nav { padding: 12px 16px; gap: 8px; }
+    .nav-right { gap: 6px; }
+    .nav-security { display: none !important; }
+    .scan-pill { padding: 5px 10px; font-size: 11px; }
+    .scan-pip { width: 6px; height: 6px; }
+    .btn-nav { padding: 7px 12px; font-size: 12px; }
+    .user-chip { padding: 5px 10px; }
+    .user-chip span { display: none; }
+
+    /* HERO */
+    .hero { padding: 110px 20px 48px; }
+    .hero h1 { font-size: 30px; }
+    .hero p { font-size: 15px; margin-bottom: 32px; }
+    .trust-strip { gap: 12px; flex-direction: column; align-items: center; margin-bottom: 36px; }
+
+    /* MAIN CARD */
+    .main-card { padding: 0 12px; margin-bottom: 48px; }
+    .card-header { padding: 18px 20px 16px; flex-direction: column; align-items: flex-start; gap: 10px; }
+    .drop-zone { margin: 16px 20px; padding: 36px 16px; }
     .divider { padding: 0 20px; }
-    .how-grid { grid-template-columns: 1fr; }
-    footer { flex-direction: column; gap: 12px; text-align: center; }
-    .trust-strip { gap: 16px; }
-    .modal { padding: 32px 24px 28px; }
+    .doc-textarea { margin: 10px 20px 20px; width: calc(100% - 40px); height: 140px; }
+    .options-row { padding: 0 20px 20px; gap: 8px; }
+    .opt-chip { font-size: 11px; padding: 6px 12px; }
+    .btn-row { padding: 0 20px 24px; }
+    .loading-state { padding: 36px 20px; }
+    .results-area { padding: 0 20px 24px; }
+    .results-header { flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+    .result-section-header { padding: 12px 16px; }
+    .result-section-body { padding: 16px; }
+
+    /* UPGRADE WALL */
+    .upgrade-wall { padding: 40px 20px; }
+    .upgrade-actions { flex-direction: column; align-items: stretch; }
+    .btn-upgrade { width: 100%; text-align: center; }
+
+    /* PRICING MODAL */
+    .pricing-modal { border-radius: 16px; max-height: 95vh; }
+    .pm-header { padding: 28px 20px 0; }
+    .pm-header h2 { font-size: 22px; }
+    .pm-plans { grid-template-columns: 1fr; padding: 20px; gap: 20px; }
+    .pm-plan.pm-featured { transform: none; }
+    .billing-toggle { margin: 16px 0 4px; }
+
+    /* AUTH MODAL */
+    .modal { padding: 28px 20px 24px; margin: 0 8px; }
+    .modal h2 { font-size: 20px; }
+
+    /* HOW IT WORKS */
+    .how-section { margin-bottom: 60px; padding: 0 16px; }
+    .how-header h2 { font-size: 26px; }
+    .how-grid { grid-template-columns: 1fr; gap: 16px; }
+
+    /* KNOW MORE */
+    .knowmore-section { margin-bottom: 60px; padding: 0 16px; }
+    .knowmore-card { padding: 32px 24px; }
+    .knowmore-card h2 { font-size: 22px; }
+    .knowmore-card p { font-size: 14px; }
+
+    /* FOOTER */
+    footer { padding: 24px 20px; flex-direction: column; gap: 10px; text-align: center; }
+  }
+
+  @media (max-width: 400px) {
+    nav { padding: 10px 14px; }
+    .btn-nav { padding: 6px 10px; font-size: 11px; }
+    .logo { font-size: 18px; }
+    .hero h1 { font-size: 26px; }
+    .drop-zone h3 { font-size: 15px; }
+    .pm-plans { padding: 16px; }
   }
 </style>
 </head>
@@ -272,7 +331,7 @@
   <div class="logo">Verrix<span>AI</span></div>
   <div class="nav-right">
     <!-- Security text -->
-    <span style="font-size:11px;color:var(--ink-muted);font-weight:500;white-space:nowrap;">🔒 Never stored or shared</span>
+    <span class="nav-security" style="font-size:11px;color:var(--ink-muted);font-weight:500;white-space:nowrap;">🔒 Never stored or shared</span>
     <!-- Scan counter -->
     <div class="scan-pill" id="scanPill" style="display:none">
       <div class="scan-pips" id="scanPips"></div>

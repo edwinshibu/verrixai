@@ -255,8 +255,7 @@
     nav { padding: 12px 16px; gap: 8px; }
     .nav-right { gap: 6px; }
     .nav-security { display: none !important; }
-    .scan-pill { padding: 5px 10px; font-size: 11px; }
-    .scan-pip { width: 6px; height: 6px; }
+    .scan-pill { display: none !important; }
     .btn-nav { padding: 7px 12px; font-size: 12px; }
     .user-chip { padding: 5px 10px; }
     .user-chip span { display: none; }
@@ -341,7 +340,7 @@
     <div id="navGuest" style="display:flex;gap:8px;">
       <a href="pricing.html" class="btn-nav" style="text-decoration:none;">Pricing</a>
       <button class="btn-nav" onclick="openModal('login')">Sign in</button>
-      <button class="btn-nav primary" onclick="openModal('signup')">Create account</button>
+      <button class="btn-nav primary" onclick="openModal('signup')">Create Account</button>
     </div>
     <!-- Logged-in user -->
     <div id="navUser" style="display:none;align-items:center;gap:8px;">
@@ -359,7 +358,7 @@
 <div class="modal-overlay" id="authModal">
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">×</button>
-    <h2 id="modalTitle">Create account</h2>
+    <h2 id="modalTitle">Create Account</h2>
     <p class="modal-sub" id="modalSub">Get <strong>10 free scans</strong> — no credit card needed.</p>
     <div class="modal-error" id="modalError"></div>
     <div class="modal-success" id="modalSuccess"></div>
@@ -371,7 +370,7 @@
       <label>Password</label>
       <input type="password" id="authPassword" placeholder="Minimum 6 characters" onkeydown="if(event.key==='Enter')handleAuth()" />
     </div>
-    <button class="btn-submit" id="authSubmitBtn" onclick="handleAuth()">Create account</button>
+    <button class="btn-submit" id="authSubmitBtn" onclick="handleAuth()">Create Account</button>
     <div class="modal-switch" id="modalSwitch">
       Already have an account? <a onclick="switchModal('login')">Sign in</a>
     </div>
@@ -807,9 +806,9 @@ function openModal(mode) {
   document.getElementById('authEmail').value = '';
   document.getElementById('authPassword').value = '';
   const isSignup = mode === 'signup';
-  document.getElementById('modalTitle').textContent       = isSignup ? 'Create account' : 'Welcome back';
+  document.getElementById('modalTitle').textContent       = isSignup ? 'Create Account' : 'Welcome back';
   document.getElementById('modalSub').innerHTML           = isSignup ? 'Get <strong>10 free scans</strong> — no credit card needed.' : 'Sign in to access your scans.';
-  document.getElementById('authSubmitBtn').textContent    = isSignup ? 'Create account' : 'Sign in';
+  document.getElementById('authSubmitBtn').textContent    = isSignup ? 'Create Account' : 'Sign in';
   document.getElementById('modalSwitch').innerHTML        = isSignup
     ? "Already have an account? <a onclick=\"switchModal('login')\">Sign in</a>"
     : "Don't have an account? <a onclick=\"switchModal('signup')\">Create one free</a>";
@@ -841,7 +840,7 @@ async function handleAuth() {
     }
   } catch(e) { errEl.textContent = 'Something went wrong. Please try again.'; errEl.classList.add('visible'); }
   btn.disabled = false;
-  btn.textContent = modalMode === 'signup' ? 'Create account' : 'Sign in';
+  btn.textContent = modalMode === 'signup' ? 'Create Account' : 'Sign in';
 }
 
 async function signOut() { await sb.auth.signOut(); }

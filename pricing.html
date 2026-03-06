@@ -136,11 +136,51 @@
     .plans-grid { grid-template-columns: repeat(2, 1fr); }
     .plan-card.featured { transform: none; }
     nav { padding: 14px 20px; }
+    .compare-section { overflow-x: auto; }
   }
-  @media (max-width: 560px) {
-    .plans-grid { grid-template-columns: 1fr; }
-    .compare-table { font-size: 12px; }
-    footer { flex-direction: column; gap: 10px; text-align: center; }
+  @media (max-width: 680px) {
+    /* NAV */
+    nav { padding: 12px 16px; }
+    .btn-nav { padding: 7px 12px; font-size: 12px; }
+    .btn-nav.primary { display: none; }
+
+    /* HERO */
+    .pricing-hero { padding: 110px 20px 32px; }
+    .pricing-hero h1 { font-size: 28px; }
+    .pricing-hero p { font-size: 14px; }
+
+    /* TOGGLE */
+    .toggle-wrap { margin: 20px 0 32px; flex-wrap: wrap; gap: 10px; }
+
+    /* PLANS */
+    .plans-section { margin-bottom: 48px; padding: 0 16px; }
+    .plans-grid { grid-template-columns: 1fr; gap: 16px; }
+    .plan-card { padding: 24px 20px 20px; }
+    .plan-card.featured { transform: none; }
+    .price-amount { font-size: 32px; }
+
+    /* COMPARE TABLE */
+    .compare-section { padding: 0 16px; margin-bottom: 60px; }
+    .compare-table { font-size: 11px; display: block; overflow-x: auto; white-space: nowrap; }
+    .compare-table th, .compare-table td { padding: 10px 12px; }
+
+    /* FAQ */
+    .faq-section { padding: 0 16px; margin-bottom: 60px; }
+    .faq-header h2 { font-size: 24px; }
+    .faq-q { font-size: 13px; }
+
+    /* CTA */
+    .cta-section { padding: 48px 20px; }
+    .cta-section h2 { font-size: 24px; }
+    .btn-cta { padding: 14px 24px; font-size: 14px; }
+
+    /* FOOTER */
+    footer { padding: 24px 20px; flex-direction: column; gap: 10px; text-align: center; }
+  }
+  @media (max-width: 400px) {
+    .pricing-hero h1 { font-size: 24px; }
+    .plans-grid { padding: 0; }
+    .logo { font-size: 18px; }
   }
 </style>
 </head>

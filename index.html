@@ -119,6 +119,18 @@
   .pm-footer a { font-size: 13px; color: var(--accent-light); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
   .pm-footer a:hover { color: var(--accent); }
 
+  /* BILLING TOGGLE */
+  .billing-toggle { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 20px 0 4px; }
+  .toggle-track { width: 44px; height: 24px; background: var(--border); border-radius: 999px; position: relative; cursor: pointer; transition: background 0.25s; flex-shrink: 0; }
+  .toggle-track.on { background: var(--accent); }
+  .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; background: white; border-radius: 50%; transition: transform 0.25s; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+  .toggle-track.on .toggle-thumb { transform: translateX(20px); }
+  .toggle-label { font-size: 13px; font-weight: 500; color: var(--ink-muted); transition: color 0.2s; }
+  .toggle-label.active { color: var(--ink); }
+  .save-badge { background: #EAF2EC; color: var(--accent-light); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; }
+  .price-annual { display: none; }
+  .price-orig { font-size: 11px; color: #BBBBAA; text-decoration: line-through; margin-top: 1px; }
+
   /* HERO */
   .hero { padding: 160px 48px 80px; max-width: 760px; margin: 0 auto; text-align: center; }
   .hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; background: #EAF2EC; color: var(--accent-light); font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 14px; border-radius: 999px; margin-bottom: 28px; }
@@ -297,33 +309,64 @@
       <div class="pm-eyebrow">✦ Upgrade your plan</div>
       <h2>You've used all your <em>free</em> scans</h2>
       <p>Choose a plan to keep analysing documents — cancel anytime.</p>
+      <!-- BILLING TOGGLE -->
+      <div class="billing-toggle">
+        <span class="toggle-label active" id="pm-label-monthly">Monthly</span>
+        <div class="toggle-track" id="pmToggle" onclick="togglePmBilling()">
+          <div class="toggle-thumb"></div>
+        </div>
+        <span class="toggle-label" id="pm-label-annual">Annual</span>
+        <span class="save-badge">Save 20%</span>
+      </div>
     </div>
     <div class="pm-plans">
+      <!-- FREE -->
       <div class="pm-plan">
         <div class="pm-plan-name">Free</div>
-        <div class="pm-price"><div class="pm-price-val">$0</div><div class="pm-price-sub">No credit card</div></div>
-        <div class="pm-scans">3 guest · 10 with account</div>
+        <div class="pm-price">
+          <div class="pm-price-val">$0</div>
+          <div class="pm-price-sub">No credit card</div>
+        </div>
+        <div class="pm-scans">10 scans / account</div>
         <ul class="pm-feats"><li>Full AI analysis</li><li>Risk flagging</li><li>Key points</li><li>Plain-English summary</li></ul>
         <button class="btn-pm outline" onclick="closePricingModal()">Current plan</button>
       </div>
+      <!-- PRO -->
       <div class="pm-plan pm-featured">
         <div class="pm-featured-tag">Most Popular</div>
         <div class="pm-plan-name">Pro</div>
-        <div class="pm-price"><div class="pm-price-val"><span class="cur">$</span>9</div><div class="pm-price-sub">per month</div></div>
+        <div class="pm-price">
+          <div class="pm-price-val pm-monthly-price"><span class="cur">$</span>9</div>
+          <div class="pm-price-val pm-annual-price" style="display:none"><span class="cur">$</span>86</div>
+          <div class="pm-price-sub pm-monthly-sub">per month</div>
+          <div class="pm-price-sub pm-annual-sub" style="display:none">per year <span style="color:var(--accent-light);font-weight:600;">($7/mo)</span></div>
+          <div class="price-orig pm-annual-orig" style="display:none;">was $108/yr</div>
+        </div>
         <div class="pm-scans">300 scans / mo</div>
         <ul class="pm-feats"><li>Everything in Free</li><li>300 scans per month</li><li>Priority processing</li><li>Email support</li></ul>
         <button class="btn-pm solid" onclick="alert('Coming soon! We\'ll notify you when Pro launches.')">Coming soon</button>
       </div>
+      <!-- PRO 2 -->
       <div class="pm-plan">
         <div class="pm-plan-name">Pro 2</div>
-        <div class="pm-price"><div class="pm-price-val"><span class="cur">$</span>15</div><div class="pm-price-sub">per month</div></div>
+        <div class="pm-price">
+          <div class="pm-price-val pm-monthly-price"><span class="cur">$</span>15</div>
+          <div class="pm-price-val pm-annual-price" style="display:none"><span class="cur">$</span>144</div>
+          <div class="pm-price-sub pm-monthly-sub">per month</div>
+          <div class="pm-price-sub pm-annual-sub" style="display:none">per year <span style="color:var(--accent-light);font-weight:600;">($12/mo)</span></div>
+          <div class="price-orig pm-annual-orig" style="display:none;">was $180/yr</div>
+        </div>
         <div class="pm-scans">700 scans / mo</div>
         <ul class="pm-feats"><li>Everything in Pro</li><li>700 scans per month</li><li>Batch document upload</li><li>Priority support</li></ul>
         <button class="btn-pm gold-btn" onclick="alert('Coming soon! We\'ll notify you when Pro 2 launches.')">Coming soon</button>
       </div>
+      <!-- ENTERPRISE -->
       <div class="pm-plan">
         <div class="pm-plan-name">Enterprise</div>
-        <div class="pm-price"><div class="pm-price-val" style="font-size:20px;padding-top:8px;">Custom</div><div class="pm-price-sub">Tailored pricing</div></div>
+        <div class="pm-price">
+          <div class="pm-price-val" style="font-size:20px;padding-top:8px;">Custom</div>
+          <div class="pm-price-sub">Tailored pricing</div>
+        </div>
         <div class="pm-scans">Unlimited scans</div>
         <ul class="pm-feats"><li>Everything in Pro 2</li><li>Unlimited scans</li><li>Custom integrations</li><li>Dedicated support</li></ul>
         <button class="btn-pm dark" onclick="window.location.href='mailto:hello@verrixai.com?subject=Enterprise Enquiry'">Contact us</button>
@@ -597,6 +640,20 @@ function closePricingModal() {
 document.getElementById('pricingModal').addEventListener('click', e => {
   if (e.target.id === 'pricingModal') closePricingModal();
 });
+
+let pmAnnual = false;
+function togglePmBilling() {
+  pmAnnual = !pmAnnual;
+  const track = document.getElementById('pmToggle');
+  track.classList.toggle('on', pmAnnual);
+  document.getElementById('pm-label-monthly').classList.toggle('active', !pmAnnual);
+  document.getElementById('pm-label-annual').classList.toggle('active', pmAnnual);
+  document.querySelectorAll('.pm-monthly-price').forEach(el => el.style.display = pmAnnual ? 'none' : 'block');
+  document.querySelectorAll('.pm-annual-price').forEach(el => el.style.display = pmAnnual ? 'block' : 'none');
+  document.querySelectorAll('.pm-monthly-sub').forEach(el => el.style.display = pmAnnual ? 'none' : 'block');
+  document.querySelectorAll('.pm-annual-sub').forEach(el => el.style.display = pmAnnual ? 'block' : 'none');
+  document.querySelectorAll('.pm-annual-orig').forEach(el => el.style.display = pmAnnual ? 'block' : 'none');
+}
 
 // ─── AUTH MODAL ──────────────────────────────────────────────
 function openModal(mode) {

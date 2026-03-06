@@ -1,14 +1,47 @@
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // CORS: restrict to your domain only
+  const allowedOrigins = ['https://verrixai.com', 'https://www.verrixai.com'];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Vary', 'Origin');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
+  // Rate limiting: max 5 submissions per IP per hour
+  const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket?.remoteAddress || 'unknown';
+  const now = Date.now();
+  if (!global._kmRateLimit) global._kmRateLimit = {};
+  if (!global._kmRateLimit[ip]) global._kmRateLimit[ip] = [];
+  global._kmRateLimit[ip] = global._kmRateLimit[ip].filter(t => now - t < 3600000);
+  if (global._kmRateLimit[ip].length >= 5) {
+    return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+  }
+  global._kmRateLimit[ip].push(now);
+
   const { business_name, email } = req.body;
+
+  // Validate required fields
   if (!business_name || !email) {
     return res.status(400).json({ error: 'Business name and email are required.' });
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: 'Please enter a valid email address.' });
+  }
+
+  // Sanitise inputs — strip HTML tags, limit length
+  const safeName = business_name.replace(/[<>'"&]/g, '').slice(0, 100).trim();
+  const safeEmail = email.slice(0, 254).trim().toLowerCase();
+
+  if (!safeName) {
+    return res.status(400).json({ error: 'Please enter a valid business name.' });
   }
 
   const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -24,7 +57,7 @@ module.exports = async function handler(req, res) {
       'Authorization': `Bearer ${SUPABASE_KEY}`,
       'Prefer': 'return=minimal'
     },
-    body: JSON.stringify({ business_name, email })
+    body: JSON.stringify({ business_name: safeName, email: safeEmail })
   });
 
   if (!dbRes.ok && dbRes.status !== 409) {
@@ -49,7 +82,7 @@ module.exports = async function handler(req, res) {
         </td></tr>
 
         <tr><td style="background:#1A3A2A;border-radius:16px 16px 0 0;padding:48px 48px 40px;text-align:center;">
-          <p style="font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#B8963E;margin:0 0 16px;">For ${business_name}</p>
+          <p style="font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#B8963E;margin:0 0 16px;">For ${safeName}</p>
           <p style="font-family:Georgia,serif;font-size:30px;font-weight:500;color:#FFFFFF;margin:0 0 20px;line-height:1.25;letter-spacing:-0.3px;">Most businesses sign agreements<br/>they have never truly read.</p>
           <p style="font-size:15px;color:rgba(255,255,255,0.65);margin:0;line-height:1.75;font-weight:300;">Buried in every contract, terms and conditions, or supplier agreement are clauses that can cost your business — financially, legally, and operationally. Most of the time, nobody catches them until it is too late.</p>
         </td></tr>
@@ -213,8 +246,8 @@ module.exports = async function handler(req, res) {
     },
     body: JSON.stringify({
       from: 'VerrixAI <onboarding@resend.dev>',
-      to: email,
-      subject: `Here is everything about VerrixAI, ${business_name}`,
+      to: safeEmail,
+      subject: `Here is everything about VerrixAI, ${safeName}`,
       html: emailHtml
     })
   });

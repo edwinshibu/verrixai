@@ -254,6 +254,7 @@
   .pw-req.met .pw-dot { color:#2E7D52; }
   .footer-logo { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 500; color: var(--ink); }
   .footer-logo span { color: var(--gold); }
+  footer { border-top: 1px solid var(--border); padding: 28px 48px; display: flex; align-items: center; justify-content: center; }
 
   @media (max-width: 680px) {
     /* NAV */
@@ -315,7 +316,9 @@
     .knowmore-card p { font-size: 14px; }
 
     /* FOOTER */
-    footer { padding: 24px 20px; flex-direction: column; gap: 10px; text-align: center; }
+    footer { padding: 24px 20px; }
+    footer > div { flex-direction: column; align-items: center !important; text-align: center; gap: 16px; }
+    footer > div > div { text-align: center !important; }
   }
 
   @media (max-width: 400px) {
@@ -623,14 +626,16 @@
 </div>
 
 <footer>
-  <div class="footer-logo">Verrix<span>AI</span></div>
-  <div style="display:flex;gap:20px;">
-    <a href="/privacy.html" style="color:var(--ink-muted);text-decoration:none;font-size:12px;">Privacy Policy</a>
-    <a href="/terms.html" style="color:var(--ink-muted);text-decoration:none;font-size:12px;">Terms of Service</a>
-  </div>
-  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;text-align:right;">
-    <span>© 2026 VerrixAI. All rights reserved.</span>
-    <span>Not legal advice. Always consult a qualified solicitor for binding decisions.</span>
+  <div style="max-width:1100px;margin:0 auto;width:100%;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+    <div class="footer-logo">Verrix<span>AI</span></div>
+    <div style="display:flex;gap:24px;align-items:center;">
+      <a href="/privacy.html" style="color:var(--ink-muted);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-muted)'">Privacy Policy</a>
+      <a href="/terms.html" style="color:var(--ink-muted);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-muted)'">Terms of Service</a>
+    </div>
+    <div style="font-size:12px;color:var(--ink-muted);text-align:right;line-height:1.6;">
+      <div>© 2026 VerrixAI. All rights reserved.</div>
+      <div>Not legal advice. Consult a qualified solicitor for binding decisions.</div>
+    </div>
   </div>
 </footer>
 

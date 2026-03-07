@@ -460,7 +460,7 @@
 <section class="hero">
   <div class="hero-eyebrow"><span>✦</span> AI-Powered Document Intelligence</div>
   <h1>Understand every agreement<br>before you <em>sign</em></h1>
-  <p>Upload or paste any legal document. VerrixAI analyses every clause, identifies risk, and delivers a structured breakdown in seconds.</p>
+  <p id="heroText">Upload or paste any legal document. VerrixAI analyses every clause, identifies risk, and delivers a structured breakdown in seconds.</p>
   <div class="trust-strip">
     <div class="trust-item">🔒 Encrypted in transit (HTTPS)</div>
   </div>
@@ -1036,7 +1036,7 @@ function resetTool() {
   document.getElementById('pasteToggleRow').style.display = 'block';
   document.getElementById('pasteDivider').style.display   = 'none';
   ['step1','step2','step3','step4','step5'].forEach(s => document.getElementById(s).classList.remove('active','done'));
-  document.getElementById('mainCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('heroText').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 </script>
 </body>

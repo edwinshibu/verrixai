@@ -368,7 +368,7 @@
     </div>
     <div class="form-field" id="passwordField">
       <label>Password</label>
-      <input type="password" id="authPassword" placeholder="Minimum 6 characters" onkeydown="if(event.key==='Enter')handleAuth()" />
+      <input type="password" id="authPassword" placeholder="Min 8 chars, uppercase, number & symbol" onkeydown="if(event.key==='Enter')handleAuth()" />
     </div>
     <button class="btn-submit" id="authSubmitBtn" onclick="handleAuth()">Create Account</button>
     <div class="modal-switch" id="modalSwitch">
@@ -829,6 +829,26 @@ async function handleAuth() {
   const okEl     = document.getElementById('modalSuccess');
   errEl.classList.remove('visible'); okEl.classList.remove('visible');
   if (!email || !password) { errEl.textContent = 'Please fill in all fields.'; errEl.classList.add('visible'); return; }
+
+  // Password validation on signup only
+  if (modalMode === 'signup') {
+    if (password.length < 8) {
+      errEl.textContent = 'Password must be at least 8 characters.'; errEl.classList.add('visible'); return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      errEl.textContent = 'Password must include at least one uppercase letter.'; errEl.classList.add('visible'); return;
+    }
+    if (!/[a-z]/.test(password)) {
+      errEl.textContent = 'Password must include at least one lowercase letter.'; errEl.classList.add('visible'); return;
+    }
+    if (!/[0-9]/.test(password)) {
+      errEl.textContent = 'Password must include at least one number.'; errEl.classList.add('visible'); return;
+    }
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      errEl.textContent = 'Password must include at least one symbol (e.g. !@#$%).'; errEl.classList.add('visible'); return;
+    }
+  }
+
   btn.disabled = true;
   btn.textContent = modalMode === 'signup' ? 'Creating account…' : 'Signing in…';
   try {

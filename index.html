@@ -1083,25 +1083,25 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
   let result = null;
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout
-    const res  = await fetch('/api/analyse', {
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s client timeout
+    const res = await fetch('/api/analyse', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2500, messages: [{ role: 'user', content: userContent }] }),
       signal: controller.signal
     });
     clearTimeout(timeoutId);
-    const data = await res.json();
-    const raw  = data.content?.map(b => b.text || '').join('').trim();
-    // Try to extract JSON even if there's surrounding text
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      result = JSON.parse(jsonMatch[0]);
+    if (!res.ok) {
+      // Server returned an error (including 504 timeout)
+      result = '__timeout__';
+    } else {
+      const data = await res.json();
+      const raw  = data.content?.map(b => b.text || '').join('').trim();
+      const jsonMatch = raw?.match(/\{[\s\S]*\}/);
+      if (jsonMatch) result = JSON.parse(jsonMatch[0]);
     }
   } catch(e) {
     console.error(e);
-    if (e.name === 'AbortError') {
-      result = '__timeout__';
-    }
+    result = '__timeout__'; // AbortError or network failure
   }
 
   await stepsPromise;

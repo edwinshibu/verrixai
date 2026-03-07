@@ -698,11 +698,22 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ─── STATE ───────────────────────────────────────────────────
+function setCookie(name, value, days) {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${value};expires=${expires};path=/;SameSite=Lax`;
+}
+function getCookie(name) {
+  return document.cookie.split('; ').reduce((acc, c) => {
+    const [k, v] = c.split('=');
+    return k === name ? v : acc;
+  }, null);
+}
+
 const GUEST_LIMIT = 3;
 const USER_LIMIT  = 10;
 let currentUser   = null;
 let userProfile   = null;
-let guestUsed     = parseInt(localStorage.getItem('verrix_guest') || '0');
+let guestUsed     = parseInt(getCookie('vrx_guest') || '0');
 let loadedFile    = null;
 let pasteMode     = false;
 let modalMode     = 'signup';
@@ -782,7 +793,7 @@ async function recordScan() {
     userProfile.scans_used = next;
   } else {
     guestUsed++;
-    localStorage.setItem('verrix_guest', guestUsed);
+    setCookie('vrx_guest', guestUsed, 30);
   }
   renderScanPill();
 }

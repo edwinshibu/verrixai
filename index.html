@@ -730,8 +730,8 @@ async function onSignIn(user) {
   if (!profile) {
     await sb.from('profiles').upsert({ id: user.id, email: user.email, scans_used: 0, scans_limit: USER_LIMIT });
     ({ data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single());
-  } else if (!profile.scans_limit || profile.scans_limit < USER_LIMIT) {
-    // Fix existing profiles with missing or incorrect scans_limit
+  } else if (!profile.scans_limit) {
+    // Only fix profiles where scans_limit was never set (null/0) — never touch valid profiles
     await sb.from('profiles').update({ scans_limit: USER_LIMIT }).eq('id', user.id);
     profile.scans_limit = USER_LIMIT;
   }

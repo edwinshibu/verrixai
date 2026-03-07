@@ -82,6 +82,9 @@ module.exports = async function handler(req, res) {
 
   try {
     // Build request ourselves — never forward client body directly
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 22000); // 22s — under Vercel's 30s limit
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -94,12 +97,17 @@ module.exports = async function handler(req, res) {
         max_tokens: MAX_TOKENS,
         messages:   [{ role: 'user', content: userContent }]
       }),
+      signal: controller.signal
     });
 
+    clearTimeout(timeoutId);
     const data = await response.json();
     return res.status(response.status).json(data);
   } catch (error) {
     console.error('Proxy error:', error);
+    if (error.name === 'AbortError') {
+      return res.status(504).json({ error: 'Analysis timed out. Please try again.' });
+    }
     return res.status(500).json({ error: 'Failed to reach Anthropic API' });
   }
 };

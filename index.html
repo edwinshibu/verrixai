@@ -329,7 +329,7 @@
 
 <!-- NAV -->
 <nav>
-  <div class="logo">Verrix<span>AI</span></div>
+  <div class="logo" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="cursor:pointer;">Verrix<span>AI</span></div>
   <div class="nav-right">
     <!-- Security text -->
     <span class="nav-security" style="font-size:11px;color:var(--ink-muted);font-weight:500;white-space:nowrap;">🔒 Never stored or shared</span>
@@ -467,7 +467,7 @@
 </section>
 
 <!-- MAIN TOOL CARD -->
-<div class="main-card">
+<div class="main-card" id="mainCard">
   <div class="card">
     <div class="card-header">
       <div class="card-title">Analyse a Document</div>
@@ -1036,6 +1036,7 @@ function resetTool() {
   document.getElementById('pasteToggleRow').style.display = 'block';
   document.getElementById('pasteDivider').style.display   = 'none';
   ['step1','step2','step3','step4','step5'].forEach(s => document.getElementById(s).classList.remove('active','done'));
+  document.getElementById('mainCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 </script>
 </body>

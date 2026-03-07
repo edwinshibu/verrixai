@@ -1,7 +1,7 @@
 const ALLOWED_ORIGIN = 'https://verrixai.com';
 const MAX_TEXT_LENGTH = 50000;
 const ALLOWED_MODEL   = 'claude-sonnet-4-20250514';
-const MAX_TOKENS      = 1500;
+const MAX_TOKENS      = 2500;
 
 // Simple in-memory rate limiter (per IP, resets on cold start)
 const rateLimitMap = new Map();

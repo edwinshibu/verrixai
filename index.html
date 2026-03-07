@@ -947,10 +947,10 @@ ${sections.join('\n')}`;
         { type: 'text', text: instruction }
       ];
     } else {
-      userContent = instruction + '\n\nDOCUMENT:\n"""\n' + atob(loadedFile.base64).slice(0, 12000) + '\n"""';
+      userContent = instruction + '\n\nDOCUMENT:\n"""\n' + atob(loadedFile.base64).slice(0, 50000) + '\n"""';
     }
   } else {
-    userContent = instruction + '\n\nDOCUMENT:\n"""\n' + pasteText.slice(0, 12000) + '\n"""';
+    userContent = instruction + '\n\nDOCUMENT:\n"""\n' + pasteText.slice(0, 50000) + '\n"""';
   }
 
   let result = null;

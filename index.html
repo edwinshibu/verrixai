@@ -252,6 +252,8 @@
   .pw-req.met { color:#2E7D52; }
   .pw-dot { font-size:10px;flex-shrink:0;transition:all 0.2s; }
   .pw-req.met .pw-dot { color:#2E7D52; }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+  @keyframes scaleUp { from { transform:scale(0.85);opacity:0; } to { transform:scale(1);opacity:1; } }
   .footer-logo { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 500; color: var(--ink); }
   .footer-logo span { color: var(--gold); }
   footer { border-top: 1px solid var(--border); padding: 28px 48px; display: flex; align-items: center; justify-content: center; }
@@ -533,6 +535,9 @@
     <!-- Upgrade wall -->
     <div id="upgradeWall" style="display:none;">
       <div class="upgrade-wall">
+        <div id="zeroScansBanner" style="display:none;margin-bottom:16px;padding:10px 14px;background:#FEF9EE;border:1px solid #E8D9B0;border-radius:8px;font-size:13px;color:#7A5C1E;text-align:center;">
+          You've used all your free scans. Upgrade to keep going.
+        </div>
         <div class="upgrade-icon">🔒</div>
         <h3 id="upgradeTitle">You've used your free scan</h3>
         <p id="upgradeMsg">Create a free account to get 10 scans instantly — no credit card needed.</p>
@@ -738,17 +743,58 @@ let modalMode     = 'signup';
 async function onSignIn(user) {
   currentUser = user;
   let { data: profile, error } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  const isNewUser = !profile;
   if (!profile) {
     await sb.from('profiles').upsert({ id: user.id, email: user.email, scans_used: 0, scans_limit: USER_LIMIT });
     ({ data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single());
   } else if (!profile.scans_limit) {
-    // Only fix profiles where scans_limit was never set (null/0) — never touch valid profiles
     await sb.from('profiles').update({ scans_limit: USER_LIMIT }).eq('id', user.id);
     profile.scans_limit = USER_LIMIT;
   }
   userProfile = profile;
   renderNavUser(user);
   renderScanPill();
+
+  // Only do post-login transition if user was on the upgrade wall
+  const wasOnUpgradeWall = document.getElementById('upgradeWall').style.display !== 'none';
+  if (!wasOnUpgradeWall) return;
+
+  const remaining = (profile.scans_limit || USER_LIMIT) - (profile.scans_used || 0);
+
+  if (remaining <= 0) {
+    // Zero scans — show upgrade wall with banner
+    document.getElementById('upgradeWall').style.display = 'block';
+    document.getElementById('zeroScansBanner').style.display = 'block';
+    document.getElementById('upgradeTitle').textContent = 'No scans remaining';
+    document.getElementById('upgradeMsg').textContent   = 'Upgrade to a paid plan to continue analysing documents.';
+    document.getElementById('upgradeActions').innerHTML = `<button class="btn-upgrade primary" onclick="openPricingModal()">View plans</button>`;
+  } else {
+    // Has scans — show success moment then reset to input
+    closeModal();
+    document.getElementById('upgradeWall').style.display = 'none';
+    showSuccessMoment(isNewUser ? `You're in — ${remaining} scans unlocked` : `You're in`);
+  }
+}
+
+function showSuccessMoment(message) {
+  // Create and inject a temporary success overlay
+  const el = document.createElement('div');
+  el.id = 'successMoment';
+  el.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(247,246,242,0.92);backdrop-filter:blur(4px);z-index:9999;animation:fadeIn 0.3s ease;';
+  el.innerHTML = `
+    <div style="text-align:center;animation:scaleUp 0.3s ease;">
+      <div style="font-size:40px;margin-bottom:16px;">✓</div>
+      <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:500;color:#1A3A2A;margin-bottom:8px;">${message}</div>
+    </div>`;
+  document.body.appendChild(el);
+  setTimeout(() => {
+    el.style.transition = 'opacity 0.4s ease';
+    el.style.opacity = '0';
+    setTimeout(() => {
+      el.remove();
+      document.getElementById('inputState').style.display = '';
+    }, 400);
+  }, 1800);
 }
 
 // ─── NAV RENDER ──────────────────────────────────────────────

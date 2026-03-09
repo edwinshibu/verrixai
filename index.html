@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -989,7 +990,7 @@ document.getElementById('fileInput').addEventListener('change', e => { if (e.tar
 function handleFile(file) {
   const reader = new FileReader();
   reader.onload = ev => {
-    loadedFile = { base64: ev.target.result.split(',')[1], mediaType: file.type || 'application/pdf', name: file.name };
+    loadedFile = { base64: ev.target.result.split(',')[1], mediaType: file.type || 'application/pdf', name: file.name, _rawFile: file };
     document.getElementById('dropLabel').textContent = `✓ ${file.name}`;
     document.getElementById('dropSub').textContent   = 'File ready for analysis';
     dropZone.style.borderColor = 'var(--gold)'; dropZone.style.background = '#FDFBF5'; dropZone.style.pointerEvents = 'none';
@@ -1076,17 +1077,33 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
         { type: 'text', text: instruction }
       ];
     } else if (isDocx) {
-      // DOCX — extract text server-side first
+      // DOCX — extract text client-side using JSZip (no server needed, no size limits)
       try {
-        const extractRes = await fetch('/api/extract-docx', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ base64: loadedFile.base64 })
+        const arrayBuffer = await new Promise((resolve, reject) => {
+          const r = new FileReader();
+          r.onload = e => resolve(e.target.result);
+          r.onerror = reject;
+          r.readAsArrayBuffer(loadedFile._rawFile);
         });
-        const extractData = await extractRes.json();
 
-        if (extractData.imageHeavy) {
-          // Show warning and stop — don't attempt analysis
+        const zip = await JSZip.loadAsync(arrayBuffer);
+        const docXml = zip.file('word/document.xml');
+        if (!docXml) throw new Error('Not a valid DOCX file');
+
+        const xmlStr = await docXml.async('string');
+        // Strip XML tags, decode basic entities, collapse whitespace
+        const text = xmlStr
+          .replace(/<w:br[^>]*\/>/gi, '\n')
+          .replace(/<w:p[ >][^>]*>/gi, '\n')
+          .replace(/<[^>]+>/g, '')
+          .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#x[0-9A-Fa-f]+;/g, '')
+          .replace(/[ \t]+/g, ' ')
+          .replace(/\n{3,}/g, '\n\n')
+          .trim();
+
+        const MIN_TEXT = 200;
+        if (text.length < MIN_TEXT) {
+          // Image-heavy — show warning, stop analysis
           await stepsPromise;
           document.getElementById('loadingState').classList.remove('visible');
           document.getElementById('resultsArea').classList.add('visible');
@@ -1099,7 +1116,7 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
               <span style="font-size:16px;flex-shrink:0;">🖼️</span>
               <div>
                 <strong style="font-size:13px;color:#1A1A18;display:block;margin-bottom:4px;">Document contains mostly images</strong>
-                <span style="font-size:12px;color:#6B6B62;line-height:1.6;">${extractData.message}</span>
+                <span style="font-size:12px;color:#6B6B62;line-height:1.6;">This document appears to contain mostly images and very little text. For best results, please export it as a PDF — VerrixAI can read images and diagrams inside PDFs.</span>
               </div>
             </div>`;
           ['risks','keypoints','simplify'].forEach(s => {
@@ -1108,8 +1125,7 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
           return;
         }
 
-        if (extractData.error) throw new Error(extractData.error);
-        userContent = instruction + '\n\nDOCUMENT:\n"""\n' + extractData.text.slice(0, 50000) + '\n"""';
+        userContent = instruction + '\n\nDOCUMENT:\n"""\n' + text.slice(0, 50000) + '\n"""';
       } catch(e) {
         console.error('DOCX extraction failed:', e);
         await stepsPromise;

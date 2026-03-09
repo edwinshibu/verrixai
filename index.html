@@ -1068,12 +1068,58 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
 
   let userContent;
   if (loadedFile) {
-    if (loadedFile.mediaType === 'application/pdf' || loadedFile.name.endsWith('.pdf')) {
+    const isDocx = loadedFile.name.toLowerCase().endsWith('.docx');
+    if (loadedFile.mediaType === 'application/pdf' || loadedFile.name.toLowerCase().endsWith('.pdf')) {
+      // PDF — send natively, Claude reads it directly
       userContent = [
         { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: loadedFile.base64 } },
         { type: 'text', text: instruction }
       ];
+    } else if (isDocx) {
+      // DOCX — extract text server-side first
+      try {
+        const extractRes = await fetch('/api/extract-docx', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ base64: loadedFile.base64 })
+        });
+        const extractData = await extractRes.json();
+
+        if (extractData.imageHeavy) {
+          // Show warning and stop — don't attempt analysis
+          await stepsPromise;
+          document.getElementById('loadingState').classList.remove('visible');
+          document.getElementById('resultsArea').classList.add('visible');
+          document.getElementById('nonLegalBanner').style.display = 'none';
+          ['summary','risks','keypoints','simplify'].forEach(s => {
+            document.getElementById(`sec-${s}`).style.display = opts.includes(s) ? '' : 'none';
+          });
+          document.getElementById('body-summary').innerHTML = `
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:#FEF9EE;border:1px solid #E8D9B0;border-radius:8px;">
+              <span style="font-size:16px;flex-shrink:0;">🖼️</span>
+              <div>
+                <strong style="font-size:13px;color:#1A1A18;display:block;margin-bottom:4px;">Document contains mostly images</strong>
+                <span style="font-size:12px;color:#6B6B62;line-height:1.6;">${extractData.message}</span>
+              </div>
+            </div>`;
+          ['risks','keypoints','simplify'].forEach(s => {
+            document.getElementById(`body-${s}`).innerHTML = '<p style="color:var(--ink-muted);font-size:13px;font-style:italic;">No analysis available.</p>';
+          });
+          return;
+        }
+
+        if (extractData.error) throw new Error(extractData.error);
+        userContent = instruction + '\n\nDOCUMENT:\n"""\n' + extractData.text.slice(0, 50000) + '\n"""';
+      } catch(e) {
+        console.error('DOCX extraction failed:', e);
+        await stepsPromise;
+        document.getElementById('loadingState').classList.remove('visible');
+        renderFallback();
+        document.getElementById('resultsArea').classList.add('visible');
+        return;
+      }
     } else {
+      // TXT or other text file — decode base64 and send as text
       userContent = instruction + '\n\nDOCUMENT:\n"""\n' + atob(loadedFile.base64).slice(0, 50000) + '\n"""';
     }
   } else {

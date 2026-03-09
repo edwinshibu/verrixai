@@ -1,119 +1,1317 @@
-const ALLOWED_ORIGIN = 'https://verrixai.com';
-const MAX_TEXT_LENGTH = 60000;
-const ALLOWED_MODEL   = 'claude-sonnet-4-20250514';
-const MAX_TOKENS      = 4000;
-
-// Simple in-memory rate limiter (per IP, resets on cold start)
-const rateLimitMap = new Map();
-const RATE_LIMIT  = 10;         // max requests
-const RATE_WINDOW = 60 * 1000;  // per 60 seconds
-
-function isRateLimited(ip) {
-  const now   = Date.now();
-  const entry = rateLimitMap.get(ip) || { count: 0, start: now };
-  if (now - entry.start > RATE_WINDOW) {
-    rateLimitMap.set(ip, { count: 1, start: now });
-    return false;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VerrixAI — Understand Every Agreement</title>
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAAAHg0lEQVR42sWXS2xV1xWGv33OuX5jX2PD5WEggElChQNO2yhBAbWRVZBcMagi5HZUVanaeaV2kEE76aRVJ61UKWo7qjrIoDRQIaVV0qSKilUnDg3YEHCCwXZxMGDwNfdxzn78HVzfCwZHrZpBlrSkfR57rX/vvfZa/zKAAIwxDQXw3hPHMUePHmV4eJiDBw+ybds2urq6iOOYtcR7z9LSErOzs5w5c4bTp0/z+uuvN2wBSGpoXVTXOI4b45GREY2NjemzytjYmEZGRtb0AQhjjAAlSSJAhUJBJ06caBjw3ss5J++9QggKIXyqs/r3B+fU5cSJEyoUCqt8GWNEFEWNF/39/ZqYmJCkRwz8v1IHI0kTExPq7+9vgIiiSMRxrCiKVCgUNDk5KUlK01TeBwUfGqsKQQ+MP03r/9zfLR+CvA9K01SSNDk5qUKhoCiKaseRJImMMTp58qQkKcsyOVdVmpWU2lSZy5TZqjKbytlMIUsVbFXOp0q9lbNewZcVvJVzqVIb5IPkXCrrrHyayaZVWZcpyzJJ0smTJ2WMqe88On78uCTJWlvbfl9R6u4ptVVlzipzmVKfqqpMNlgFbxWsU7CpnJZV9U42VBXCshTuanH2XZWK07Ihk80y2aws69JVPo4fP14LwubmZo2PjzeCR5JcqCrzZVmbyVov54KCk0IWlHqnNFQlOUmZFO7V5kgKaVkfjf1al//2Q92e/ou8MpWdVeYq8isA6sE8Pj6u5uZmJUNDQwwODgIQRdHKzTQQDGAweIzAm4woF9NECxCzfPtDLp17jeKteR5/6ihbdh1iYf4fLM5foKctobh4na4doMiD92Dihg9JDA4OMjQ0RHLs2DGMMauSBYrAiMiIKMrVJpIjKy1y699/Z/riOywuXGfH7r3s3neA8+f+THlphurybbrWdVAsFXli5wCxydGkKsYIkTQSTwiBOI45duwY5ty5cxoYGFgFwCpgvEhiuD33Ptcu/YsbN2cpL35ES3Mrff0DPLZviK7efTW8IWXmwh+4Pf0B3V1tLKeifePTtLZsZNOu/Zi4mRDaiBNWZdnz58+T9PX1PbT9AAEjgcnxzzd+T+nmZfYeOs6GZ4fo3vAETR2FB9JvIFLGJ9c+ZmtvnlsLC/QNfI2FhQWujr9K18af0d69A/BAvMpXX18fSWdnJ5IaNQAgQWA8kLBMwoEXvklL7x6uXhlnfmEOGzztHZ1s2foE+fV7mJt8g5asijftKOlhqdLKnie/yuLcOaxqFoMpE9NGve5IorOzkySO41WFoVYc4pVQNLQ2Ga6cHSW/07Bj99N420KSE1V3hw/PjZLvnuLe3BkeK/Rybf4KWw6MkJbvMX/pfUJWoiXXBAEi82jxiuOYqI5oNQBQ7RPrOzpZnLlITlWMaWJ5cYrS8hTGZezbfxhTmqZVKYEKnlba1u/EqMrS3SlclpHLtYPAKFnlo+4zWqusRliMPADt3dupJk1YYzFxhVyulRByZNZTKd1h+ebH9OR7uXFrlvzmAYK1OJrJFDCt3URN6/CxJRjD2r7WEJmIkFQAyBf24ppAlQCKUa6b1DlacjkWpt/FLt/Ec4d7ro2O3sdJvSMyHpcFWtb3YaIcIWRE6H8HYEICtAKwectu8j3b8NZjfDtLlXlcgMjlmb74Fj15mJm9QWvXXu6VF3DVMolJ8D5hw8b+FRLShFFuTQBJnaU8HAeGGC/R0tFJ76adlIu3sZUi27fthqiZq++dJty9jcvvYqlyl337XqDqoClOmJkdp6VjHfkN21aMPbrOus/Ee/9QDgBwiIBMICbH3WLGps4epibfoRKJPY89x9TEm2zPG65ev8TGPYeZv3GBGzeuEiqGjT3NFK3H2VwtpI0FxUDuEQoXFYvFxr28fwsEiggChYRdu58lDRnOlNi+oZ+5y2+zfGeaUrlKySZ0tj7OpbNvYSy0r2ulklo6OreyrmsbjrBy0npk9cVikWhubq6Rn+//EEEwJOQIwTP43DBfevYIUx+cJ3U3uTDxV1qiiOvz8+Q37SeNeth/+Ns8M/QSSzNTpJWE/c+P0Na5HiMRhahm84FaADA3N0c0Ojr6aBCaejoGEwnnMtYVnuLA88Oc+t2P8Xc/oZK2UrHtfOH5bzDwlWG27/wyb//p51ybv8Lg4RfxPtRWKkAB1riFo6OjRKdOnULSQ3FgViGNoginlINHvsPXv/VTXMVSunON/i8eYevOQ2Tlm7z2yktcvzTGi9/7Fc3rNoMsWrWz9xHUS/KpU6eIZ2ZmfjI8PMzmzZsbZ1ObpFWxERuDXELfk8/QVdjMxQ/Pku/qwgTLH3/zA+L2Jl78/it0dPUhl2Gi+KHbZYiiiBACxhjOnj3Lyy+/zNqUzGXKsqqsTe+rc/LOytmSJOnG/GW9+svv6hc/OqT33vytJC+nVNZW5K2vccKVuVlWkXPZ2pRsLVJqbQ1AlqW1sU1rz76sSqgoS90K6U5VLS3WDLuKfNWr6pxSV5WzdTvpymLs2qT002m5X9WMPEy9vXfyK02Kc24VFX9Qvf8vtPyzNybhszUmn3tr9nk3p+bzbs//AxuB8pETa08HAAAAAElFTkSuQmCC">
+<meta name="theme-color" content="#1A3A2A">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #F7F6F2; --surface: #FFFFFF; --ink: #1A1A18; --ink-muted: #6B6B62;
+    --accent: #1A3A2A; --accent-light: #2E5C42; --gold: #B8963E;
+    --border: #E2E0D8; --risk-high: #C0392B; --risk-med: #E67E22; --risk-low: #27AE60;
+    --radius: 12px; --shadow: 0 4px 24px rgba(26,26,24,0.08); --shadow-lg: 0 12px 48px rgba(26,26,24,0.12);
   }
-  if (entry.count >= RATE_LIMIT) return true;
-  entry.count++;
-  rateLimitMap.set(ip, entry);
-  return false;
-}
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
 
-module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  /* NAV */
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 16px 48px; background: rgba(247,246,242,0.92); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); gap: 16px; }
+  .logo { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; letter-spacing: -0.3px; color: var(--ink); flex-shrink: 0; }
+  .logo span { color: var(--gold); }
+  .nav-center { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; color: var(--ink-muted); }
+  .nav-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST')   return res.status(405).json({ error: 'Method not allowed' });
+  .scan-pill { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); font-size: 12px; font-weight: 500; color: var(--ink-muted); }
+  .scan-pips { display: flex; gap: 3px; align-items: center; }
+  .scan-pip { width: 7px; height: 7px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
+  .scan-pip.avail { background: var(--gold); }
 
-  // Rate limiting by IP
-  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
-    || req.socket?.remoteAddress
-    || 'unknown';
-  if (isRateLimited(ip)) {
-    return res.status(429).json({ error: 'Too many requests. Please wait a moment and try again.' });
+  .btn-nav { padding: 8px 18px; border-radius: 999px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: 1px solid var(--border); background: var(--surface); color: var(--ink); }
+  .btn-nav:hover { border-color: var(--ink); }
+  .btn-nav.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn-nav.primary:hover { background: var(--accent-light); }
+  .btn-nav.ghost { background: none; border: none; color: var(--ink-muted); font-size: 12px; padding: 8px 10px; }
+  .btn-nav.ghost:hover { color: var(--ink); }
+  .user-chip { display: flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); font-size: 12px; font-weight: 500; }
+  .user-avatar { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: white; font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(26,26,24,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+  .modal-overlay.visible { opacity: 1; pointer-events: all; }
+  .modal { background: var(--surface); border-radius: 20px; padding: 40px 40px 36px; width: 100%; max-width: 420px; box-shadow: var(--shadow-lg); transform: translateY(12px); transition: transform 0.25s; position: relative; }
+  .modal-overlay.visible .modal { transform: translateY(0); }
+  .modal-close { position: absolute; top: 16px; right: 18px; background: none; border: none; font-size: 22px; cursor: pointer; color: var(--ink-muted); line-height: 1; padding: 4px; }
+  .modal-close:hover { color: var(--ink); }
+  .modal h2 { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 500; margin-bottom: 6px; }
+  .modal-sub { font-size: 14px; color: var(--ink-muted); margin-bottom: 28px; line-height: 1.5; }
+  .modal-sub strong { color: var(--accent-light); }
+  .form-field { margin-bottom: 16px; }
+  .form-field label { display: block; font-size: 11px; font-weight: 500; color: var(--ink-muted); margin-bottom: 6px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .form-field input { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink); background: var(--bg); outline: none; transition: border-color 0.2s; }
+  .form-field input:focus { border-color: var(--gold); background: white; }
+  .btn-submit { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; margin-top: 4px; }
+  .btn-submit:hover { background: var(--accent-light); }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+  .modal-switch { text-align: center; margin-top: 18px; font-size: 13px; color: var(--ink-muted); }
+  .modal-switch a { color: var(--accent-light); cursor: pointer; font-weight: 500; text-decoration: underline; text-underline-offset: 2px; }
+  .modal-error { background: #FDECEA; color: var(--risk-high); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; display: none; }
+  .modal-error.visible { display: block; }
+  .modal-success { background: #EAF5EE; color: var(--risk-low); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; display: none; }
+  .modal-success.visible { display: block; }
+
+  /* UPGRADE WALL (inline in card) */
+  .upgrade-wall { text-align: center; padding: 60px 36px; }
+  .upgrade-icon { font-size: 44px; margin-bottom: 16px; }
+  .upgrade-wall h3 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 500; margin-bottom: 10px; }
+  .upgrade-wall p { font-size: 14px; color: var(--ink-muted); max-width: 320px; margin: 0 auto 28px; line-height: 1.65; }
+  .upgrade-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .btn-upgrade { padding: 12px 28px; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .btn-upgrade.primary { background: var(--accent); color: white; border: none; }
+  .btn-upgrade.primary:hover { background: var(--accent-light); }
+  .btn-upgrade.secondary { background: none; border: 1px solid var(--border); color: var(--ink-muted); }
+  .btn-upgrade.secondary:hover { border-color: var(--ink); color: var(--ink); }
+
+  /* PRICING MODAL */
+  .pricing-overlay { position: fixed; inset: 0; z-index: 600; background: rgba(26,26,24,0.6); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+  .pricing-overlay.visible { opacity: 1; pointer-events: all; }
+  .pricing-modal { background: var(--surface); border-radius: 24px; width: 100%; max-width: 860px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(26,26,24,0.2); transform: translateY(16px) scale(0.98); transition: transform 0.3s; position: relative; }
+  .pricing-overlay.visible .pricing-modal { transform: translateY(0) scale(1); }
+  .pricing-modal-close { position: absolute; top: 20px; right: 22px; background: var(--bg); border: 1px solid var(--border); border-radius: 50%; width: 32px; height: 32px; font-size: 16px; cursor: pointer; color: var(--ink-muted); display: flex; align-items: center; justify-content: center; z-index: 10; transition: all 0.2s; }
+  .pricing-modal-close:hover { background: var(--ink); color: white; border-color: var(--ink); }
+
+  .pm-header { padding: 40px 40px 0; text-align: center; }
+  .pm-eyebrow { display: inline-flex; align-items: center; gap: 6px; background: #EAF2EC; color: var(--accent-light); font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 12px; border-radius: 999px; margin-bottom: 14px; }
+  .pm-header h2 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 500; margin-bottom: 8px; }
+  .pm-header h2 em { font-style: italic; color: var(--gold); }
+  .pm-header p { font-size: 14px; color: var(--ink-muted); }
+
+  .pm-plans { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 32px 32px 36px; }
+  .pm-plan { border: 1px solid var(--border); border-radius: 16px; padding: 24px 20px; position: relative; transition: all 0.2s; }
+  .pm-plan:hover { box-shadow: 0 8px 24px rgba(26,26,24,0.1); transform: translateY(-2px); }
+  .pm-plan.pm-featured { border: 2px solid var(--accent); background: #FAFDF9; }
+  .pm-featured-tag { position: absolute; top: -11px; left: 50%; transform: translateX(-50%); background: var(--accent); color: white; font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 12px; border-radius: 999px; white-space: nowrap; }
+  .pm-plan-name { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 500; margin-bottom: 4px; }
+  .pm-price { margin: 12px 0; }
+  .pm-price-val { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 500; line-height: 1; }
+  .pm-price-val .cur { font-size: 16px; vertical-align: super; }
+  .pm-price-sub { font-size: 11px; color: var(--ink-muted); margin-top: 3px; }
+  .pm-scans { font-size: 12px; font-weight: 600; color: var(--accent); background: #EAF2EC; padding: 4px 10px; border-radius: 999px; display: inline-block; margin-bottom: 14px; }
+  .pm-plan.pm-featured .pm-scans { background: var(--accent); color: white; }
+  .pm-feats { list-style: none; margin-bottom: 18px; display: flex; flex-direction: column; gap: 7px; }
+  .pm-feats li { font-size: 12px; color: var(--ink-muted); display: flex; gap: 7px; align-items: flex-start; line-height: 1.4; }
+  .pm-feats li::before { content: '✓'; color: var(--accent-light); font-weight: 700; font-size: 11px; flex-shrink: 0; margin-top: 1px; }
+  .pm-plan.pm-featured .pm-feats li::before { color: var(--accent); }
+  .btn-pm { width: 100%; padding: 11px; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; }
+  .btn-pm.outline { background: none; border: 1px solid var(--border); color: var(--ink); }
+  .btn-pm.outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-pm.solid { background: var(--accent); color: white; }
+  .btn-pm.solid:hover { background: var(--accent-light); }
+  .btn-pm.gold-btn { background: var(--gold); color: white; }
+  .btn-pm.gold-btn:hover { background: #C9A44A; }
+  .btn-pm.dark { background: var(--ink); color: white; }
+  .btn-pm.dark:hover { background: #333; }
+
+  .pm-footer { padding: 0 32px 28px; text-align: center; }
+  .pm-footer a { font-size: 13px; color: var(--accent-light); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+  .pm-footer a:hover { color: var(--accent); }
+
+  /* BILLING TOGGLE */
+  .billing-toggle { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 20px 0 4px; }
+  .toggle-track { width: 44px; height: 24px; background: var(--border); border-radius: 999px; position: relative; cursor: pointer; transition: background 0.25s; flex-shrink: 0; }
+  .toggle-track.on { background: var(--accent); }
+  .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; background: white; border-radius: 50%; transition: transform 0.25s; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+  .toggle-track.on .toggle-thumb { transform: translateX(20px); }
+  .toggle-label { font-size: 13px; font-weight: 500; color: var(--ink-muted); transition: color 0.2s; }
+  .toggle-label.active { color: var(--ink); }
+  .save-badge { background: #EAF2EC; color: var(--accent-light); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; }
+  .price-annual { display: none; }
+  .price-orig { font-size: 11px; color: #BBBBAA; text-decoration: line-through; margin-top: 1px; }
+
+  /* HERO */
+  .hero { padding: 160px 48px 40px; max-width: 760px; margin: 0 auto; text-align: center; }
+  .hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; background: #EAF2EC; color: var(--accent-light); font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 14px; border-radius: 999px; margin-bottom: 28px; }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(36px, 5vw, 58px); font-weight: 500; line-height: 1.15; letter-spacing: -0.02em; color: var(--ink); margin-bottom: 20px; }
+  .hero h1 em { font-style: italic; color: var(--gold); }
+  .hero p { font-size: 17px; color: var(--ink-muted); max-width: 520px; margin: 0 auto 48px; font-weight: 300; line-height: 1.7; }
+  .trust-strip { display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; font-size: 12px; color: var(--ink-muted); font-weight: 400; letter-spacing: 0.02em; margin-bottom: 20px; }
+  .trust-item { display: flex; align-items: center; gap: 6px; }
+  .trust-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+
+  /* MAIN CARD */
+  .main-card { max-width: 860px; margin: 0 auto 80px; padding: 0 24px; animation: fadeUp 0.6s ease both; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow-lg); overflow: hidden; }
+  .card-header { padding: 24px 36px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 500; }
+  .security-badge { display: flex; align-items: center; gap: 8px; background: #EAF2EC; border: 1px solid #C6DEC9; padding: 6px 14px; border-radius: 999px; font-size: 11px; font-weight: 500; color: var(--accent-light); letter-spacing: 0.05em; }
+
+  /* DROP ZONE */
+  .drop-zone { margin: 28px 36px; border: 2px dashed var(--border); border-radius: var(--radius); padding: 52px 24px; text-align: center; cursor: pointer; transition: all 0.25s ease; background: var(--bg); position: relative; }
+  .drop-zone:hover, .drop-zone.drag-over { border-color: var(--gold); background: #FDFBF5; }
+  .drop-icon { font-size: 36px; margin-bottom: 14px; opacity: 0.5; display: block; }
+  .drop-zone h3 { font-family: 'Playfair Display', serif; font-weight: 500; font-size: 17px; margin-bottom: 8px; }
+  .drop-zone p { font-size: 13px; color: var(--ink-muted); }
+  .drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .divider { display: flex; align-items: center; gap: 16px; padding: 0 36px; margin-bottom: 4px; color: var(--ink-muted); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .doc-textarea { margin: 12px 36px 28px; width: calc(100% - 72px); height: 180px; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink); background: var(--surface); resize: vertical; outline: none; transition: border-color 0.2s; line-height: 1.7; }
+  .doc-textarea:focus { border-color: var(--gold); }
+  .doc-textarea::placeholder { color: #B8B8AA; }
+  .options-row { padding: 0 36px 24px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .opt-chip { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; background: var(--surface); user-select: none; }
+  .opt-chip.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .opt-chip:hover:not(.active) { border-color: var(--ink-muted); }
+  .btn-row { padding: 0 36px 32px; }
+  .btn-analyze { width: 100%; padding: 16px 24px; background: var(--accent); color: white; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.25s ease; letter-spacing: 0.02em; }
+  .btn-analyze:hover { background: var(--accent-light); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(26,58,42,0.3); }
+  .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* LOADING */
+  .loading-state { display: none; padding: 48px 36px; text-align: center; }
+  .loading-state.visible { display: block; }
+  .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 20px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-steps { list-style: none; display: flex; flex-direction: column; gap: 8px; max-width: 260px; margin: 0 auto; text-align: left; }
+  .loading-steps li { font-size: 13px; color: var(--ink-muted); display: flex; align-items: center; gap: 10px; }
+  .loading-steps li.done { color: var(--accent-light); }
+  .step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); flex-shrink: 0; transition: background 0.3s; }
+  .loading-steps li.done .step-dot { background: var(--accent-light); }
+  .loading-steps li.active .step-dot { background: var(--gold); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* RESULTS */
+  .results-area { display: none; padding: 0 36px 36px; }
+  .results-area.visible { display: block; animation: fadeUp 0.5s ease both; }
+  .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding-top: 8px; }
+  .results-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 500; }
+  .new-btn { padding: 8px 18px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; color: var(--ink-muted); }
+  .new-btn:hover { border-color: var(--ink); color: var(--ink); }
+  .result-section { margin-bottom: 20px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .result-section-header { padding: 14px 20px; background: var(--bg); display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; border-bottom: 1px solid transparent; }
+  .result-section.open .result-section-header { border-bottom-color: var(--border); }
+  .section-icon { font-size: 16px; }
+  .section-label { font-weight: 500; font-size: 13px; letter-spacing: 0.02em; flex: 1; }
+  .section-toggle { font-size: 11px; color: var(--ink-muted); transition: transform 0.2s; }
+  .result-section.open .section-toggle { transform: rotate(180deg); }
+  .result-section-body { display: none; padding: 20px; font-size: 14px; line-height: 1.75; }
+  .result-section.open .result-section-body { display: block; animation: fadeUp 0.2s ease; }
+  .risk-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .risk-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .risk-badge { padding: 3px 10px; border-radius: 999px; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; flex-shrink: 0; margin-top: 2px; }
+  .risk-badge.high { background: #FDECEA; color: var(--risk-high); }
+  .risk-badge.medium { background: #FEF3E2; color: var(--risk-med); }
+  .risk-badge.low { background: #EAF5EE; color: var(--risk-low); }
+  .risk-text { font-size: 13px; line-height: 1.6; }
+  .risk-text strong { display: block; margin-bottom: 3px; font-weight: 500; }
+  .risk-text span { color: var(--ink-muted); }
+  .key-point { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .key-point:last-child { border-bottom: none; }
+  .kp-bullet { width: 20px; height: 20px; border-radius: 50%; background: #EAF2EC; color: var(--accent-light); font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .simplified-block { background: var(--bg); border-radius: 8px; padding: 16px 20px; font-size: 14px; line-height: 1.8; border-left: 3px solid var(--gold); }
+  .privacy-note { margin-top: 24px; padding: 16px 20px; border: 1px solid #D8E8D8; border-radius: var(--radius); background: #F2F9F3; display: flex; gap: 12px; align-items: flex-start; }
+  .privacy-icon { font-size: 18px; flex-shrink: 0; }
+  .privacy-text { font-size: 12px; color: var(--accent-light); line-height: 1.6; }
+  .privacy-text strong { display: block; margin-bottom: 2px; font-weight: 600; }
+
+  /* KNOW MORE SECTION */
+  .knowmore-section { max-width: 680px; margin: 0 auto 100px; padding: 0 24px; text-align: center; }
+  .knowmore-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 52px 48px; box-shadow: var(--shadow); }
+  .knowmore-eyebrow { display: inline-flex; align-items: center; gap: 8px; background: #EAF2EC; color: var(--accent-light); font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 14px; border-radius: 999px; margin-bottom: 20px; }
+  .knowmore-card h2 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 500; margin-bottom: 12px; line-height: 1.3; }
+  .knowmore-card h2 em { font-style: italic; color: var(--gold); }
+  .knowmore-card p { font-size: 15px; color: var(--ink-muted); margin-bottom: 32px; line-height: 1.7; font-weight: 300; }
+  .knowmore-form { display: flex; flex-direction: column; gap: 12px; max-width: 400px; margin: 0 auto; }
+  .knowmore-input { width: 100%; padding: 13px 18px; border: 1px solid var(--border); border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink); background: var(--bg); outline: none; transition: border-color 0.2s; }
+  .knowmore-input:focus { border-color: var(--gold); background: white; }
+  .knowmore-input::placeholder { color: #B8B8AA; }
+  .btn-knowmore { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; letter-spacing: 0.02em; }
+  .btn-knowmore:hover { background: var(--accent-light); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(26,58,42,0.25); }
+  .btn-knowmore:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+  .knowmore-msg { font-size: 13px; padding: 10px 14px; border-radius: 8px; display: none; margin-top: 4px; }
+  .knowmore-msg.success { background: #EAF5EE; color: var(--risk-low); display: block; }
+  .knowmore-msg.error { background: #FDECEA; color: var(--risk-high); display: block; }
+  .knowmore-note { font-size: 11px; color: var(--ink-muted); margin-top: 14px; }
+  .how-section { max-width: 860px; margin: 0 auto 100px; padding: 0 24px; }
+  .how-header { text-align: center; margin-bottom: 48px; }
+  .how-header h2 { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 500; margin-bottom: 12px; }
+  .how-header p { font-size: 15px; color: var(--ink-muted); }
+  .how-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .how-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 24px; transition: box-shadow 0.25s; }
+  .how-card:hover { box-shadow: var(--shadow); }
+  .how-num { font-family: 'Playfair Display', serif; font-size: 32px; color: var(--gold); font-weight: 500; margin-bottom: 12px; line-height: 1; }
+  .how-card h3 { font-size: 15px; font-weight: 500; margin-bottom: 8px; }
+  .how-card p { font-size: 13px; color: var(--ink-muted); line-height: 1.65; }
+
+  .pw-req { font-size:12px;color:#9B9B8E;display:flex;align-items:center;gap:7px;transition:color 0.2s; }
+  .pw-req.met { color:#2E7D52; }
+  .pw-dot { font-size:10px;flex-shrink:0;transition:all 0.2s; }
+  .pw-req.met .pw-dot { color:#2E7D52; }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+  @keyframes scaleUp { from { transform:scale(0.85);opacity:0; } to { transform:scale(1);opacity:1; } }
+  .footer-logo { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 500; color: var(--ink); }
+  .footer-logo span { color: var(--gold); }
+  footer { border-top: 1px solid var(--border); padding: 28px 48px; display: flex; align-items: center; justify-content: center; }
+
+  @media (max-width: 680px) {
+    /* NAV */
+    nav { padding: 12px 16px; gap: 8px; }
+    .nav-right { gap: 6px; }
+    .nav-security { display: none !important; }
+    .scan-pill { display: none !important; }
+    .btn-nav { padding: 7px 12px; font-size: 12px; }
+    .user-chip { padding: 5px 10px; }
+    .user-chip span { display: none; }
+
+    /* HERO */
+    .hero { padding: 110px 20px 48px; }
+    .hero h1 { font-size: 30px; }
+    .hero p { font-size: 15px; margin-bottom: 32px; }
+    .trust-strip { gap: 12px; flex-direction: column; align-items: center; margin-bottom: 36px; }
+
+    /* MAIN CARD */
+    .main-card { padding: 0 12px; margin-bottom: 48px; }
+    .card-header { padding: 18px 20px 16px; flex-direction: column; align-items: flex-start; gap: 10px; }
+    .drop-zone { margin: 16px 20px; padding: 36px 16px; }
+    .divider { padding: 0 20px; }
+    .doc-textarea { margin: 10px 20px 20px; width: calc(100% - 40px); height: 140px; }
+    .options-row { padding: 0 20px 20px; gap: 8px; }
+    .opt-chip { font-size: 11px; padding: 6px 12px; }
+    .btn-row { padding: 0 20px 24px; }
+    .loading-state { padding: 36px 20px; }
+    .results-area { padding: 0 20px 24px; }
+    .results-header { flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+    .result-section-header { padding: 12px 16px; }
+    .result-section-body { padding: 16px; }
+
+    /* UPGRADE WALL */
+    .upgrade-wall { padding: 40px 20px; }
+    .upgrade-actions { flex-direction: column; align-items: stretch; }
+    .btn-upgrade { width: 100%; text-align: center; }
+
+    /* PRICING MODAL */
+    .pricing-modal { border-radius: 16px; max-height: 95vh; }
+    .pm-header { padding: 28px 20px 0; }
+    .pm-header h2 { font-size: 22px; }
+    .pm-plans { grid-template-columns: 1fr; padding: 20px; gap: 20px; }
+    .pm-plan.pm-featured { transform: none; }
+    .billing-toggle { margin: 16px 0 4px; }
+
+    /* AUTH MODAL */
+    .modal { padding: 28px 20px 24px; margin: 0 8px; }
+    .modal h2 { font-size: 20px; }
+
+    /* HOW IT WORKS */
+    .how-section { margin-bottom: 60px; padding: 0 16px; }
+    .how-header h2 { font-size: 26px; }
+    .how-grid { grid-template-columns: 1fr; gap: 16px; }
+
+    /* KNOW MORE */
+    .knowmore-section { margin-bottom: 60px; padding: 0 16px; }
+    .knowmore-card { padding: 32px 24px; }
+    .knowmore-card h2 { font-size: 22px; }
+    .knowmore-card p { font-size: 14px; }
+
+    /* FOOTER */
+    footer { padding: 24px 20px; }
+    footer > div { flex-direction: column; align-items: center !important; text-align: center; gap: 16px; }
+    footer > div > div { text-align: center !important; }
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
+  @media (max-width: 400px) {
+    nav { padding: 10px 14px; }
+    .btn-nav { padding: 6px 10px; font-size: 11px; }
+    .logo { font-size: 18px; }
+    .hero h1 { font-size: 26px; }
+    .drop-zone h3 { font-size: 15px; }
+    .pm-plans { padding: 16px; }
+  }
+</style>
+</head>
+<body>
 
-  // Validate request body structure
-  const body = req.body;
-  if (!body || !body.messages || !Array.isArray(body.messages)) {
-    return res.status(400).json({ error: 'Invalid request format.' });
+<!-- NAV -->
+<nav>
+  <div class="logo" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="cursor:pointer;">Verrix<span>AI</span></div>
+  <div class="nav-right">
+    <!-- Scan counter -->
+    <div class="scan-pill" id="scanPill" style="display:none">
+      <div class="scan-pips" id="scanPips"></div>
+      <span id="scanLabel"></span>
+    </div>
+    <!-- Guest buttons -->
+    <div id="navGuest" style="display:flex;gap:8px;">
+      <a href="pricing.html" class="btn-nav" style="text-decoration:none;">Pricing</a>
+      <button class="btn-nav" onclick="openModal('login')">Sign in</button>
+      <button class="btn-nav primary" onclick="openModal('signup')">Create Account</button>
+    </div>
+    <!-- Logged-in user -->
+    <div id="navUser" style="display:none;align-items:center;gap:8px;">
+      <a href="pricing.html" class="btn-nav" style="font-size:13px;text-decoration:none;">Pricing</a>
+      <div class="user-chip">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <span id="userEmailLabel" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;"></span>
+      </div>
+      <button class="btn-nav ghost" onclick="signOut()">Sign out</button>
+    </div>
+  </div>
+</nav>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <h2 id="modalTitle">Create Account</h2>
+    <p class="modal-sub" id="modalSub">Get <strong>10 free scans</strong> — no credit card needed.</p>
+    <div class="modal-error" id="modalError"></div>
+    <div class="modal-success" id="modalSuccess"></div>
+    <div class="form-field">
+      <label>Email address</label>
+      <input type="email" id="authEmail" placeholder="you@example.com" />
+    </div>
+    <div class="form-field" id="passwordField">
+      <label>Password</label>
+      <input type="password" id="authPassword" placeholder="Create a password" onkeydown="if(event.key==='Enter')handleAuth()" oninput="checkPasswordStrength(this.value)" />
+      <div id="pwRequirements" style="display:none;margin-top:10px;padding:12px 14px;background:#FAFAF8;border:1px solid #E2E0D8;border-radius:10px;animation:fadeUp 0.2s ease;">
+        <p style="font-size:11px;font-weight:600;color:#1A1A18;margin:0 0 8px;letter-spacing:0.04em;text-transform:uppercase;">Password requirements</p>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div id="req-length"  class="pw-req"><span class="pw-dot">○</span> At least 8 characters</div>
+          <div id="req-upper"   class="pw-req"><span class="pw-dot">○</span> One uppercase letter</div>
+          <div id="req-lower"   class="pw-req"><span class="pw-dot">○</span> One lowercase letter</div>
+          <div id="req-digit"   class="pw-req"><span class="pw-dot">○</span> One number</div>
+          <div id="req-symbol"  class="pw-req"><span class="pw-dot">○</span> One symbol (e.g. !@#$%)</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-submit" id="authSubmitBtn" onclick="handleAuth()">Create Account</button>
+    <div class="modal-switch" id="modalSwitch">
+      Already have an account? <a onclick="switchModal('login')">Sign in</a>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING MODAL -->
+<div class="pricing-overlay" id="pricingModal">
+  <div class="pricing-modal">
+    <button class="pricing-modal-close" onclick="closePricingModal()">×</button>
+    <div class="pm-header">
+      <div class="pm-eyebrow">✦ Upgrade your plan</div>
+      <h2>You've used all your <em>free</em> scans</h2>
+      <p>Choose a plan to keep analysing documents — cancel anytime.</p>
+      <!-- BILLING TOGGLE -->
+      <div class="billing-toggle">
+        <span class="toggle-label active" id="pm-label-monthly">Monthly</span>
+        <div class="toggle-track" id="pmToggle" onclick="togglePmBilling()">
+          <div class="toggle-thumb"></div>
+        </div>
+        <span class="toggle-label" id="pm-label-annual">Annual</span>
+        <span class="save-badge">Save 20%</span>
+      </div>
+    </div>
+    <div class="pm-plans">
+      <!-- FREE -->
+      <div class="pm-plan">
+        <div class="pm-plan-name">Free</div>
+        <div class="pm-price">
+          <div class="pm-price-val">$0</div>
+          <div class="pm-price-sub">No credit card</div>
+        </div>
+        <div class="pm-scans">10 scans / account</div>
+        <ul class="pm-feats"><li>Full AI analysis</li><li>Risk flagging</li><li>Key points</li><li>Plain-English summary</li></ul>
+        <button class="btn-pm outline" onclick="closePricingModal()">Current plan</button>
+      </div>
+      <!-- PRO -->
+      <div class="pm-plan pm-featured">
+        <div class="pm-featured-tag">Most Popular</div>
+        <div class="pm-plan-name">Pro</div>
+        <div class="pm-price">
+          <div class="pm-price-val pm-monthly-price"><span class="cur">$</span>9</div>
+          <div class="pm-price-val pm-annual-price" style="display:none"><span class="cur">$</span>86</div>
+          <div class="pm-price-sub pm-monthly-sub">per month</div>
+          <div class="pm-price-sub pm-annual-sub" style="display:none">per year <span style="color:var(--accent-light);font-weight:600;">($7/mo)</span></div>
+          <div class="price-orig pm-annual-orig" style="display:none;">was $108/yr</div>
+        </div>
+        <div class="pm-scans">300 scans / mo</div>
+        <ul class="pm-feats"><li>Everything in Free</li><li>300 scans per month</li><li>Priority processing</li><li>Email support</li></ul>
+        <button class="btn-pm solid" onclick="alert('Coming soon! We\'ll notify you when Pro launches.')">Coming soon</button>
+      </div>
+      <!-- PRO 2 -->
+      <div class="pm-plan">
+        <div class="pm-plan-name">Pro 2</div>
+        <div class="pm-price">
+          <div class="pm-price-val pm-monthly-price"><span class="cur">$</span>15</div>
+          <div class="pm-price-val pm-annual-price" style="display:none"><span class="cur">$</span>144</div>
+          <div class="pm-price-sub pm-monthly-sub">per month</div>
+          <div class="pm-price-sub pm-annual-sub" style="display:none">per year <span style="color:var(--accent-light);font-weight:600;">($12/mo)</span></div>
+          <div class="price-orig pm-annual-orig" style="display:none;">was $180/yr</div>
+        </div>
+        <div class="pm-scans">700 scans / mo</div>
+        <ul class="pm-feats"><li>Everything in Pro</li><li>700 scans per month</li><li>Batch document upload</li><li>Priority support</li></ul>
+        <button class="btn-pm gold-btn" onclick="alert('Coming soon! We\'ll notify you when Pro 2 launches.')">Coming soon</button>
+      </div>
+      <!-- ENTERPRISE -->
+      <div class="pm-plan">
+        <div class="pm-plan-name">Enterprise</div>
+        <div class="pm-price">
+          <div class="pm-price-val" style="font-size:20px;padding-top:8px;">Custom</div>
+          <div class="pm-price-sub">Tailored pricing</div>
+        </div>
+        <div class="pm-scans">Unlimited scans</div>
+        <ul class="pm-feats"><li>Everything in Pro 2</li><li>Unlimited scans</li><li>Custom integrations</li><li>Dedicated support</li></ul>
+        <button class="btn-pm dark" onclick="window.location.href='mailto:hello@verrixai.com?subject=Enterprise Enquiry'">Contact us</button>
+      </div>
+    </div>
+    <div class="pm-footer">
+      <a href="pricing.html" target="_blank">View full pricing details →</a>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow"><span>✦</span> AI-Powered Document Intelligence</div>
+  <h1>Understand every agreement<br>before you <em>sign</em></h1>
+  <p id="heroText">Upload or paste any legal document. VerrixAI analyses every clause, identifies risk, and delivers a structured breakdown in seconds.</p>
+  <div class="trust-strip">
+    <div class="trust-item">🔒 Encrypted in transit (HTTPS)</div>
+  </div>
+</section>
+
+<!-- MAIN TOOL CARD -->
+<div class="main-card" id="mainCard">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Analyse a Document</div>
+      <div class="security-badge">🔐 Secure Session</div>
+    </div>
+
+    <!-- Input -->
+    <div id="inputState">
+      <div class="drop-zone" id="dropZone">
+        <span class="drop-icon">📄</span>
+        <h3 id="dropLabel">Drop your document here</h3>
+        <p id="dropSub">PDF, DOCX, or TXT accepted</p>
+        <input type="file" id="fileInput" accept=".pdf,.docx,.txt" />
+      </div>
+      <div id="clearFileRow" style="display:none;padding:0 36px;margin-top:-8px;margin-bottom:8px;">
+        <button onclick="clearFile()" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--ink-muted);font-family:'DM Sans',sans-serif;">✕ Remove file and paste instead</button>
+      </div>
+      <div class="divider" id="pasteDivider" style="display:none;">or paste text</div>
+      <textarea class="doc-textarea" id="docText" style="display:none;" placeholder="Paste the full text of your agreement, terms & conditions, privacy policy, or any legal document here…"></textarea>
+      <div id="pasteToggleRow" style="padding:0 36px 20px;text-align:center;">
+        <button onclick="showPaste()" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--ink-muted);font-family:'DM Sans',sans-serif;text-decoration:underline;text-underline-offset:3px;">or paste text instead</button>
+      </div>
+      <div class="options-row">
+        <div class="opt-chip active" data-opt="summary">📋 Summary</div>
+        <div class="opt-chip active" data-opt="risks">⚠️ Risk Flags</div>
+        <div class="opt-chip active" data-opt="keypoints">🔑 Key Points</div>
+        <div class="opt-chip active" data-opt="simplify">✨ Simplify</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-analyze" onclick="startAnalysis()">
+          <span>Analyse Document</span><span>→</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" id="loadingState">
+      <div class="spinner"></div>
+      <p style="font-size:14px;margin-bottom:20px;color:var(--ink-muted)">Analysing your document…</p>
+      <ul class="loading-steps">
+        <li id="step1"><span class="step-dot"></span> Encrypting document locally</li>
+        <li id="step2"><span class="step-dot"></span> Extracting structure & clauses</li>
+        <li id="step3"><span class="step-dot"></span> Identifying risks & obligations</li>
+        <li id="step4"><span class="step-dot"></span> Generating plain-language summary</li>
+        <li id="step5"><span class="step-dot"></span> Finalising report</li>
+      </ul>
+    </div>
+
+    <!-- Upgrade wall -->
+    <div id="upgradeWall" style="display:none;">
+      <div class="upgrade-wall">
+        <div id="zeroScansBanner" style="display:none;margin-bottom:16px;padding:10px 14px;background:#FEF9EE;border:1px solid #E8D9B0;border-radius:8px;font-size:13px;color:#7A5C1E;text-align:center;">
+          You've used all your free scans. Upgrade to keep going.
+        </div>
+        <div class="upgrade-icon">🔒</div>
+        <h3 id="upgradeTitle">You've used your free scan</h3>
+        <p id="upgradeMsg">Create a free account to get 10 scans instantly — no credit card needed.</p>
+        <div class="upgrade-actions" id="upgradeActions"></div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-area" id="resultsArea">
+      <div class="results-header">
+        <div class="results-title">Analysis Complete</div>
+        <button class="new-btn" onclick="resetTool()">← New Document</button>
+      </div>
+
+      <!-- Non-legal warning banner (hidden by default) -->
+      <div id="nonLegalBanner" style="display:none;margin-bottom:20px;padding:14px 18px;background:#FEF9EE;border:1px solid #E8D9B0;border-radius:var(--radius);align-items:flex-start;gap:12px;">
+        <span style="font-size:18px;flex-shrink:0;">⚠️</span>
+        <div>
+          <strong style="font-size:13px;color:#1A1A18;display:block;margin-bottom:3px;">This doesn't appear to be a legal document</strong>
+          <span style="font-size:12px;color:#6B6B62;line-height:1.6;">VerrixAI is designed for contracts, agreements, terms & conditions, and similar documents. We've done our best to analyse what you uploaded, but results may not be meaningful.</span>
+        </div>
+      </div>
+      <div class="result-section open" id="sec-summary">
+        <div class="result-section-header" onclick="toggleSection('sec-summary')">
+          <span class="section-icon">📋</span><span class="section-label">Document Summary</span><span class="section-toggle">▾</span>
+        </div>
+        <div class="result-section-body" id="body-summary">Loading…</div>
+      </div>
+      <div class="result-section open" id="sec-risks">
+        <div class="result-section-header" onclick="toggleSection('sec-risks')">
+          <span class="section-icon">⚠️</span><span class="section-label">Risk Flags</span><span class="section-toggle">▾</span>
+        </div>
+        <div class="result-section-body" id="body-risks">Loading…</div>
+      </div>
+      <div class="result-section open" id="sec-keypoints">
+        <div class="result-section-header" onclick="toggleSection('sec-keypoints')">
+          <span class="section-icon">🔑</span><span class="section-label">Key Points</span><span class="section-toggle">▾</span>
+        </div>
+        <div class="result-section-body" id="body-keypoints">Loading…</div>
+      </div>
+      <div class="result-section open" id="sec-simplify">
+        <div class="result-section-header" onclick="toggleSection('sec-simplify')">
+          <span class="section-icon">✨</span><span class="section-label">Plain-Language Version</span><span class="section-toggle">▾</span>
+        </div>
+        <div class="result-section-body" id="body-simplify">Loading…</div>
+      </div>
+      <div class="privacy-note">
+        <span class="privacy-icon">🛡️</span>
+        <div class="privacy-text">
+          <strong>Your document was never stored or shared.</strong>
+          It was processed securely and deleted immediately after analysis. Nothing is saved to any server.
+        </div>
+      </div>
+      <div style="text-align:center;padding:24px 0 8px;">
+        <button onclick="resetTool()" style="display:inline-flex;align-items:center;gap:8px;padding:13px 32px;background:var(--accent);color:white;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:all 0.2s;letter-spacing:0.01em;">
+          ← Analyse Another Document
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how-section">
+  <div class="how-header">
+    <h2>How it works</h2>
+    <p>Three steps to complete clarity — in under 30 seconds.</p>
+  </div>
+  <div class="how-grid">
+    <div class="how-card"><div class="how-num">01</div><h3>Drop or paste your document</h3><p>Upload a PDF, DOCX, or simply paste the raw text of any agreement or legal document.</p></div>
+    <div class="how-card"><div class="how-num">02</div><h3>AI analyses every clause</h3><p>Our model reads the full document, identifies obligations, risks, and notable terms buried in the fine print.</p></div>
+    <div class="how-card"><div class="how-num">03</div><h3>Get your clear breakdown</h3><p>Receive a plain-English summary, risk flags ranked by severity, and a list of the clauses that matter most.</p></div>
+  </div>
+</div>
+
+<!-- KNOW MORE SECTION -->
+<div class="knowmore-section">
+  <div class="knowmore-card">
+    <div class="knowmore-eyebrow">✦ For businesses</div>
+    <h2>Want to know <em>more</em>?</h2>
+    <p>Enter your business name and email and we'll send you everything about VerrixAI — features, pricing, and how it can save your team time reviewing documents.</p>
+    <div class="knowmore-form">
+      <input class="knowmore-input" id="kmBusiness" type="text" placeholder="Business name" />
+      <input class="knowmore-input" id="kmEmail" type="email" placeholder="Business email" />
+      <button class="btn-knowmore" id="kmBtn" onclick="submitKnowMore()">Send me the details →</button>
+      <div class="knowmore-msg" id="kmMsg"></div>
+    </div>
+    <p class="knowmore-note">🔒 No spam. We'll send one email with everything you need.</p>
+  </div>
+</div>
+
+<footer>
+  <div style="max-width:1100px;margin:0 auto;width:100%;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+    <div class="footer-logo">Verrix<span>AI</span></div>
+    <div style="display:flex;gap:24px;align-items:center;">
+      <a href="/privacy.html" style="color:var(--ink-muted);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-muted)'">Privacy Policy</a>
+      <a href="/terms.html" style="color:var(--ink-muted);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-muted)'">Terms of Service</a>
+    </div>
+    <div style="font-size:12px;color:var(--ink-muted);text-align:right;line-height:1.6;">
+      <div>© 2026 VerrixAI. All rights reserved.</div>
+      <div>Not legal advice. Consult a qualified solicitor for binding decisions.</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ─── KNOW MORE ───────────────────────────────────────────────
+async function submitKnowMore() {
+  const business_name = document.getElementById('kmBusiness').value.trim();
+  const email         = document.getElementById('kmEmail').value.trim();
+  const btn           = document.getElementById('kmBtn');
+  const msg           = document.getElementById('kmMsg');
+
+  msg.className = 'knowmore-msg';
+  msg.textContent = '';
+
+  if (!business_name || !email) {
+    msg.className = 'knowmore-msg error';
+    msg.textContent = 'Please enter both your business name and email.';
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    msg.className = 'knowmore-msg error';
+    msg.textContent = 'Please enter a valid email address.';
+    return;
   }
 
-  const userMessage = body.messages.find(m => m.role === 'user');
-  if (!userMessage) return res.status(400).json({ error: 'No user message provided.' });
-
-  // Validate and sanitise content
-  let userContent = userMessage.content;
-
-  if (typeof userContent === 'string') {
-    if (userContent.length > MAX_TEXT_LENGTH) {
-      return res.status(400).json({ error: 'Document too large. Please reduce the size and try again.' });
-    }
-  } else if (Array.isArray(userContent)) {
-    // PDF + text array
-    const textPart = userContent.find(p => p.type === 'text');
-    if (textPart?.text?.length > MAX_TEXT_LENGTH) {
-      return res.status(400).json({ error: 'Document too large. Please reduce the size and try again.' });
-    }
-    const docPart = userContent.find(p => p.type === 'document');
-    if (docPart) {
-      if (!docPart.source?.data || typeof docPart.source.data !== 'string') {
-        return res.status(400).json({ error: 'Invalid document format.' });
-      }
-      // Reject base64 payloads over ~10MB
-      if (docPart.source.data.length > 13_000_000) {
-        return res.status(400).json({ error: 'Document too large.' });
-      }
-      // Only allow PDF media type
-      if (docPart.source.media_type !== 'application/pdf') {
-        return res.status(400).json({ error: 'Only PDF documents are supported.' });
-      }
-    }
-  } else {
-    return res.status(400).json({ error: 'Invalid content format.' });
-  }
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
 
   try {
-    // Send keep-alive header immediately — prevents Vercel from killing the
-    // connection during cold starts before Claude responds
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Transfer-Encoding', 'chunked');
-    res.setHeader('X-Accel-Buffering', 'no');
-
-    // Build request ourselves — never forward client body directly
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 22000); // 22s — under Vercel's 30s limit
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const res  = await fetch('/api/knowmore', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model:      ALLOWED_MODEL,
-        max_tokens: MAX_TOKENS,
-        messages:   [{ role: 'user', content: userContent }]
-      }),
-      signal: controller.signal
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ business_name, email })
     });
+    const data = await res.json();
 
-    clearTimeout(timeoutId);
-    const data = await response.json();
-    return res.status(response.status).json(data);
-  } catch (error) {
-    console.error('Proxy error:', error);
-    if (error.name === 'AbortError') {
-      return res.status(504).json({ error: 'Analysis timed out. Please try again.' });
+    if (res.status === 409) {
+      msg.className = 'knowmore-msg error';
+      msg.textContent = 'This email has already been registered.';
+      btn.disabled = false;
+      btn.textContent = 'Send me the details →';
+      return;
     }
-    return res.status(500).json({ error: 'Failed to reach Anthropic API' });
+    if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+
+    msg.className = 'knowmore-msg success';
+    msg.textContent = `Done! Check your inbox at ${email} — we've sent everything over.`;
+    document.getElementById('kmBusiness').value = '';
+    document.getElementById('kmEmail').value = '';
+    btn.textContent = '✓ Sent!';
+  } catch(e) {
+    msg.className = 'knowmore-msg error';
+    msg.textContent = e.message || 'Something went wrong. Please try again.';
+    btn.disabled = false;
+    btn.textContent = 'Send me the details →';
   }
-};
+}
+const SUPABASE_URL = 'https://ivisbawpltxqpsltnmny.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2aXNiYXdwbHR4cXBzbHRubW55Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDM0MDIsImV4cCI6MjA4ODMxOTQwMn0.exgxjgKKs3XzhBG8fpH4tkKJ_zZmrY1VtU_VU9ALVM0';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ─── STATE ───────────────────────────────────────────────────
+function setCookie(name, value, days) {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${value};expires=${expires};path=/;SameSite=Lax`;
+}
+function getCookie(name) {
+  return document.cookie.split('; ').reduce((acc, c) => {
+    const [k, v] = c.split('=');
+    return k === name ? v : acc;
+  }, null);
+}
+
+const GUEST_LIMIT = 3;
+const USER_LIMIT  = 10;
+let currentUser   = null;
+let userProfile   = null;
+let guestUsed     = parseInt(getCookie('vrx_guest') || '0');
+let loadedFile       = null;
+let pasteMode        = false;
+let modalMode        = 'signup';
+let activeController = null;  // AbortController for in-flight analysis
+let activeEscape     = null;  // escape hatch timer for in-flight analysis
+
+// ─── BOOT ────────────────────────────────────────────────────
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session?.user) await onSignIn(session.user);
+  else renderNavGuest();
+
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session?.user) {
+      await onSignIn(session.user);
+      closeModal();
+    } else if (event === 'SIGNED_OUT') {
+      currentUser = null; userProfile = null;
+      renderNavGuest();
+    }
+  });
+})();
+
+async function onSignIn(user) {
+  currentUser = user;
+  let { data: profile, error } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  const isNewUser = !profile;
+  if (!profile) {
+    await sb.from('profiles').upsert({ id: user.id, email: user.email, scans_used: 0, scans_limit: USER_LIMIT });
+    ({ data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single());
+  } else if (!profile.scans_limit) {
+    await sb.from('profiles').update({ scans_limit: USER_LIMIT }).eq('id', user.id);
+    profile.scans_limit = USER_LIMIT;
+  }
+  userProfile = profile;
+  renderNavUser(user);
+  renderScanPill();
+
+  // Only do post-login transition if user was on the upgrade wall
+  const wasOnUpgradeWall = document.getElementById('upgradeWall').style.display !== 'none';
+  if (!wasOnUpgradeWall) return;
+
+  const remaining = (profile.scans_limit || USER_LIMIT) - (profile.scans_used || 0);
+
+  if (remaining <= 0) {
+    // Zero scans — show upgrade wall with banner
+    document.getElementById('upgradeWall').style.display = 'block';
+    document.getElementById('zeroScansBanner').style.display = 'block';
+    document.getElementById('upgradeTitle').textContent = 'No scans remaining';
+    document.getElementById('upgradeMsg').textContent   = 'Upgrade to a paid plan to continue analysing documents.';
+    document.getElementById('upgradeActions').innerHTML = `<button class="btn-upgrade primary" onclick="openPricingModal()">View plans</button>`;
+  } else {
+    // Has scans — show success moment then reset to input
+    closeModal();
+    document.getElementById('upgradeWall').style.display = 'none';
+    showSuccessMoment(isNewUser ? `You're in — ${remaining} scans unlocked` : `You're in`);
+  }
+}
+
+function showSuccessMoment(message) {
+  // Create and inject a temporary success overlay
+  const el = document.createElement('div');
+  el.id = 'successMoment';
+  el.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(247,246,242,0.92);backdrop-filter:blur(4px);z-index:9999;animation:fadeIn 0.3s ease;';
+  el.innerHTML = `
+    <div style="text-align:center;animation:scaleUp 0.3s ease;">
+      <div style="font-size:40px;margin-bottom:16px;">✓</div>
+      <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:500;color:#1A3A2A;margin-bottom:8px;">${message}</div>
+    </div>`;
+  document.body.appendChild(el);
+  setTimeout(() => {
+    el.style.transition = 'opacity 0.4s ease';
+    el.style.opacity = '0';
+    setTimeout(() => {
+      el.remove();
+      document.getElementById('inputState').style.display = '';
+    }, 400);
+  }, 1800);
+}
+
+// ─── NAV RENDER ──────────────────────────────────────────────
+function renderNavGuest() {
+  document.getElementById('navGuest').style.display = 'flex';
+  document.getElementById('navUser').style.display  = 'none';
+  renderScanPill();
+}
+function renderNavUser(user) {
+  document.getElementById('navGuest').style.display = 'none';
+  document.getElementById('navUser').style.display  = 'flex';
+  document.getElementById('userEmailLabel').textContent = user.email;
+  document.getElementById('userAvatar').textContent = (user.email||'?')[0].toUpperCase();
+  renderScanPill();
+}
+function renderScanPill() {
+  const pill  = document.getElementById('scanPill');
+  const pips  = document.getElementById('scanPips');
+  const label = document.getElementById('scanLabel');
+  pill.style.display = 'flex';
+  const used  = currentUser ? (userProfile?.scans_used || 0) : guestUsed;
+  const total = currentUser ? (userProfile?.scans_limit || USER_LIMIT) : GUEST_LIMIT;
+  const rem   = Math.max(0, total - used);
+  pips.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('span');
+    d.className = 'scan-pip' + (i < used ? '' : ' avail');
+    pips.appendChild(d);
+  }
+  label.textContent = `${rem} scan${rem !== 1 ? 's' : ''} left`;
+}
+
+// ─── SCAN GATE ───────────────────────────────────────────────
+function canScan() {
+  if (currentUser && userProfile) return userProfile.scans_used < (userProfile.scans_limit || USER_LIMIT);
+  return guestUsed < GUEST_LIMIT;
+}
+async function recordScan() {
+  if (currentUser && userProfile) {
+    const next = (userProfile.scans_used || 0) + 1;
+    await sb.from('profiles').update({ scans_used: next }).eq('id', currentUser.id);
+    userProfile.scans_used = next;
+  } else {
+    guestUsed++;
+    setCookie('vrx_guest', guestUsed, 30);
+  }
+  renderScanPill();
+}
+function showUpgradeWall() {
+  document.getElementById('inputState').style.display  = 'none';
+  document.getElementById('loadingState').classList.remove('visible');
+  document.getElementById('resultsArea').classList.remove('visible');
+  const wall = document.getElementById('upgradeWall');
+  const acts = document.getElementById('upgradeActions');
+  wall.style.display = 'block';
+  if (!currentUser) {
+    document.getElementById('upgradeTitle').textContent = "You've used your free scan";
+    document.getElementById('upgradeMsg').textContent   = "Create a free account to unlock 10 scans instantly — no credit card needed.";
+    acts.innerHTML = `<button class="btn-upgrade primary" onclick="openModal('signup')">Create free account</button>
+                      <button class="btn-upgrade secondary" onclick="openModal('login')">Sign in</button>
+                      <button class="btn-upgrade secondary" onclick="openPricingModal()">View pricing</button>`;
+  } else {
+    // Logged-in, out of scans — go straight to pricing modal
+    wall.style.display = 'none';
+    document.getElementById('inputState').style.display = '';
+    openPricingModal();
+  }
+}
+function openPricingModal() {
+  document.getElementById('pricingModal').classList.add('visible');
+}
+function closePricingModal() {
+  document.getElementById('pricingModal').classList.remove('visible');
+}
+document.getElementById('pricingModal').addEventListener('click', e => {
+  if (e.target.id === 'pricingModal') closePricingModal();
+});
+
+let pmAnnual = false;
+function togglePmBilling() {
+  pmAnnual = !pmAnnual;
+  const track = document.getElementById('pmToggle');
+  track.classList.toggle('on', pmAnnual);
+  document.getElementById('pm-label-monthly').classList.toggle('active', !pmAnnual);
+  document.getElementById('pm-label-annual').classList.toggle('active', pmAnnual);
+  document.querySelectorAll('.pm-monthly-price').forEach(el => el.style.display = pmAnnual ? 'none' : 'block');
+  document.querySelectorAll('.pm-annual-price').forEach(el => el.style.display = pmAnnual ? 'block' : 'none');
+  document.querySelectorAll('.pm-monthly-sub').forEach(el => el.style.display = pmAnnual ? 'none' : 'block');
+  document.querySelectorAll('.pm-annual-sub').forEach(el => el.style.display = pmAnnual ? 'block' : 'none');
+  document.querySelectorAll('.pm-annual-orig').forEach(el => el.style.display = pmAnnual ? 'block' : 'none');
+}
+
+// ─── AUTH MODAL ──────────────────────────────────────────────
+function openModal(mode) {
+  modalMode = mode;
+  ['modalError','modalSuccess'].forEach(id => document.getElementById(id).classList.remove('visible'));
+  document.getElementById('authEmail').value = '';
+  document.getElementById('authPassword').value = '';
+  document.getElementById('pwRequirements').style.display = 'none';
+  const isSignup = mode === 'signup';
+  document.getElementById('modalTitle').textContent       = isSignup ? 'Create Account' : 'Welcome back';
+  document.getElementById('modalSub').innerHTML           = isSignup ? 'Get <strong>10 free scans</strong> — no credit card needed.' : 'Sign in to access your scans.';
+  document.getElementById('authSubmitBtn').textContent    = isSignup ? 'Create Account' : 'Sign in';
+  document.getElementById('modalSwitch').innerHTML        = isSignup
+    ? "Already have an account? <a onclick=\"switchModal('login')\">Sign in</a>"
+    : "Don't have an account? <a onclick=\"switchModal('signup')\">Create one free</a>";
+  document.getElementById('authModal').classList.add('visible');
+  setTimeout(() => document.getElementById('authEmail').focus(), 200);
+}
+function closeModal() { document.getElementById('authModal').classList.remove('visible'); }
+function switchModal(m) { openModal(m); }
+document.getElementById('authModal').addEventListener('click', e => { if (e.target.id === 'authModal') closeModal(); });
+
+function checkPasswordStrength(val) {
+  if (modalMode !== 'signup') return;
+  const box = document.getElementById('pwRequirements');
+  if (!val) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+
+  const checks = {
+    'req-length': val.length >= 8,
+    'req-upper':  /[A-Z]/.test(val),
+    'req-lower':  /[a-z]/.test(val),
+    'req-digit':  /[0-9]/.test(val),
+    'req-symbol': /[^A-Za-z0-9]/.test(val),
+  };
+  let allMet = true;
+  for (const [id, met] of Object.entries(checks)) {
+    const el = document.getElementById(id);
+    el.classList.toggle('met', met);
+    el.querySelector('.pw-dot').textContent = met ? '✓' : '○';
+    if (!met) allMet = false;
+  }
+  // Hide the box once all requirements are met
+  if (allMet) box.style.display = 'none';
+}
+
+
+async function handleAuth() {
+  const email    = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const btn      = document.getElementById('authSubmitBtn');
+  const errEl    = document.getElementById('modalError');
+  const okEl     = document.getElementById('modalSuccess');
+  errEl.classList.remove('visible'); okEl.classList.remove('visible');
+  if (!email || !password) { errEl.textContent = 'Please fill in all fields.'; errEl.classList.add('visible'); return; }
+
+  // Password validation on signup only
+  if (modalMode === 'signup') {
+    if (password.length < 8) {
+      errEl.textContent = 'Password must be at least 8 characters.'; errEl.classList.add('visible'); return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      errEl.textContent = 'Password must include at least one uppercase letter.'; errEl.classList.add('visible'); return;
+    }
+    if (!/[a-z]/.test(password)) {
+      errEl.textContent = 'Password must include at least one lowercase letter.'; errEl.classList.add('visible'); return;
+    }
+    if (!/[0-9]/.test(password)) {
+      errEl.textContent = 'Password must include at least one number.'; errEl.classList.add('visible'); return;
+    }
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      errEl.textContent = 'Password must include at least one symbol (e.g. !@#$%).'; errEl.classList.add('visible'); return;
+    }
+  }
+
+  btn.disabled = true;
+  btn.textContent = modalMode === 'signup' ? 'Creating account…' : 'Signing in…';
+  try {
+    if (modalMode === 'signup') {
+      const { error } = await sb.auth.signUp({ email, password });
+      if (error) { errEl.textContent = error.message; errEl.classList.add('visible'); }
+      else { okEl.textContent = '✓ Check your email to confirm your account, then sign in.'; okEl.classList.add('visible'); }
+    } else {
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) { errEl.textContent = error.message; errEl.classList.add('visible'); }
+    }
+  } catch(e) { errEl.textContent = 'Something went wrong. Please try again.'; errEl.classList.add('visible'); }
+  btn.disabled = false;
+  btn.textContent = modalMode === 'signup' ? 'Create Account' : 'Sign in';
+}
+
+async function signOut() { await sb.auth.signOut(); }
+
+// ─── FILE HANDLING ───────────────────────────────────────────
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag-over'); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+document.getElementById('fileInput').addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+function handleFile(file) {
+  // TXT size limit — 1MB max (large TXT files stall FileReader with no benefit)
+  const isTxt = file.name.toLowerCase().endsWith('.txt') || file.type === 'text/plain';
+  if (isTxt && file.size > 1 * 1024 * 1024) {
+    dropZone.style.borderColor = '#C0392B';
+    document.getElementById('dropLabel').textContent = '⚠ File too large';
+    document.getElementById('dropSub').textContent   = 'TXT files must be under 1MB. Only the first ~48,000 characters would be analysed anyway.';
+    setTimeout(() => {
+      dropZone.style.borderColor = '';
+      document.getElementById('dropLabel').textContent = 'Drop your document here';
+      document.getElementById('dropSub').textContent   = 'PDF, DOCX, or TXT accepted';
+    }, 4000);
+    document.getElementById('fileInput').value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    loadedFile = { base64: ev.target.result.split(',')[1], mediaType: file.type || 'application/pdf', name: file.name, _rawFile: file };
+    document.getElementById('dropLabel').textContent = `✓ ${file.name}`;
+    document.getElementById('dropSub').textContent   = 'File ready for analysis';
+    dropZone.style.borderColor = 'var(--gold)'; dropZone.style.background = '#FDFBF5'; dropZone.style.pointerEvents = 'none';
+    document.getElementById('clearFileRow').style.display   = 'block';
+    document.getElementById('pasteToggleRow').style.display = 'none';
+    document.getElementById('pasteDivider').style.display   = 'none';
+    document.getElementById('docText').style.display        = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+function clearFile() {
+  loadedFile = null; pasteMode = false;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('dropLabel').textContent = 'Drop your document here';
+  document.getElementById('dropSub').textContent   = 'PDF, DOCX, or TXT accepted';
+  dropZone.style.borderColor = ''; dropZone.style.background = ''; dropZone.style.pointerEvents = '';
+  document.getElementById('clearFileRow').style.display   = 'none';
+  document.getElementById('pasteToggleRow').style.display = 'block';
+  document.getElementById('pasteDivider').style.display   = 'none';
+  document.getElementById('docText').style.display        = 'none';
+}
+function showPaste() {
+  pasteMode = true;
+  document.getElementById('pasteToggleRow').style.display = 'none';
+  document.getElementById('pasteDivider').style.display   = 'flex';
+  document.getElementById('docText').style.display        = 'block';
+  document.getElementById('docText').focus();
+}
+
+document.querySelectorAll('.opt-chip').forEach(c => c.addEventListener('click', () => c.classList.toggle('active')));
+function getActiveOptions() { return [...document.querySelectorAll('.opt-chip.active')].map(c => c.dataset.opt); }
+
+// ─── LOADING ANIMATION ───────────────────────────────────────
+function animateSteps() {
+  const steps = ['step1','step2','step3','step4','step5']; let i = 0;
+  let resolveSteps;
+  const promise = new Promise(resolve => { resolveSteps = resolve; });
+  function next() {
+    if (i > 0) { document.getElementById(steps[i-1]).classList.remove('active'); document.getElementById(steps[i-1]).classList.add('done'); }
+    if (i < steps.length) { document.getElementById(steps[i]).classList.add('active'); i++; setTimeout(next, 900); }
+    else resolveSteps();
+  }
+  next();
+  promise.finish = () => resolveSteps();
+  return promise;
+}
+
+// ─── ANALYSIS ────────────────────────────────────────────────
+async function startAnalysis() {
+  if (!canScan()) { showUpgradeWall(); return; }
+  const pasteText = document.getElementById('docText').value.trim();
+  if (!loadedFile && !pasteText) {
+    dropZone.style.borderColor = '#C0392B'; setTimeout(() => dropZone.style.borderColor = '', 2000); return;
+  }
+  const opts = getActiveOptions();
+  document.getElementById('inputState').style.display = 'none';
+  document.getElementById('upgradeWall').style.display = 'none';
+  document.getElementById('loadingState').classList.add('visible');
+  const stepsPromise = animateSteps();
+  await recordScan();
+
+  const sections = [];
+  if (opts.includes('summary'))   sections.push('SUMMARY: 3-5 sentence overview.');
+  if (opts.includes('risks'))     sections.push('RISKS: JSON array [{level,title,desc}] with 3-6 items, level = HIGH/MEDIUM/LOW.');
+  if (opts.includes('keypoints')) sections.push('KEY_POINTS: JSON array of 4-7 important points as strings.');
+  if (opts.includes('simplify'))  sections.push('SIMPLIFIED: Plain-English rewrite, 3-5 sentences, no jargon.');
+
+  const instruction = `You are a document analyst. You MUST respond ONLY with a single valid JSON object — no markdown, no preamble, no text outside the JSON.
+
+Analyse the document and return this JSON:
+{"IS_LEGAL":true/false,"SUMMARY":"...","RISKS":[{"level":"HIGH","title":"...","desc":"..."}],"KEY_POINTS":["..."],"SIMPLIFIED":"..."}
+
+IS_LEGAL: true if this is a legal/contractual/business document. false for anything else (CV, academic, personal docs etc).
+
+CRITICAL: Always populate every field with real analysis. Never leave fields empty or null. If not a legal document, still analyse what the document contains and note what type it is.
+
+Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.split(':')[0]).join(', ') : ''}.`
+
+  let userContent;
+  if (loadedFile) {
+    const isDocx = loadedFile.name.toLowerCase().endsWith('.docx');
+    if (loadedFile.mediaType === 'application/pdf' || loadedFile.name.toLowerCase().endsWith('.pdf')) {
+      // PDF — send natively, Claude reads it directly
+      userContent = [
+        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: loadedFile.base64 } },
+        { type: 'text', text: instruction }
+      ];
+    } else if (isDocx) {
+      // DOCX — extract text client-side using JSZip (no server needed, no size limits)
+      try {
+        const arrayBuffer = await new Promise((resolve, reject) => {
+          const r = new FileReader();
+          r.onload = e => resolve(e.target.result);
+          r.onerror = reject;
+          r.readAsArrayBuffer(loadedFile._rawFile);
+        });
+
+        const zip = await JSZip.loadAsync(arrayBuffer);
+        const docXml = zip.file('word/document.xml');
+        if (!docXml) throw new Error('Not a valid DOCX file');
+
+        const xmlStr = await docXml.async('string');
+        // Strip XML tags, decode basic entities, collapse whitespace
+        const text = xmlStr
+          .replace(/<w:br[^>]*\/>/gi, '\n')
+          .replace(/<w:p[ >][^>]*>/gi, '\n')
+          .replace(/<[^>]+>/g, '')
+          .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#x[0-9A-Fa-f]+;/g, '')
+          .replace(/[ \t]+/g, ' ')
+          .replace(/\n{3,}/g, '\n\n')
+          .trim();
+
+        const MIN_TEXT = 200;
+        if (text.length < MIN_TEXT) {
+          // Image-heavy — show warning, stop analysis
+          await stepsPromise;
+          document.getElementById('loadingState').classList.remove('visible');
+          document.getElementById('resultsArea').classList.add('visible');
+          document.getElementById('nonLegalBanner').style.display = 'none';
+          ['summary','risks','keypoints','simplify'].forEach(s => {
+            document.getElementById(`sec-${s}`).style.display = opts.includes(s) ? '' : 'none';
+          });
+          document.getElementById('body-summary').innerHTML = `
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:#FEF9EE;border:1px solid #E8D9B0;border-radius:8px;">
+              <span style="font-size:16px;flex-shrink:0;">🖼️</span>
+              <div>
+                <strong style="font-size:13px;color:#1A1A18;display:block;margin-bottom:4px;">Document contains mostly images</strong>
+                <span style="font-size:12px;color:#6B6B62;line-height:1.6;">This document appears to contain mostly images and very little text. For best results, please export it as a PDF — VerrixAI can read images and diagrams inside PDFs.</span>
+              </div>
+            </div>`;
+          ['risks','keypoints','simplify'].forEach(s => {
+            document.getElementById(`body-${s}`).innerHTML = '<p style="color:var(--ink-muted);font-size:13px;font-style:italic;">No analysis available.</p>';
+          });
+          return;
+        }
+
+        userContent = instruction + '\n\nDOCUMENT:\n"""\n' + text.slice(0, 48000) + '\n"""';
+      } catch(e) {
+        console.error('DOCX extraction failed:', e);
+        await stepsPromise;
+        document.getElementById('loadingState').classList.remove('visible');
+        renderFallback();
+        document.getElementById('resultsArea').classList.add('visible');
+        return;
+      }
+    } else {
+      // TXT or other text file — decode base64 and send as text
+      userContent = instruction + '\n\nDOCUMENT:\n"""\n' + atob(loadedFile.base64).slice(0, 48000) + '\n"""';
+    }
+  } else {
+    userContent = instruction + '\n\nDOCUMENT:\n"""\n' + pasteText.slice(0, 48000) + '\n"""';
+  }
+
+  let result = null;
+  async function attemptAnalysis() {
+    // Cancel any previous in-flight request before starting a new one
+    if (activeController) { try { activeController.abort(); } catch(e){} }
+    activeController = new AbortController();
+    const timeoutId = setTimeout(() => activeController.abort(), 25000);
+    try {
+      const res = await fetch('/api/analyse', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 4000, messages: [{ role: 'user', content: userContent }] }),
+        signal: activeController.signal
+      });
+      clearTimeout(timeoutId);
+      activeController = null;
+      if (!res.ok) return null;
+      const data = await res.json();
+      const raw  = data.content?.map(b => b.text || '').join('').trim();
+      const jsonMatch = raw?.match(/\{[\s\S]*\}/);
+      return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    } catch(e) {
+      clearTimeout(timeoutId);
+      activeController = null;
+      return null;
+    }
+  }
+
+  // Hard escape hatch — no matter what happens, UI exits within 35s
+  let escaped = false;
+  if (activeEscape) clearTimeout(activeEscape);
+  activeEscape = setTimeout(() => {
+    if (!escaped) {
+      escaped = true;
+      stepsPromise.finish();
+      document.getElementById('loadingState').classList.remove('visible');
+      renderTimeout();
+      document.getElementById('resultsArea').classList.add('visible');
+      ['summary','risks','keypoints','simplify'].forEach(s => {
+        document.getElementById(`sec-${s}`).style.display = opts.includes(s) ? '' : 'none';
+      });
+    }
+  }, 35000);
+
+  try {
+    result = await attemptAnalysis();
+    if (!result) {
+      // Silent retry once — covers cold starts and transient failures
+      await new Promise(r => setTimeout(r, 1500));
+      result = await attemptAnalysis();
+      if (!result) result = '__timeout__';
+    }
+  } catch(e) {
+    console.error(e);
+    result = '__timeout__';
+  }
+
+  if (escaped) return;
+  clearTimeout(activeEscape);
+  activeEscape = null;
+  escaped = true;
+
+  stepsPromise.finish();
+  await stepsPromise;
+  document.getElementById('loadingState').classList.remove('visible');
+  if (result === '__timeout__') {
+    renderTimeout();
+  } else if (result) {
+    renderResults(result, opts);
+  } else {
+    renderFallback();
+  }
+  document.getElementById('resultsArea').classList.add('visible');
+  ['summary','risks','keypoints','simplify'].forEach(s => {
+    document.getElementById(`sec-${s}`).style.display = opts.includes(s) ? '' : 'none';
+  });
+}
+
+function renderResults(r, opts) {
+  // Show warning banner if not a legal document
+  const banner = document.getElementById('nonLegalBanner');
+  if (r.IS_LEGAL === false) {
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+
+  if (opts.includes('summary') && r.SUMMARY)
+    document.getElementById('body-summary').innerHTML = `<p>${esc(r.SUMMARY)}</p>`;
+  if (opts.includes('risks') && r.RISKS) {
+    let risks = r.RISKS;
+    if (typeof risks === 'string') { try { risks = JSON.parse(risks); } catch(e){ risks=[]; } }
+    document.getElementById('body-risks').innerHTML = risks.map(r => `
+      <div class="risk-item">
+        <div class="risk-badge ${r.level?.toLowerCase()}">${r.level}</div>
+        <div class="risk-text"><strong>${esc(r.title)}</strong><span>${esc(r.desc)}</span></div>
+      </div>`).join('') || '<p>No significant risks identified.</p>';
+  }
+  if (opts.includes('keypoints') && r.KEY_POINTS) {
+    let pts = r.KEY_POINTS;
+    if (typeof pts === 'string') pts = pts.split('\n').filter(Boolean);
+    document.getElementById('body-keypoints').innerHTML = pts.map((p,i)=>`
+      <div class="key-point"><div class="kp-bullet">${i+1}</div><div>${esc(p)}</div></div>`).join('');
+  }
+  if (opts.includes('simplify') && r.SIMPLIFIED)
+    document.getElementById('body-simplify').innerHTML = `<div class="simplified-block">${esc(r.SIMPLIFIED)}</div>`;
+}
+function renderTimeout() {
+  document.getElementById('nonLegalBanner').style.display = 'none';
+  document.getElementById('body-summary').innerHTML = `
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:#F5F0FA;border:1px solid #D9CCF0;border-radius:8px;">
+      <span style="font-size:16px;flex-shrink:0;">⏱️</span>
+      <div>
+        <strong style="font-size:13px;color:#1A1A18;display:block;margin-bottom:3px;">Analysis timed out</strong>
+        <span style="font-size:12px;color:#6B6B62;line-height:1.6;">The request took too long to complete. This can happen with large documents or slow connections. Please try again.</span>
+      </div>
+    </div>`;
+  ['risks','keypoints','simplify'].forEach(s => {
+    document.getElementById(`body-${s}`).innerHTML = '<p style="color:var(--ink-muted);font-size:13px;font-style:italic;">No analysis available.</p>';
+  });
+}
+function renderFallback() {
+  // Show the banner above sections — single disclaimer, nowhere else
+  const banner = document.getElementById('nonLegalBanner');
+  banner.style.display = 'flex';
+  // Neutral message in all section bodies — no duplicate disclaimer
+  ['summary','risks','keypoints','simplify'].forEach(s => {
+    document.getElementById(`body-${s}`).innerHTML = '<p style="color:var(--ink-muted);font-size:13px;font-style:italic;">Analysis could not be completed for this document.</p>';
+  });
+}
+function esc(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function toggleSection(id) { document.getElementById(id).classList.toggle('open'); }
+
+function resetTool() {
+  // Kill any in-flight analysis immediately
+  if (activeEscape)     { clearTimeout(activeEscape); activeEscape = null; }
+  if (activeController) { try { activeController.abort(); } catch(e){} activeController = null; }
+  loadedFile = null; pasteMode = false;
+  ['resultsArea'].forEach(id => document.getElementById(id).classList.remove('visible'));
+  document.getElementById('loadingState').classList.remove('visible');
+  document.getElementById('upgradeWall').style.display = 'none';
+  document.getElementById('inputState').style.display  = '';
+  document.getElementById('nonLegalBanner').style.display = 'none';
+  document.getElementById('docText').value = ''; document.getElementById('docText').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('dropLabel').textContent = 'Drop your document here';
+  document.getElementById('dropSub').textContent   = 'PDF, DOCX, or TXT accepted';
+  dropZone.style.borderColor = ''; dropZone.style.background = ''; dropZone.style.pointerEvents = '';
+  document.getElementById('clearFileRow').style.display   = 'none';
+  document.getElementById('pasteToggleRow').style.display = 'block';
+  document.getElementById('pasteDivider').style.display   = 'none';
+  ['step1','step2','step3','step4','step5'].forEach(s => document.getElementById(s).classList.remove('active','done'));
+  document.getElementById('heroText').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+</script>
+</body>
+</html>

@@ -4,7 +4,8 @@
   ],
   "functions": {
     "api/analyse.js": { "maxDuration": 30 },
-    "api/knowmore.js": { "maxDuration": 10 }
+    "api/knowmore.js": { "maxDuration": 10 },
+    "api/extract-docx.js": { "maxDuration": 15 }
   },
   "headers": [
     {

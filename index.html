@@ -720,9 +720,11 @@ const USER_LIMIT  = 10;
 let currentUser   = null;
 let userProfile   = null;
 let guestUsed     = parseInt(getCookie('vrx_guest') || '0');
-let loadedFile    = null;
-let pasteMode     = false;
-let modalMode     = 'signup';
+let loadedFile       = null;
+let pasteMode        = false;
+let modalMode        = 'signup';
+let activeController = null;  // AbortController for in-flight analysis
+let activeEscape     = null;  // escape hatch timer for in-flight analysis
 
 // ─── BOOT ────────────────────────────────────────────────────
 (async () => {
@@ -1146,15 +1148,18 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
 
   let result = null;
   async function attemptAnalysis() {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000);
+    // Cancel any previous in-flight request before starting a new one
+    if (activeController) { try { activeController.abort(); } catch(e){} }
+    activeController = new AbortController();
+    const timeoutId = setTimeout(() => activeController.abort(), 25000);
     try {
       const res = await fetch('/api/analyse', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 4000, messages: [{ role: 'user', content: userContent }] }),
-        signal: controller.signal
+        signal: activeController.signal
       });
       clearTimeout(timeoutId);
+      activeController = null;
       if (!res.ok) return null;
       const data = await res.json();
       const raw  = data.content?.map(b => b.text || '').join('').trim();
@@ -1162,13 +1167,15 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
       return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
     } catch(e) {
       clearTimeout(timeoutId);
+      activeController = null;
       return null;
     }
   }
 
   // Hard escape hatch — no matter what happens, UI exits within 35s
   let escaped = false;
-  const escapeHatch = setTimeout(() => {
+  if (activeEscape) clearTimeout(activeEscape);
+  activeEscape = setTimeout(() => {
     if (!escaped) {
       escaped = true;
       stepsPromise.finish();
@@ -1195,7 +1202,8 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
   }
 
   if (escaped) return;
-  clearTimeout(escapeHatch);
+  clearTimeout(activeEscape);
+  activeEscape = null;
   escaped = true;
 
   stepsPromise.finish();
@@ -1270,6 +1278,9 @@ function esc(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&
 function toggleSection(id) { document.getElementById(id).classList.toggle('open'); }
 
 function resetTool() {
+  // Kill any in-flight analysis immediately
+  if (activeEscape)     { clearTimeout(activeEscape); activeEscape = null; }
+  if (activeController) { try { activeController.abort(); } catch(e){} activeController = null; }
   loadedFile = null; pasteMode = false;
   ['resultsArea'].forEach(id => document.getElementById(id).classList.remove('visible'));
   document.getElementById('loadingState').classList.remove('visible');

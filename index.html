@@ -1081,27 +1081,38 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
   }
 
   let result = null;
-  try {
+  async function attemptAnalysis() {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s client timeout
-    const res = await fetch('/api/analyse', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2500, messages: [{ role: 'user', content: userContent }] }),
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
-    if (!res.ok) {
-      // Server returned an error (including 504 timeout)
-      result = '__timeout__';
-    } else {
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
+    try {
+      const res = await fetch('/api/analyse', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 4000, messages: [{ role: 'user', content: userContent }] }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (!res.ok) return null;
       const data = await res.json();
       const raw  = data.content?.map(b => b.text || '').join('').trim();
       const jsonMatch = raw?.match(/\{[\s\S]*\}/);
-      if (jsonMatch) result = JSON.parse(jsonMatch[0]);
+      return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    } catch(e) {
+      clearTimeout(timeoutId);
+      return null;
+    }
+  }
+
+  try {
+    result = await attemptAnalysis();
+    if (!result) {
+      // Silent retry once — covers cold starts and transient failures
+      await new Promise(r => setTimeout(r, 1500));
+      result = await attemptAnalysis();
+      if (!result) result = '__timeout__';
     }
   } catch(e) {
     console.error(e);
-    result = '__timeout__'; // AbortError or network failure
+    result = '__timeout__';
   }
 
   await stepsPromise;

@@ -1129,7 +1129,7 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
           return;
         }
 
-        userContent = instruction + '\n\nDOCUMENT:\n"""\n' + text.slice(0, 50000) + '\n"""';
+        userContent = instruction + '\n\nDOCUMENT:\n"""\n' + text.slice(0, 48000) + '\n"""';
       } catch(e) {
         console.error('DOCX extraction failed:', e);
         await stepsPromise;
@@ -1140,10 +1140,10 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
       }
     } else {
       // TXT or other text file — decode base64 and send as text
-      userContent = instruction + '\n\nDOCUMENT:\n"""\n' + atob(loadedFile.base64).slice(0, 50000) + '\n"""';
+      userContent = instruction + '\n\nDOCUMENT:\n"""\n' + atob(loadedFile.base64).slice(0, 48000) + '\n"""';
     }
   } else {
-    userContent = instruction + '\n\nDOCUMENT:\n"""\n' + pasteText.slice(0, 50000) + '\n"""';
+    userContent = instruction + '\n\nDOCUMENT:\n"""\n' + pasteText.slice(0, 48000) + '\n"""';
   }
 
   let result = null;

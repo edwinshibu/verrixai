@@ -10,7 +10,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -1122,80 +1121,26 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
 
         const MIN_TEXT = 200;
         if (text.length < MIN_TEXT) {
-          // Image-heavy — attempt auto-conversion to PDF using jsPDF
-          try {
-            // Update loading step text to let user know what's happening
-            document.getElementById('step2').querySelector('span') && (document.getElementById('step2').querySelector('span').textContent = 'Converting images to PDF...');
-
-            // Extract all images from the DOCX zip
-            const imageFiles = Object.keys(zip.files).filter(f =>
-              f.startsWith('word/media/') && f.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i)
-            );
-
-            if (imageFiles.length === 0) throw new Error('no_images');
-
-            // Load each image and get its dimensions via canvas
-            const loadImage = (dataUrl) => new Promise((res, rej) => {
-              const img = new Image();
-              img.onload = () => res(img);
-              img.onerror = rej;
-              img.src = dataUrl;
-            });
-
-            const { jsPDF } = window.jspdf;
-            let pdf = null;
-
-            for (let i = 0; i < imageFiles.length; i++) {
-              const imgData = await zip.files[imageFiles[i]].async('base64');
-              const ext = imageFiles[i].split('.').pop().toLowerCase();
-              const mimeType = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : `image/${ext}`;
-              const dataUrl = `data:${mimeType};base64,${imgData}`;
-
-              const img = await loadImage(dataUrl);
-              const imgW = img.naturalWidth;
-              const imgH = img.naturalHeight;
-
-              // Page size matches image aspect ratio, max A4 width
-              const pageW = 210; // A4 width in mm
-              const pageH = Math.round((imgH / imgW) * pageW);
-
-              if (!pdf) {
-                pdf = new jsPDF({ orientation: imgW > imgH ? 'landscape' : 'portrait', unit: 'mm', format: [pageW, pageH] });
-              } else {
-                pdf.addPage([pageW, pageH], imgW > imgH ? 'landscape' : 'portrait');
-              }
-              pdf.addImage(dataUrl, ext === 'jpg' || ext === 'jpeg' ? 'JPEG' : 'PNG', 0, 0, pageW, pageH);
-            }
-
-            // Get PDF as base64 and send to Claude natively
-            const pdfBase64 = pdf.output('datauristring').split(',')[1];
-            userContent = [
-              { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: pdfBase64 } },
-              { type: 'text', text: instruction }
-            ];
-            // Fall through to analysis with the converted PDF
-          } catch(convErr) {
-            // Conversion failed — show the original warning
-            await stepsPromise;
-            document.getElementById('loadingState').classList.remove('visible');
-            document.getElementById('resultsArea').classList.add('visible');
-            document.getElementById('nonLegalBanner').style.display = 'none';
-            ['summary','risks','keypoints','simplify'].forEach(s => {
-              document.getElementById(`sec-${s}`).style.display = opts.includes(s) ? '' : 'none';
-            });
-            document.getElementById('body-summary').innerHTML = `
-              <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:#FEF9EE;border:1px solid #E8D9B0;border-radius:8px;">
-                <span style="font-size:16px;flex-shrink:0;">🖼️</span>
-                <div>
-                  <strong style="font-size:13px;color:#1A1A18;display:block;margin-bottom:4px;">Document contains mostly images</strong>
-                  <span style="font-size:12px;color:#6B6B62;line-height:1.6;">This document appears to contain mostly images and very little text. For best results, please export it as a PDF — VerrixAI can read images and diagrams inside PDFs.</span>
-                </div>
-              </div>`;
-            ['risks','keypoints','simplify'].forEach(s => {
-              document.getElementById(`body-${s}`).innerHTML = '<p style="color:var(--ink-muted);font-size:13px;font-style:italic;">No analysis available.</p>';
-            });
-            return;
-          }
+          // Image-heavy — show warning
+          await stepsPromise;
+          document.getElementById('loadingState').classList.remove('visible');
+          document.getElementById('resultsArea').classList.add('visible');
+          document.getElementById('nonLegalBanner').style.display = 'none';
+          ['summary','risks','keypoints','simplify'].forEach(s => {
+            document.getElementById(`sec-${s}`).style.display = opts.includes(s) ? '' : 'none';
+          });
+          document.getElementById('body-summary').innerHTML = `
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:#FEF9EE;border:1px solid #E8D9B0;border-radius:8px;">
+              <span style="font-size:16px;flex-shrink:0;">🖼️</span>
+              <div>
+                <strong style="font-size:13px;color:#1A1A18;display:block;margin-bottom:4px;">Document contains mostly images</strong>
+                <span style="font-size:12px;color:#6B6B62;line-height:1.6;">This document appears to contain mostly images and very little text. For best results, please export it as a PDF — VerrixAI can read images and diagrams inside PDFs.</span>
+              </div>
+            </div>`;
+          ['risks','keypoints','simplify'].forEach(s => {
+            document.getElementById(`body-${s}`).innerHTML = '<p style="color:var(--ink-muted);font-size:13px;font-style:italic;">No analysis available.</p>';
+          });
+          return;
         }
 
         userContent = instruction + '\n\nDOCUMENT:\n"""\n' + text.slice(0, 48000) + '\n"""';

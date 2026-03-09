@@ -1,5 +1,5 @@
 const ALLOWED_ORIGIN = 'https://verrixai.com';
-const MAX_TEXT_LENGTH = 50000;
+const MAX_TEXT_LENGTH = 60000;
 const ALLOWED_MODEL   = 'claude-sonnet-4-20250514';
 const MAX_TOKENS      = 4000;
 

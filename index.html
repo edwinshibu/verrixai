@@ -990,6 +990,20 @@ dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.
 document.getElementById('fileInput').addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
 
 function handleFile(file) {
+  // TXT size limit — 1MB max (large TXT files stall FileReader with no benefit)
+  const isTxt = file.name.toLowerCase().endsWith('.txt') || file.type === 'text/plain';
+  if (isTxt && file.size > 5.5 * 1024 * 1024) {
+    dropZone.style.borderColor = '#C0392B';
+    document.getElementById('dropLabel').textContent = '⚠ File too large';
+    document.getElementById('dropSub').textContent   = 'TXT files must be under 5.5MB. Only the first ~48,000 characters would be analysed anyway.';
+    setTimeout(() => {
+      dropZone.style.borderColor = '';
+      document.getElementById('dropLabel').textContent = 'Drop your document here';
+      document.getElementById('dropSub').textContent   = 'PDF, DOCX, or TXT accepted';
+    }, 4000);
+    document.getElementById('fileInput').value = '';
+    return;
+  }
   const reader = new FileReader();
   reader.onload = ev => {
     loadedFile = { base64: ev.target.result.split(',')[1], mediaType: file.type || 'application/pdf', name: file.name, _rawFile: file };

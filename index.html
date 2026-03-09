@@ -1026,14 +1026,16 @@ function getActiveOptions() { return [...document.querySelectorAll('.opt-chip.ac
 // ─── LOADING ANIMATION ───────────────────────────────────────
 function animateSteps() {
   const steps = ['step1','step2','step3','step4','step5']; let i = 0;
-  return new Promise(resolve => {
-    function next() {
-      if (i > 0) { document.getElementById(steps[i-1]).classList.remove('active'); document.getElementById(steps[i-1]).classList.add('done'); }
-      if (i < steps.length) { document.getElementById(steps[i]).classList.add('active'); i++; setTimeout(next, 900); }
-      else resolve();
-    }
-    next();
-  });
+  let resolveSteps;
+  const promise = new Promise(resolve => { resolveSteps = resolve; });
+  function next() {
+    if (i > 0) { document.getElementById(steps[i-1]).classList.remove('active'); document.getElementById(steps[i-1]).classList.add('done'); }
+    if (i < steps.length) { document.getElementById(steps[i]).classList.add('active'); i++; setTimeout(next, 900); }
+    else resolveSteps();
+  }
+  next();
+  promise.finish = () => resolveSteps();
+  return promise;
 }
 
 // ─── ANALYSIS ────────────────────────────────────────────────
@@ -1164,6 +1166,21 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
     }
   }
 
+  // Hard escape hatch — no matter what happens, UI exits within 35s
+  let escaped = false;
+  const escapeHatch = setTimeout(() => {
+    if (!escaped) {
+      escaped = true;
+      stepsPromise.finish();
+      document.getElementById('loadingState').classList.remove('visible');
+      renderTimeout();
+      document.getElementById('resultsArea').classList.add('visible');
+      ['summary','risks','keypoints','simplify'].forEach(s => {
+        document.getElementById(`sec-${s}`).style.display = opts.includes(s) ? '' : 'none';
+      });
+    }
+  }, 35000);
+
   try {
     result = await attemptAnalysis();
     if (!result) {
@@ -1177,6 +1194,11 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
     result = '__timeout__';
   }
 
+  if (escaped) return;
+  clearTimeout(escapeHatch);
+  escaped = true;
+
+  stepsPromise.finish();
   await stepsPromise;
   document.getElementById('loadingState').classList.remove('visible');
   if (result === '__timeout__') {

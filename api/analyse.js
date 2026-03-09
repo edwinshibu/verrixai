@@ -81,6 +81,12 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    // Send keep-alive header immediately — prevents Vercel from killing the
+    // connection during cold starts before Claude responds
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Transfer-Encoding', 'chunked');
+    res.setHeader('X-Accel-Buffering', 'no');
+
     // Build request ourselves — never forward client body directly
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 22000); // 22s — under Vercel's 30s limit

@@ -725,6 +725,7 @@ let pasteMode        = false;
 let modalMode        = 'signup';
 let activeController = null;  // AbortController for in-flight analysis
 let activeEscape     = null;  // escape hatch timer for in-flight analysis
+let analysisGen      = 0;     // incremented on each new analysis; stale continuations bail out
 
 // ─── BOOT ────────────────────────────────────────────────────
 (async () => {
@@ -1062,6 +1063,7 @@ async function startAnalysis() {
     dropZone.style.borderColor = '#C0392B'; setTimeout(() => dropZone.style.borderColor = '', 2000); return;
   }
   const opts = getActiveOptions();
+  const myGen = ++analysisGen;  // capture this analysis's generation number
   document.getElementById('inputState').style.display = 'none';
   document.getElementById('upgradeWall').style.display = 'none';
   document.getElementById('loadingState').classList.add('visible');
@@ -1187,19 +1189,17 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
   }
 
   // Hard escape hatch — no matter what happens, UI exits within 35s
-  let escaped = false;
   if (activeEscape) clearTimeout(activeEscape);
   activeEscape = setTimeout(() => {
-    if (!escaped) {
-      escaped = true;
-      stepsPromise.finish();
-      document.getElementById('loadingState').classList.remove('visible');
-      renderTimeout();
-      document.getElementById('resultsArea').classList.add('visible');
-      ['summary','risks','keypoints','simplify'].forEach(s => {
-        document.getElementById(`sec-${s}`).style.display = opts.includes(s) ? '' : 'none';
-      });
-    }
+    if (analysisGen !== myGen) return;  // stale — a newer analysis is running
+    activeEscape = null;
+    stepsPromise.finish();
+    document.getElementById('loadingState').classList.remove('visible');
+    renderTimeout();
+    document.getElementById('resultsArea').classList.add('visible');
+    ['summary','risks','keypoints','simplify'].forEach(s => {
+      document.getElementById(`sec-${s}`).style.display = opts.includes(s) ? '' : 'none';
+    });
   }, 35000);
 
   try {
@@ -1215,10 +1215,9 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
     result = '__timeout__';
   }
 
-  if (escaped) return;
+  if (analysisGen !== myGen) return;  // reset was clicked while we were waiting — discard result
   clearTimeout(activeEscape);
   activeEscape = null;
-  escaped = true;
 
   stepsPromise.finish();
   await stepsPromise;
@@ -1292,7 +1291,8 @@ function esc(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&
 function toggleSection(id) { document.getElementById(id).classList.toggle('open'); }
 
 function resetTool() {
-  // Kill any in-flight analysis immediately
+  // Kill any in-flight analysis immediately — bump generation so its continuation bails
+  analysisGen++;
   if (activeEscape)     { clearTimeout(activeEscape); activeEscape = null; }
   if (activeController) { try { activeController.abort(); } catch(e){} activeController = null; }
   loadedFile = null; pasteMode = false;
@@ -1310,6 +1310,13 @@ function resetTool() {
   document.getElementById('pasteToggleRow').style.display = 'block';
   document.getElementById('pasteDivider').style.display   = 'none';
   ['step1','step2','step3','step4','step5'].forEach(s => document.getElementById(s).classList.remove('active','done'));
+  // Reset result section bodies so stale content never shows on next analysis
+  ['summary','risks','keypoints','simplify'].forEach(s => {
+    const body = document.getElementById(`body-${s}`);
+    if (body) body.innerHTML = 'Loading…';
+    const sec = document.getElementById(`sec-${s}`);
+    if (sec) { sec.classList.add('open'); sec.style.display = ''; }
+  });
   document.getElementById('heroText').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 </script>

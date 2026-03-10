@@ -727,6 +727,10 @@ let activeController = null;  // AbortController for in-flight analysis
 let activeEscape     = null;  // escape hatch timer for in-flight analysis
 let analysisGen      = 0;     // incremented on each new analysis; stale continuations bail out
 
+// ─── INVITE SOURCE TRACKING ──────────────────────────────────
+const urlSource = new URLSearchParams(window.location.search).get('source');
+if (urlSource) sessionStorage.setItem('vrx_source', urlSource);
+
 // ─── BOOT ────────────────────────────────────────────────────
 (async () => {
   const { data: { session } } = await sb.auth.getSession();
@@ -751,6 +755,12 @@ async function onSignIn(user) {
   if (!profile) {
     await sb.from('profiles').upsert({ id: user.id, email: user.email, scans_used: 0, scans_limit: USER_LIMIT });
     ({ data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single());
+    // Record invite source if user arrived via a tracked link (e.g. ?source=invite)
+    const source = sessionStorage.getItem('vrx_source');
+    if (source) {
+      await sb.from('invites').insert({ user_id: user.id, email: user.email, source });
+      sessionStorage.removeItem('vrx_source');
+    }
   } else if (!profile.scans_limit) {
     await sb.from('profiles').update({ scans_limit: USER_LIMIT }).eq('id', user.id);
     profile.scans_limit = USER_LIMIT;

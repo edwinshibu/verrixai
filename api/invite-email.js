@@ -199,6 +199,9 @@ const EMAIL_HTML = `<!DOCTYPE html>
         <!-- FOOTER -->
         <tr>
           <td style="padding:28px 0;text-align:center;">
+            <p style="margin:0 0 14px;font-family:Arial,sans-serif;font-size:12px;color:#9B9B8E;line-height:1.7;background:#F0EEE8;border-radius:8px;padding:12px 16px;">
+              📬 If this landed in <strong>Promotions</strong>, drag it to <strong>Primary</strong> — it helps us reach you next time.
+            </p>
             <p style="margin:0 0 6px;font-family:'Georgia',serif;font-size:15px;color:#1A1A18;">Verrix<span style="color:#B8963E;">AI</span></p>
             <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#9B9B8E;line-height:1.6;">
               Not legal advice. Always consult a qualified solicitor for binding decisions.<br/>
@@ -251,7 +254,8 @@ module.exports = async function handler(req, res) {
           reply_to: 'noreply@verrixai.com',
           to:       recipient.email,
           subject:  `We built something we think you'll actually use`,
-          html:     EMAIL_HTML
+          html:     EMAIL_HTML,
+          text:     `Hey,\n\nWe built something we think you'll find genuinely useful — and we wanted you to be one of the first to try it.\n\nIt's called VerrixAI. Legal documents are deliberately hard to read — contracts, leases, privacy policies, terms & conditions. Most people sign them without truly understanding what they're agreeing to.\n\nVerrixAI fixes that. Upload or paste any legal document and within seconds you get:\n\n- A plain-English summary of what it actually says\n- Risk flags — clauses ranked HIGH / MEDIUM / LOW that could come back to bite you\n- Key points — the most important obligations extracted clearly\n- A fully simplified rewrite in language a normal person can understand\n\nIt works on PDFs, Word docs, or pasted text. Takes about 30 seconds. Your document is never stored.\n\nFree to use, no credit card needed, 5 scans on sign-up.\n\nhttps://verrixai.com?source=invite\n\nLet us know what you think — honest feedback very welcome.\n\nThe VerrixAI team\n\n---\nNot legal advice. Always consult a qualified solicitor for binding decisions.\n© 2026 VerrixAI. All rights reserved.`
         })
       });
 

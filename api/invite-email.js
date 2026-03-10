@@ -2,7 +2,7 @@ const ALLOWED_ORIGIN = 'https://verrixai.com';
 
 // List of recipients — add names and emails here before triggering
 const RECIPIENTS = [
-  // { name: 'Jane Smith',  email: 'jane@example.com' },
+   { name: 'Edwin Shibu',  email: 'edwinshibu255@gmail.com' },
   // { name: 'John Doe',    email: 'john@example.com' },
 ];
 

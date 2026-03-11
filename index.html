@@ -13,6 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -612,7 +613,10 @@
     <div class="results-area" id="resultsArea">
       <div class="results-header">
         <div class="results-title">Analysis Complete</div>
-        <button class="new-btn" onclick="resetTool()">← New Document</button>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="new-btn" id="btnExportPdf" onclick="exportToPdf()" style="display:none;background:var(--gold);color:white;border-color:var(--gold);">⬇ Export PDF</button>
+          <button class="new-btn" onclick="resetTool()">← New Document</button>
+        </div>
       </div>
 
       <!-- Non-legal warning banner (hidden by default) -->
@@ -1195,6 +1199,7 @@ function handleFile(file) {
   const reader = new FileReader();
   reader.onload = ev => {
     loadedFile = { base64: ev.target.result.split(',')[1], mediaType: file.type || 'application/pdf', name: file.name, _rawFile: file };
+    window._currentFileName = file.name.replace(/\.[^/.]+$/, '');
     document.getElementById('dropLabel').textContent = `✓ ${file.name}`;
     document.getElementById('dropSub').textContent   = 'File ready for analysis';
     dropZone.style.borderColor = 'var(--gold)'; dropZone.style.background = '#FDFBF5'; dropZone.style.pointerEvents = 'none';
@@ -1423,6 +1428,14 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
 }
 
 function renderResults(r, opts) {
+  // Show export button for Pro 2 users
+  const exportBtn = document.getElementById('btnExportPdf');
+  if (userProfile?.plan === 'pro2') exportBtn.style.display = '';
+  else exportBtn.style.display = 'none';
+  // Store last result for export
+  window._lastResult = r;
+  window._lastOpts   = opts;
+  window._lastFileName = window._currentFileName || 'document';
   // Show warning banner if not a legal document
   const banner = document.getElementById('nonLegalBanner');
   if (r.IS_LEGAL === false) {
@@ -1505,6 +1518,178 @@ function resetTool() {
     if (sec) { sec.classList.add('open'); sec.style.display = ''; }
   });
   document.getElementById('heroText').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ─── PDF EXPORT (Pro 2) ──────────────────────────────────────
+function exportToPdf() {
+  const r    = window._lastResult;
+  const opts = window._lastOpts || [];
+  const name = window._lastFileName || 'document';
+  if (!r) return;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const pageW = 210, pageH = 297;
+  const marginL = 20, marginR = 20, marginT = 20, marginB = 20;
+  const contentW = pageW - marginL - marginR;
+  let y = marginT;
+
+  // Colours
+  const darkGreen = [26, 58, 42];
+  const gold      = [184, 150, 62];
+  const inkMuted  = [107, 107, 98];
+  const ink       = [26, 26, 24];
+  const riskHigh  = [197, 59, 59];
+  const riskMed   = [194, 120, 30];
+  const riskLow   = [46, 92, 66];
+  const border    = [226, 224, 216];
+
+  function checkPage(needed = 10) {
+    if (y + needed > pageH - marginB) { doc.addPage(); y = marginT; }
+  }
+
+  function wrapText(text, x, maxW, fontSize) {
+    doc.setFontSize(fontSize);
+    return doc.splitTextToSize(text, maxW);
+  }
+
+  // ── Header bar ──────────────────────────────────────────────
+  doc.setFillColor(...darkGreen);
+  doc.rect(0, 0, pageW, 22, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text('VerrixAI', marginL, 14);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(200, 220, 210);
+  doc.text('Document Analysis Report', marginL + 28, 14);
+
+  // Date top right
+  const dateStr = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+  doc.setTextColor(200, 220, 210);
+  doc.setFontSize(8);
+  doc.text(dateStr, pageW - marginR, 14, { align: 'right' });
+
+  y = 32;
+
+  // ── Document name ────────────────────────────────────────────
+  doc.setTextColor(...ink);
+  doc.setFontSize(13);
+  doc.setFont('helvetica', 'bold');
+  const displayName = name.length > 60 ? name.substring(0, 57) + '…' : name;
+  doc.text(displayName, marginL, y);
+  y += 5;
+  doc.setDrawColor(...border);
+  doc.setLineWidth(0.3);
+  doc.line(marginL, y, pageW - marginR, y);
+  y += 8;
+
+  // ── Helper: section title ────────────────────────────────────
+  function sectionTitle(icon, title) {
+    checkPage(14);
+    doc.setFillColor(240, 244, 241);
+    doc.roundedRect(marginL, y, contentW, 9, 2, 2, 'F');
+    doc.setTextColor(...darkGreen);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${icon}  ${title}`, marginL + 4, y + 6);
+    y += 14;
+  }
+
+  // ── SUMMARY ──────────────────────────────────────────────────
+  if (opts.includes('summary') && r.SUMMARY) {
+    sectionTitle('📋', 'Document Summary');
+    const lines = wrapText(r.SUMMARY, marginL, contentW, 10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...ink);
+    lines.forEach(line => { checkPage(6); doc.text(line, marginL, y); y += 6; });
+    y += 6;
+  }
+
+  // ── RISK FLAGS ───────────────────────────────────────────────
+  if (opts.includes('risks') && r.RISKS) {
+    sectionTitle('⚠️', 'Risk Flags');
+    let risks = r.RISKS;
+    if (typeof risks === 'string') { try { risks = JSON.parse(risks); } catch(e) { risks = []; } }
+    risks.forEach(risk => {
+      checkPage(20);
+      const level = (risk.level || '').toUpperCase();
+      const badgeColor = level === 'HIGH' ? riskHigh : level === 'MEDIUM' ? riskMed : riskLow;
+      // Badge
+      doc.setFillColor(...badgeColor);
+      doc.roundedRect(marginL, y, 18, 6, 1, 1, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'bold');
+      doc.text(level, marginL + 9, y + 4.2, { align: 'center' });
+      // Title
+      doc.setTextColor(...ink);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text(risk.title || '', marginL + 22, y + 4.5);
+      y += 8;
+      // Description
+      const descLines = wrapText(risk.desc || '', marginL + 22, contentW - 22, 9);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...inkMuted);
+      doc.setFontSize(9);
+      descLines.forEach(line => { checkPage(5); doc.text(line, marginL + 22, y); y += 5; });
+      y += 4;
+    });
+    y += 2;
+  }
+
+  // ── KEY POINTS ───────────────────────────────────────────────
+  if (opts.includes('keypoints') && r.KEY_POINTS) {
+    sectionTitle('🔑', 'Key Points');
+    let pts = r.KEY_POINTS;
+    if (typeof pts === 'string') pts = pts.split('\n').filter(Boolean);
+    pts.forEach((pt, i) => {
+      checkPage(14);
+      // Numbered circle
+      doc.setFillColor(...darkGreen);
+      doc.circle(marginL + 3, y + 2.5, 3, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'bold');
+      doc.text(String(i + 1), marginL + 3, y + 4, { align: 'center' });
+      // Point text
+      const ptLines = wrapText(pt, marginL + 10, contentW - 10, 10);
+      doc.setTextColor(...ink);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      ptLines.forEach((line, li) => { checkPage(6); doc.text(line, marginL + 10, y + (li === 0 ? 4 : 4 + li * 6)); });
+      y += Math.max(10, ptLines.length * 6 + 2);
+    });
+    y += 4;
+  }
+
+  // ── PLAIN LANGUAGE ───────────────────────────────────────────
+  if (opts.includes('simplify') && r.SIMPLIFIED) {
+    sectionTitle('✨', 'Plain-Language Version');
+    const lines = wrapText(r.SIMPLIFIED, marginL, contentW, 10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...ink);
+    lines.forEach(line => { checkPage(6); doc.text(line, marginL, y); y += 6; });
+    y += 4;
+  }
+
+  // ── Footer on every page ─────────────────────────────────────
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setDrawColor(...border);
+    doc.setLineWidth(0.3);
+    doc.line(marginL, pageH - 14, pageW - marginR, pageH - 14);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...inkMuted);
+    doc.text('Generated by VerrixAI · verrixai.com · Not legal advice', marginL, pageH - 9);
+    doc.text(`Page ${i} of ${totalPages}`, pageW - marginR, pageH - 9, { align: 'right' });
+  }
+
+  doc.save(`${name}-verrixai-analysis.pdf`);
 }
 </script>
 </body>

@@ -365,7 +365,7 @@
         <div class="user-avatar" id="userAvatar">?</div>
         <span id="userEmailLabel" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;"></span>
       </div>
-      <button class="btn-nav ghost" onclick="signOut()">Sign out</button>
+      <button class="btn-nav ghost" id="btnSignOut" onclick="signOut(this)">Sign out</button>
     </div>
   </div>
 </nav>
@@ -854,6 +854,9 @@ function renderNavUser(user) {
   document.getElementById('navUser').style.display  = 'flex';
   document.getElementById('userEmailLabel').textContent = user.email;
   document.getElementById('userAvatar').textContent = (user.email||'?')[0].toUpperCase();
+  // Always reset sign out button in case it was left in a broken state
+  const btn = document.getElementById('btnSignOut');
+  if (btn) { btn.disabled = false; btn.textContent = 'Sign out'; }
   renderScanPill();
 }
 function renderScanPill() {
@@ -1057,15 +1060,13 @@ async function handleAuth() {
   btn.textContent = modalMode === 'signup' ? 'Create Account' : 'Sign in';
 }
 
-async function signOut() {
-  const btn = document.querySelector('.btn-nav.ghost');
+async function signOut(btn) {
   if (btn) { btn.disabled = true; btn.textContent = 'Signing out…'; }
   try {
     const { error } = await sb.auth.signOut();
     if (error) throw error;
   } catch(e) {
     console.error('Sign out error:', e);
-    // Reset button if sign out fails so user can try again
     if (btn) { btn.disabled = false; btn.textContent = 'Sign out'; }
   }
 }

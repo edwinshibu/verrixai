@@ -120,7 +120,7 @@
 
     /* DANGER ZONE */
     .danger-card { border-color: #F5D0CC; }
-    .danger-title { color: var(--risk-high); }
+    .danger-title { color: var(--ink-muted); }
     .danger-desc { font-size: 13px; color: var(--ink-muted); margin-bottom: 18px; line-height: 1.6; }
     .btn-danger { padding: 10px 20px; border-radius: 999px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; background: none; color: var(--risk-high); border: 1px solid #F5D0CC; transition: all 0.2s; }
     .btn-danger:hover { background: #FDECEA; border-color: var(--risk-high); }
@@ -246,9 +246,9 @@
       </div>
     </div>
 
-    <!-- Danger zone -->
+    <!-- Privacy & Data -->
     <div class="card danger-card">
-      <div class="card-title danger-title">Danger Zone</div>
+      <div class="card-title danger-title">Privacy & Data</div>
       <p class="danger-desc">
         Deleting your account is permanent and cannot be undone. All your data including
         scan history and profile information will be removed within 30 days.
@@ -389,14 +389,18 @@
     const btn = document.getElementById('confirmDeleteBtn');
     btn.disabled = true; btn.textContent = 'Deleting…';
     try {
-      // Send deletion request email to admin
-      await fetch('/api/delete-account', {
+      const { data: { session } } = await sb.auth.getSession();
+      const response = await fetch('/api/delete-account', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
         body: JSON.stringify({ user_id: currentUser.id, email: currentUser.email })
       });
+      if (!response.ok) throw new Error('Request failed');
       await sb.auth.signOut();
-      showToast('Account deletion requested. You will be notified within 30 days.');
+      showToast('Account deleted. Redirecting…');
       setTimeout(() => { window.location.href = '/'; }, 3000);
     } catch(e) {
       btn.disabled = false; btn.textContent = 'Yes, delete';

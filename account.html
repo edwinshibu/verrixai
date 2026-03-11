@@ -369,11 +369,14 @@
       statusEl.textContent = `${rem} scan${rem !== 1 ? 's' : ''} remaining.`;
     }
 
-    // Populate details
-    document.getElementById('detailEmail').textContent      = user.email;
-    document.getElementById('detailProvider').innerHTML     = providerLabel;
-    document.getElementById('detailSince').textContent      = since;
-    document.getElementById('detailPlan').textContent       = 'Free';
+    // Plan label
+    const planRaw = profile?.plan || 'free';
+    const planLabel = planRaw === 'pro' ? 'Pro' : planRaw === 'pro2' ? 'Pro 2' : 'Free';
+    document.getElementById('heroPlan').textContent          = `${planLabel} Plan`;
+    document.getElementById('detailEmail').textContent       = user.email;
+    document.getElementById('detailProvider').innerHTML      = providerLabel;
+    document.getElementById('detailSince').textContent       = since;
+    document.getElementById('detailPlan').textContent        = planLabel;
 
     // Show account state
     document.getElementById('loadingState').style.display  = 'none';

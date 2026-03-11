@@ -797,6 +797,12 @@ if (urlSource) sessionStorage.setItem('vrx_source', urlSource);
   if (session?.user) await onSignIn(session.user);
   else renderNavGuest();
 
+  // Auto-open pricing modal if redirected from account page
+  if (new URLSearchParams(window.location.search).get('pricing') === '1') {
+    setTimeout(() => openPricingModal(), 400);
+    window.history.replaceState({}, '', '/');
+  }
+
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session?.user) {
       await onSignIn(session.user);

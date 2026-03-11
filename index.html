@@ -41,6 +41,20 @@
   .btn-nav.ghost:hover { color: var(--ink); }
   .user-chip { display: flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); font-size: 12px; font-weight: 500; }
   .user-avatar { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: white; font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  /* Avatar dropdown */
+  .avatar-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--accent); color: white; font-size: 13px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; position: relative; letter-spacing: 0.03em; }
+  .avatar-btn:hover { background: var(--accent-light); transform: scale(1.05); }
+  .avatar-wrapper { position: relative; }
+  .avatar-dropdown { position: absolute; top: calc(100% + 10px); right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow-lg); min-width: 200px; overflow: hidden; opacity: 0; pointer-events: none; transform: translateY(6px); transition: all 0.2s; z-index: 200; }
+  .avatar-dropdown.open { opacity: 1; pointer-events: all; transform: translateY(0); }
+  .dropdown-header { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); }
+  .dropdown-email { font-size: 11px; color: var(--ink-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; }
+  .dropdown-plan { display: inline-block; margin-top: 4px; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; background: #EAF2EC; color: var(--accent-light); padding: 2px 8px; border-radius: 999px; }
+  .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 11px 16px; font-size: 13px; font-weight: 500; color: var(--ink); cursor: pointer; transition: background 0.15s; border: none; background: none; width: 100%; text-align: left; font-family: 'DM Sans', sans-serif; }
+  .dropdown-item:hover { background: var(--bg); }
+  .dropdown-item.danger { color: var(--risk-high); }
+  .dropdown-item.danger:hover { background: #FDECEA; }
+  .dropdown-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
 
   /* MODAL */
   .modal-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(26,26,24,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
@@ -361,11 +375,24 @@
     <!-- Logged-in user -->
     <div id="navUser" style="display:none;align-items:center;gap:8px;">
       <a href="pricing.html" class="btn-nav" style="font-size:13px;text-decoration:none;">Pricing</a>
-      <div class="user-chip">
-        <div class="user-avatar" id="userAvatar">?</div>
-        <span id="userEmailLabel" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;"></span>
+      <div class="avatar-wrapper">
+        <button class="avatar-btn" id="userAvatar" onclick="toggleDropdown()" aria-label="Account menu">?</button>
+        <div class="avatar-dropdown" id="avatarDropdown">
+          <div class="dropdown-header">
+            <div class="dropdown-email" id="userEmailLabel"></div>
+            <span class="dropdown-plan">Free Plan</span>
+          </div>
+          <button class="dropdown-item" onclick="closeDropdown(); alert('My Account coming soon!')">
+            <span class="dropdown-icon">👤</span> My Account
+          </button>
+          <button class="dropdown-item" onclick="closeDropdown(); openPricingModal()">
+            <span class="dropdown-icon">⚡</span> Upgrade your plan
+          </button>
+          <button class="dropdown-item danger" id="btnSignOut" onclick="closeDropdown(); signOut(this)">
+            <span class="dropdown-icon">→</span> Sign out
+          </button>
+        </div>
       </div>
-      <button class="btn-nav ghost" id="btnSignOut" onclick="signOut(this)">Sign out</button>
     </div>
   </div>
 </nav>
@@ -853,12 +880,31 @@ function renderNavUser(user) {
   document.getElementById('navGuest').style.display = 'none';
   document.getElementById('navUser').style.display  = 'flex';
   document.getElementById('userEmailLabel').textContent = user.email;
-  document.getElementById('userAvatar').textContent = (user.email||'?')[0].toUpperCase();
+  // Build initials from email — use first letters of parts before the @ split by dots/underscores
+  const namePart = (user.user_metadata?.full_name || user.email.split('@')[0]);
+  const words = namePart.replace(/[._-]/g, ' ').trim().split(/\s+/);
+  const initials = words.length >= 2
+    ? (words[0][0] + words[words.length - 1][0]).toUpperCase()
+    : namePart.slice(0, 2).toUpperCase();
+  document.getElementById('userAvatar').textContent = initials;
   // Always reset sign out button in case it was left in a broken state
   const btn = document.getElementById('btnSignOut');
-  if (btn) { btn.disabled = false; btn.textContent = 'Sign out'; }
+  if (btn) { btn.disabled = false; btn.innerHTML = '<span class="dropdown-icon">→</span> Sign out'; }
   renderScanPill();
 }
+
+// ─── AVATAR DROPDOWN ─────────────────────────────────────────
+function toggleDropdown() {
+  document.getElementById('avatarDropdown').classList.toggle('open');
+}
+function closeDropdown() {
+  document.getElementById('avatarDropdown').classList.remove('open');
+}
+// Close dropdown when clicking outside
+document.addEventListener('click', e => {
+  const wrapper = document.querySelector('.avatar-wrapper');
+  if (wrapper && !wrapper.contains(e.target)) closeDropdown();
+});
 function renderScanPill() {
   const pill  = document.getElementById('scanPill');
   const pips  = document.getElementById('scanPips');
@@ -1061,13 +1107,13 @@ async function handleAuth() {
 }
 
 async function signOut(btn) {
-  if (btn) { btn.disabled = true; btn.textContent = 'Signing out…'; }
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="dropdown-icon">→</span> Signing out…'; }
   try {
     const { error } = await sb.auth.signOut();
     if (error) throw error;
   } catch(e) {
     console.error('Sign out error:', e);
-    if (btn) { btn.disabled = false; btn.textContent = 'Sign out'; }
+    if (btn) { btn.disabled = false; btn.innerHTML = '<span class="dropdown-icon">→</span> Sign out'; }
   }
 }
 

@@ -7,6 +7,9 @@
     "api/knowmore.js": { "maxDuration": 10 },
     "api/extract-docx.js": { "maxDuration": 15 }
   },
+  "errors": [
+    { "statusCode": 404, "destination": "/404.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",

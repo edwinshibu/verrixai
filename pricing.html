@@ -173,11 +173,12 @@
         <span>scans per account</span>
       </div>
       <ul class="plan-features">
-        <li><span class="feat-check">✓</span> Full AI document analysis</li>
-        <li><span class="feat-check">✓</span> Risk flagging</li>
-        <li><span class="feat-check">✓</span> Key points extraction</li>
-        <li><span class="feat-check">✓</span> Plain-English summary</li>
-        <li><span class="feat-check muted">✓</span> <span style="color:var(--border)">Priority support</span></li>
+        <li><span class="feat-check">✓</span> Document Summary</li>
+        <li><span class="feat-check">✓</span> Risk Flags (High / Medium / Low)</li>
+        <li><span class="feat-check">✓</span> Key Points extraction</li>
+        <li><span class="feat-check">✓</span> Plain-Language rewrite</li>
+        <li><span class="feat-check">✓</span> PDF, DOCX & TXT support</li>
+        <li><span class="feat-check">✓</span> Zero data retention</li>
       </ul>
       <button class="btn-plan outline" onclick="window.location.href='/'">Get started free</button>
     </div>
@@ -197,10 +198,10 @@
       </div>
       <ul class="plan-features">
         <li><span class="feat-check">✓</span> Everything in Free</li>
-        <li><span class="feat-check">✓</span> 300 scans / month</li>
-        <li><span class="feat-check">✓</span> PDF, DOCX & TXT support</li>
-        <li><span class="feat-check">✓</span> Priority processing</li>
+        <li><span class="feat-check">✓</span> 300 scans per month</li>
+        <li><span class="feat-check">✓</span> Scans reset monthly</li>
         <li><span class="feat-check">✓</span> Email support</li>
+        <li><span class="feat-check">✓</span> Cancel anytime</li>
       </ul>
       <button class="btn-plan solid" id="btnProMonthly" onclick="startCheckout('pro', 'monthly')">Get Pro</button>
     </div>
@@ -219,10 +220,10 @@
       </div>
       <ul class="plan-features">
         <li><span class="feat-check">✓</span> Everything in Pro</li>
-        <li><span class="feat-check">✓</span> 700 scans / month</li>
-        <li><span class="feat-check">✓</span> Batch document upload</li>
-        <li><span class="feat-check">✓</span> Priority support</li>
-        <li><span class="feat-check">✓</span> Early access to new features</li>
+        <li><span class="feat-check">✓</span> 700 scans per month</li>
+        <li><span class="feat-check">✓</span> Scans reset monthly</li>
+        <li><span class="feat-check">✓</span> Priority email support</li>
+        <li><span class="feat-check">✓</span> Cancel anytime</li>
       </ul>
       <button class="btn-plan gold" id="btnPro2Monthly" onclick="startCheckout('pro2', 'monthly')">Get Pro 2</button>
     </div>
@@ -270,28 +271,49 @@
     </thead>
     <tbody>
       <tr>
-        <td><span class="feat-name">Monthly scans</span></td>
-        <td><span class="check-val">5</span></td>
-        <td class="col-featured"><span class="check-val">300</span></td>
-        <td><span class="check-val">700</span></td>
+        <td><span class="feat-name">Scans included</span></td>
+        <td><span class="check-val">5 total</span></td>
+        <td class="col-featured"><span class="check-val">300 / mo</span></td>
+        <td><span class="check-val">700 / mo</span></td>
         <td><span class="check-val">Unlimited</span></td>
       </tr>
       <tr>
-        <td><span class="feat-name">PDF support</span></td>
+        <td><span class="feat-name">Monthly reset</span></td>
+        <td><span class="check-no">—</span></td>
+        <td class="col-featured"><span class="check-yes">✓</span></td>
+        <td><span class="check-yes">✓</span></td>
+        <td><span class="check-yes">✓</span></td>
+      </tr>
+      <tr>
+        <td><span class="feat-name">Document Summary</span></td>
         <td><span class="check-yes">✓</span></td>
         <td class="col-featured"><span class="check-yes">✓</span></td>
         <td><span class="check-yes">✓</span></td>
         <td><span class="check-yes">✓</span></td>
       </tr>
       <tr>
-        <td><span class="feat-name">Risk flagging</span></td>
+        <td><span class="feat-name">Risk Flags</span><span class="feat-sub">High / Medium / Low</span></td>
         <td><span class="check-yes">✓</span></td>
         <td class="col-featured"><span class="check-yes">✓</span></td>
         <td><span class="check-yes">✓</span></td>
         <td><span class="check-yes">✓</span></td>
       </tr>
       <tr>
-        <td><span class="feat-name">Plain-English summary</span></td>
+        <td><span class="feat-name">Key Points extraction</span></td>
+        <td><span class="check-yes">✓</span></td>
+        <td class="col-featured"><span class="check-yes">✓</span></td>
+        <td><span class="check-yes">✓</span></td>
+        <td><span class="check-yes">✓</span></td>
+      </tr>
+      <tr>
+        <td><span class="feat-name">Plain-Language rewrite</span></td>
+        <td><span class="check-yes">✓</span></td>
+        <td class="col-featured"><span class="check-yes">✓</span></td>
+        <td><span class="check-yes">✓</span></td>
+        <td><span class="check-yes">✓</span></td>
+      </tr>
+      <tr>
+        <td><span class="feat-name">PDF, DOCX & TXT upload</span></td>
         <td><span class="check-yes">✓</span></td>
         <td class="col-featured"><span class="check-yes">✓</span></td>
         <td><span class="check-yes">✓</span></td>
@@ -305,18 +327,11 @@
         <td><span class="check-yes">✓</span></td>
       </tr>
       <tr>
-        <td><span class="feat-name">Priority processing</span></td>
-        <td><span class="check-no">—</span></td>
-        <td class="col-featured"><span class="check-yes">✓</span></td>
-        <td><span class="check-yes">✓</span></td>
-        <td><span class="check-yes">✓</span></td>
-      </tr>
-      <tr>
-        <td><span class="feat-name">Batch upload</span></td>
-        <td><span class="check-no">—</span></td>
-        <td class="col-featured"><span class="check-no">—</span></td>
-        <td><span class="check-yes">✓</span></td>
-        <td><span class="check-yes">✓</span></td>
+        <td><span class="feat-name">Support</span></td>
+        <td>Community</td>
+        <td class="col-featured">Email</td>
+        <td>Priority email</td>
+        <td>Dedicated</td>
       </tr>
       <tr>
         <td><span class="feat-name">Custom integrations</span></td>
@@ -324,13 +339,6 @@
         <td class="col-featured"><span class="check-no">—</span></td>
         <td><span class="check-no">—</span></td>
         <td><span class="check-yes">✓</span></td>
-      </tr>
-      <tr>
-        <td><span class="feat-name">Support</span></td>
-        <td>Community</td>
-        <td class="col-featured">Email</td>
-        <td>Priority</td>
-        <td>Dedicated</td>
       </tr>
     </tbody>
   </table>

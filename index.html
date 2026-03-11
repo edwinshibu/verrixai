@@ -803,6 +803,9 @@ if (urlSource) sessionStorage.setItem('vrx_source', urlSource);
     if (event === 'SIGNED_IN' && session?.user) {
       await onSignIn(session.user);
       closeModal();
+    } else if (event === 'USER_UPDATED' && session?.user) {
+      await onSignIn(session.user);
+      showSuccessMoment("Email confirmed — welcome to VerrixAI!");
     } else if (event === 'SIGNED_OUT') {
       currentUser = null; userProfile = null;
       renderNavGuest();

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Account — VerrixAI</title>
+  <meta name="theme-color" content="#1A3A2A">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180.png">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #F7F6F2; --surface: #FFFFFF; --ink: #1A1A18; --ink-muted: #6B6B62;
+      --accent: #1A3A2A; --accent-light: #2E5C42; --gold: #B8963E;
+      --border: #E2E0D8; --risk-high: #C0392B; --risk-low: #27AE60;
+      --radius: 12px; --shadow: 0 4px 24px rgba(26,26,24,0.08);
+      --shadow-lg: 0 12px 48px rgba(26,26,24,0.12);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
+    body {
+      font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink);
+      min-height: 100vh; font-size: 15px; line-height: 1.6;
+      -webkit-font-smoothing: antialiased; display: flex; flex-direction: column;
+    }
+
+    /* NAV */
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 48px; background: rgba(247,246,242,0.92);
+      backdrop-filter: blur(16px); border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100; gap: 16px;
+    }
+    .logo { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; color: var(--ink); text-decoration: none; }
+    .logo span { color: var(--gold); }
+    .btn-nav { padding: 8px 18px; border-radius: 999px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--ink); text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-nav:hover { border-color: var(--ink); }
+    .btn-nav.primary { background: var(--accent); color: white; border-color: var(--accent); }
+    .btn-nav.primary:hover { background: var(--accent-light); }
+
+    /* LOADING */
+    #loadingState {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 16px; color: var(--ink-muted); font-size: 14px;
+    }
+    .spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* NOT SIGNED IN */
+    #guestState {
+      flex: 1; display: none; align-items: center; justify-content: center;
+      flex-direction: column; gap: 16px; padding: 60px 24px; text-align: center;
+    }
+    #guestState h2 { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 500; }
+    #guestState p { color: var(--ink-muted); font-size: 14px; max-width: 320px; }
+
+    /* MAIN CONTENT */
+    #accountState { display: none; flex: 1; }
+    main { max-width: 720px; margin: 0 auto; padding: 56px 24px 100px; width: 100%; }
+
+    /* PAGE HEADER */
+    .page-header { margin-bottom: 40px; animation: fadeUp 0.4s ease both; }
+    .page-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+    .page-title { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 500; line-height: 1.2; }
+
+    /* CARDS */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 18px; padding: 28px 32px; margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      animation: fadeUp 0.4s ease both;
+    }
+    .card:nth-child(2) { animation-delay: 0.05s; }
+    .card:nth-child(3) { animation-delay: 0.1s; }
+    .card:nth-child(4) { animation-delay: 0.15s; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .card-title {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--ink-muted); margin-bottom: 20px;
+    }
+
+    /* AVATAR HERO */
+    .account-hero { display: flex; align-items: center; gap: 20px; }
+    .account-avatar {
+      width: 64px; height: 64px; border-radius: 50%; background: var(--accent);
+      color: white; font-size: 22px; font-weight: 700; display: flex;
+      align-items: center; justify-content: center; flex-shrink: 0; letter-spacing: 0.02em;
+    }
+    .account-info { flex: 1; min-width: 0; }
+    .account-name { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 500; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .account-email { font-size: 13px; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .account-badges { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+    .badge-plan { background: #EAF2EC; color: var(--accent-light); }
+    .badge-provider { background: #F0EEE8; color: var(--ink-muted); }
+
+    /* SCAN USAGE */
+    .scan-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .scan-numbers { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 500; line-height: 1; }
+    .scan-numbers span { color: var(--ink-muted); font-size: 18px; }
+    .scan-sub { font-size: 13px; color: var(--ink-muted); margin-top: 4px; }
+    .scan-bar-wrap { background: var(--bg); border-radius: 999px; height: 8px; overflow: hidden; margin-bottom: 8px; }
+    .scan-bar-fill { height: 100%; border-radius: 999px; background: var(--accent); transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+    .scan-bar-fill.low { background: #E67E22; }
+    .scan-bar-fill.empty { background: var(--risk-high); }
+    .scan-upgrade { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 13px; color: var(--ink-muted); }
+
+    /* ACCOUNT DETAILS */
+    .detail-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .detail-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .detail-row:first-child { padding-top: 0; }
+    .detail-label { font-size: 12px; font-weight: 500; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .detail-value { font-size: 14px; color: var(--ink); font-weight: 500; text-align: right; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* DANGER ZONE */
+    .danger-card { border-color: #F5D0CC; }
+    .danger-title { color: var(--risk-high); }
+    .danger-desc { font-size: 13px; color: var(--ink-muted); margin-bottom: 18px; line-height: 1.6; }
+    .btn-danger { padding: 10px 20px; border-radius: 999px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; background: none; color: var(--risk-high); border: 1px solid #F5D0CC; transition: all 0.2s; }
+    .btn-danger:hover { background: #FDECEA; border-color: var(--risk-high); }
+
+    /* CONFIRM DIALOG */
+    .dialog-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(26,26,24,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+    .dialog-overlay.visible { opacity: 1; pointer-events: all; }
+    .dialog { background: var(--surface); border-radius: 20px; padding: 36px; max-width: 400px; width: 100%; box-shadow: var(--shadow-lg); transform: translateY(10px); transition: transform 0.25s; }
+    .dialog-overlay.visible .dialog { transform: translateY(0); }
+    .dialog h3 { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 500; margin-bottom: 12px; }
+    .dialog p { font-size: 14px; color: var(--ink-muted); line-height: 1.6; margin-bottom: 24px; }
+    .dialog-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* TOAST */
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: white; padding: 12px 20px; border-radius: 999px; font-size: 13px; font-weight: 500; opacity: 0; transition: all 0.3s; z-index: 999; white-space: nowrap; }
+    .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* FOOTER */
+    footer { border-top: 1px solid var(--border); padding: 24px 48px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--ink-muted); flex-wrap: wrap; gap: 12px; }
+    .footer-logo { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 500; color: var(--ink); }
+    .footer-logo span { color: var(--gold); }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { color: var(--ink-muted); text-decoration: none; font-size: 12px; }
+    .footer-links a:hover { color: var(--ink); }
+
+    @media (max-width: 600px) {
+      nav { padding: 14px 20px; }
+      main { padding: 40px 16px 80px; }
+      .card { padding: 22px 20px; }
+      .page-title { font-size: 28px; }
+      .account-hero { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .scan-numbers { font-size: 26px; }
+      footer { flex-direction: column; padding: 24px 20px; text-align: center; }
+      .dialog { padding: 28px 22px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/">Verrix<span>AI</span></a>
+  <a class="btn-nav" href="/">← Back to app</a>
+</nav>
+
+<!-- Loading -->
+<div id="loadingState">
+  <div class="spinner"></div>
+  <span>Loading your account…</span>
+</div>
+
+<!-- Not signed in -->
+<div id="guestState">
+  <h2>You're not signed in</h2>
+  <p>Sign in to view and manage your VerrixAI account.</p>
+  <a class="btn-nav primary" href="/">Sign in</a>
+</div>
+
+<!-- Account content -->
+<div id="accountState">
+  <main>
+
+    <div class="page-header">
+      <div class="page-label">Account</div>
+      <h1 class="page-title">My Account</h1>
+    </div>
+
+    <!-- Profile card -->
+    <div class="card">
+      <div class="account-hero">
+        <div class="account-avatar" id="heroAvatar">?</div>
+        <div class="account-info">
+          <div class="account-name" id="heroName">—</div>
+          <div class="account-email" id="heroEmail">—</div>
+          <div class="account-badges">
+            <span class="badge badge-plan" id="heroPlan">Free Plan</span>
+            <span class="badge badge-provider" id="heroProvider">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scan usage card -->
+    <div class="card">
+      <div class="card-title">Scan Usage</div>
+      <div class="scan-row">
+        <div>
+          <div class="scan-numbers">
+            <span id="scansUsed">0</span>
+            <span> / <span id="scansTotal">5</span></span>
+          </div>
+          <div class="scan-sub">scans used this account</div>
+        </div>
+        <div style="font-size:28px;">📄</div>
+      </div>
+      <div class="scan-bar-wrap">
+        <div class="scan-bar-fill" id="scanBar" style="width:0%"></div>
+      </div>
+      <div id="scanStatus" style="font-size:13px;color:var(--ink-muted);"></div>
+      <div class="scan-upgrade" id="upgradePrompt" style="display:none;">
+        <span>Need more scans?</span>
+        <a class="btn-nav primary" href="/#pricing" style="font-size:12px;padding:7px 16px;">View plans</a>
+      </div>
+    </div>
+
+    <!-- Account details card -->
+    <div class="card">
+      <div class="card-title">Account Details</div>
+      <div class="detail-row">
+        <span class="detail-label">Email</span>
+        <span class="detail-value" id="detailEmail">—</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Sign-in method</span>
+        <span class="detail-value" id="detailProvider">—</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Member since</span>
+        <span class="detail-value" id="detailSince">—</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Plan</span>
+        <span class="detail-value" id="detailPlan">Free</span>
+      </div>
+    </div>
+
+    <!-- Danger zone -->
+    <div class="card danger-card">
+      <div class="card-title danger-title">Danger Zone</div>
+      <p class="danger-desc">
+        Deleting your account is permanent and cannot be undone. All your data including
+        scan history and profile information will be removed within 30 days.
+      </p>
+      <button class="btn-danger" onclick="openDeleteDialog()">Delete my account</button>
+    </div>
+
+  </main>
+
+  <footer>
+    <div class="footer-logo">Verrix<span>AI</span></div>
+    <div class="footer-links">
+      <a href="/privacy.html">Privacy Policy</a>
+      <a href="/terms.html">Terms of Service</a>
+      <a href="/">Home</a>
+    </div>
+    <div>&copy; 2026 VerrixAI. Not legal advice.</div>
+  </footer>
+</div>
+
+<!-- Delete confirm dialog -->
+<div class="dialog-overlay" id="deleteDialog">
+  <div class="dialog">
+    <h3>Delete your account?</h3>
+    <p>This will permanently delete your account and all associated data. This action cannot be undone.</p>
+    <div class="dialog-actions">
+      <button class="btn-nav" onclick="closeDeleteDialog()">Cancel</button>
+      <button class="btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()" style="padding:10px 20px;">Yes, delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  const SUPABASE_URL = 'https://ivisbawpltxqpsltnmny.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2aXNiYXdwbHR4cXBzbHRubW55Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDM0MDIsImV4cCI6MjA4ODMxOTQwMn0.exgxjgKKs3XzhBG8fpH4tkKJ_zZmrY1VtU_VU9ALVM0';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let currentUser = null;
+  let userProfile = null;
+
+  // ─── BOOT ─────────────────────────────────────────────────────
+  (async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session?.user) {
+      await loadAccount(session.user);
+    } else {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('guestState').style.display   = 'flex';
+    }
+  })();
+
+  async function loadAccount(user) {
+    currentUser = user;
+
+    // Fetch profile
+    const { data: profile } = await sb.from('profiles')
+      .select('*').eq('id', user.id).single();
+    userProfile = profile;
+
+    // Build initials
+    const namePart = user.user_metadata?.full_name || user.email.split('@')[0];
+    const words = namePart.replace(/[._-]/g, ' ').trim().split(/\s+/);
+    const initials = words.length >= 2
+      ? (words[0][0] + words[words.length - 1][0]).toUpperCase()
+      : namePart.slice(0, 2).toUpperCase();
+
+    // Display name
+    const displayName = user.user_metadata?.full_name || user.email.split('@')[0];
+
+    // Provider
+    const provider = user.app_metadata?.provider || 'email';
+    const providerLabel = provider === 'google' ? 'Google' : provider === 'azure' ? 'Microsoft' : 'Email & Password';
+    const providerIcon  = provider === 'google' ? '🔵' : provider === 'azure' ? '🟦' : '✉️';
+
+    // Member since
+    const since = new Date(user.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    // Scan data
+    const used  = profile?.scans_used  || 0;
+    const total = profile?.scans_limit || 5;
+    const rem   = Math.max(0, total - used);
+    const pct   = Math.min(100, Math.round((used / total) * 100));
+
+    // Populate hero
+    document.getElementById('heroAvatar').textContent   = initials;
+    document.getElementById('heroName').textContent     = displayName;
+    document.getElementById('heroEmail').textContent    = user.email;
+    document.getElementById('heroProvider').textContent = `${providerIcon} ${providerLabel}`;
+
+    // Populate scan usage
+    document.getElementById('scansUsed').textContent  = used;
+    document.getElementById('scansTotal').textContent = total;
+
+    const bar = document.getElementById('scanBar');
+    // Animate bar after paint
+    setTimeout(() => { bar.style.width = pct + '%'; }, 80);
+    if (pct >= 100)      bar.classList.add('empty');
+    else if (pct >= 60)  bar.classList.add('low');
+
+    const statusEl = document.getElementById('scanStatus');
+    if (rem === 0) {
+      statusEl.textContent = 'You have no scans remaining. Upgrade to keep going.';
+      statusEl.style.color = 'var(--risk-high)';
+      document.getElementById('upgradePrompt').style.display = 'flex';
+    } else if (rem === 1) {
+      statusEl.textContent = '1 scan remaining — consider upgrading soon.';
+      statusEl.style.color = '#E67E22';
+      document.getElementById('upgradePrompt').style.display = 'flex';
+    } else {
+      statusEl.textContent = `${rem} scan${rem !== 1 ? 's' : ''} remaining.`;
+    }
+
+    // Populate details
+    document.getElementById('detailEmail').textContent    = user.email;
+    document.getElementById('detailProvider').textContent = `${providerIcon} ${providerLabel}`;
+    document.getElementById('detailSince').textContent    = since;
+    document.getElementById('detailPlan').textContent     = 'Free';
+
+    // Show account state
+    document.getElementById('loadingState').style.display  = 'none';
+    document.getElementById('accountState').style.display  = 'flex';
+    document.getElementById('accountState').style.flexDirection = 'column';
+  }
+
+  // ─── DELETE ACCOUNT ───────────────────────────────────────────
+  function openDeleteDialog()  { document.getElementById('deleteDialog').classList.add('visible'); }
+  function closeDeleteDialog() { document.getElementById('deleteDialog').classList.remove('visible'); }
+
+  async function confirmDelete() {
+    const btn = document.getElementById('confirmDeleteBtn');
+    btn.disabled = true; btn.textContent = 'Deleting…';
+    try {
+      // Send deletion request email to admin
+      await fetch('/api/delete-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: currentUser.id, email: currentUser.email })
+      });
+      await sb.auth.signOut();
+      showToast('Account deletion requested. You will be notified within 30 days.');
+      setTimeout(() => { window.location.href = '/'; }, 3000);
+    } catch(e) {
+      btn.disabled = false; btn.textContent = 'Yes, delete';
+      showToast('Something went wrong. Please email admin@verrixai.com');
+    }
+    closeDeleteDialog();
+  }
+
+  // ─── TOAST ────────────────────────────────────────────────────
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('visible');
+    setTimeout(() => t.classList.remove('visible'), 4000);
+  }
+</script>
+</body>
+</html>

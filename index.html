@@ -391,7 +391,7 @@
           <button class="dropdown-item" onclick="closeDropdown(); openPricingModal()">
             <span class="dropdown-icon">⚡</span> Upgrade your plan
           </button>
-          <button class="dropdown-item danger" id="btnSignOut" onclick="closeDropdown(); signOut(this)">
+          <button class="dropdown-item danger" id="btnSignOut" onclick="closeDropdown(); signOut()">
             <span class="dropdown-icon">→</span> Sign out
           </button>
         </div>
@@ -1113,13 +1113,18 @@ async function handleAuth() {
 }
 
 async function signOut(btn) {
-  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="dropdown-icon">→</span> Signing out…'; }
+  // Get a stable reference before dropdown closes
+  const signOutBtn = document.getElementById('btnSignOut');
+  if (signOutBtn) { signOutBtn.disabled = true; signOutBtn.innerHTML = '<span class="dropdown-icon">→</span> Signing out…'; }
   try {
     const { error } = await sb.auth.signOut();
     if (error) throw error;
+    // Force UI reset as fallback in case onAuthStateChange doesn't fire
+    currentUser = null; userProfile = null;
+    renderNavGuest();
   } catch(e) {
     console.error('Sign out error:', e);
-    if (btn) { btn.disabled = false; btn.innerHTML = '<span class="dropdown-icon">→</span> Sign out'; }
+    if (signOutBtn) { signOutBtn.disabled = false; signOutBtn.innerHTML = '<span class="dropdown-icon">→</span> Sign out'; }
   }
 }
 

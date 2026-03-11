@@ -397,16 +397,17 @@
 </footer>
 
 <script>
-const SUPABASE_URL = 'https://ivisbawpltxqpsltnmny.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2aXNiYXdwbHR4cXBzbHRubW55Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDM0MDIsImV4cCI6MjA4ODMxOTQwMn0.exgxjgKKs3XzhBG8fpH4tkKJ_zZmrY1VtU_VU9ALVM0';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
 function toggleFaq(btn) {
   const item = btn.closest('.faq-item');
   const isOpen = item.classList.contains('open');
   document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
   if (!isOpen) item.classList.add('open');
 }
+</script>
+<script>
+const SUPABASE_URL = 'https://ivisbawpltxqpsltnmny.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2aXNiYXdwbHR4cXBzbHRubW55Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDM0MDIsImV4cCI6MjA4ODMxOTQwMn0.exgxjgKKs3XzhBG8fpH4tkKJ_zZmrY1VtU_VU9ALVM0';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 async function startCheckout(plan, billing) {
   const btnId = plan === 'pro' ? 'btnProMonthly' : 'btnPro2Monthly';

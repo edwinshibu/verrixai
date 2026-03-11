@@ -501,7 +501,7 @@
         </div>
         <div class="pm-scans">300 scans / mo</div>
         <ul class="pm-feats"><li>Everything in Free</li><li>300 scans per month</li><li>Priority processing</li><li>Email support</li></ul>
-        <button class="btn-pm solid" onclick="alert('Coming soon! We\'ll notify you when Pro launches.')">Coming soon</button>
+        <button class="btn-pm solid" id="btnProCheckout" onclick="startCheckout('pro')">Get Pro</button>
       </div>
       <!-- PRO 2 -->
       <div class="pm-plan">
@@ -515,7 +515,7 @@
         </div>
         <div class="pm-scans">700 scans / mo</div>
         <ul class="pm-feats"><li>Everything in Pro</li><li>700 scans per month</li><li>Batch document upload</li><li>Priority support</li></ul>
-        <button class="btn-pm gold-btn" onclick="alert('Coming soon! We\'ll notify you when Pro 2 launches.')">Coming soon</button>
+        <button class="btn-pm gold-btn" id="btnPro2Checkout" onclick="startCheckout('pro2')">Get Pro 2</button>
       </div>
       <!-- ENTERPRISE -->
       <div class="pm-plan">
@@ -797,6 +797,15 @@ if (urlSource) sessionStorage.setItem('vrx_source', urlSource);
   if (session?.user) await onSignIn(session.user);
   else renderNavGuest();
 
+  // Handle redirect back from Stripe checkout
+  const checkoutStatus = new URLSearchParams(window.location.search).get('checkout');
+  if (checkoutStatus === 'success') {
+    window.history.replaceState({}, '', '/');
+    setTimeout(() => showSuccessMoment('🎉 Welcome to your new plan!'), 500);
+  } else if (checkoutStatus === 'cancelled') {
+    window.history.replaceState({}, '', '/');
+  }
+
   // Auto-open pricing modal if redirected from account page
   if (new URLSearchParams(window.location.search).get('pricing') === '1') {
     setTimeout(() => openPricingModal(), 400);
@@ -966,6 +975,37 @@ function showUpgradeWall() {
     openPricingModal();
   }
 }
+// ─── STRIPE CHECKOUT ─────────────────────────────────────────
+async function startCheckout(plan) {
+  if (!currentUser) { openModal('signup'); return; }
+  const billing = pmAnnual ? 'annual' : 'monthly';
+  const btn = document.getElementById(plan === 'pro' ? 'btnProCheckout' : 'btnPro2Checkout');
+  const origText = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Loading…';
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch('/api/create-checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({ plan, billing })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.url) throw new Error(data.error || 'Failed to create checkout');
+    window.location.href = data.url;
+  } catch(err) {
+    console.error('Checkout error:', err);
+    btn.disabled = false; btn.textContent = origText;
+    const errEl = document.createElement('div');
+    errEl.style.cssText = 'text-align:center;font-size:12px;color:var(--risk-high);margin-top:8px;';
+    errEl.textContent = 'Something went wrong. Please try again.';
+    btn.parentNode.appendChild(errEl);
+    setTimeout(() => errEl.remove(), 4000);
+  }
+}
+
 function openPricingModal() {
   document.getElementById('pricingModal').classList.add('visible');
 }

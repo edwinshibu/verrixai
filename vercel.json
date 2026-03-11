@@ -1,15 +1,13 @@
 {
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" }
-  ],
   "functions": {
     "api/analyse.js": { "maxDuration": 30 },
     "api/knowmore.js": { "maxDuration": 10 },
     "api/extract-docx.js": { "maxDuration": 15 }
   },
   "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" },
     { "handle": "error" },
-    { "status": 404, "dest": "/404.html" }
+    { "status": 404, "src": "/(.*)", "dest": "/404.html" }
   ],
   "headers": [
     {

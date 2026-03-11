@@ -1057,7 +1057,18 @@ async function handleAuth() {
   btn.textContent = modalMode === 'signup' ? 'Create Account' : 'Sign in';
 }
 
-async function signOut() { await sb.auth.signOut(); }
+async function signOut() {
+  const btn = document.querySelector('.btn-nav.ghost');
+  if (btn) { btn.disabled = true; btn.textContent = 'Signing out…'; }
+  try {
+    const { error } = await sb.auth.signOut();
+    if (error) throw error;
+  } catch(e) {
+    console.error('Sign out error:', e);
+    // Reset button if sign out fails so user can try again
+    if (btn) { btn.disabled = false; btn.textContent = 'Sign out'; }
+  }
+}
 
 // ─── FILE HANDLING ───────────────────────────────────────────
 const dropZone = document.getElementById('dropZone');

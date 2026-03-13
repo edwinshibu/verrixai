@@ -145,7 +145,7 @@
   <a href="/" class="logo">Verrix<span>AI</span></a>
   <div class="nav-right">
     <a href="/" class="btn-nav">← Back to app</a>
-    <a href="/" class="btn-nav primary">Get started free</a>
+    <a href="/" id="navGetStarted" class="btn-nav primary">Get started free</a>
   </div>
 </nav>
 
@@ -180,7 +180,7 @@
         <li><span class="feat-check">✓</span> PDF, DOCX & TXT support</li>
         <li><span class="feat-check">✓</span> Zero data retention</li>
       </ul>
-      <button class="btn-plan outline" onclick="window.location.href='/'">Get started free</button>
+      <button class="btn-plan outline" id="btnFreeStart" onclick="window.location.href='/'">Get started free</button>
     </div>
 
     <!-- PRO -->
@@ -408,6 +408,37 @@ function toggleFaq(btn) {
 const SUPABASE_URL = 'https://ivisbawpltxqpsltnmny.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2aXNiYXdwbHR4cXBzbHRubW55Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDM0MDIsImV4cCI6MjA4ODMxOTQwMn0.exgxjgKKs3XzhBG8fpH4tkKJ_zZmrY1VtU_VU9ALVM0';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Detect logged-in user and their plan, adjust UI accordingly
+async function initPricingPage() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return; // guest — show page as normal
+
+  const { data: profile } = await sb.from('profiles').select('plan').eq('id', session.user.id).single();
+  const plan = profile?.plan || 'free';
+
+  // Hide "Get started free" nav button for all logged-in users
+  const getStartedBtn = document.getElementById('navGetStarted');
+  if (getStartedBtn) getStartedBtn.style.display = 'none';
+
+  if (plan === 'pro' || plan === 'pro2') {
+    // Hide the free plan button, mark it as not their plan
+    const freeBtn = document.getElementById('btnFreeStart');
+    if (freeBtn) { freeBtn.style.display = 'none'; }
+
+    // Mark their current plan card
+    if (plan === 'pro') {
+      const proBtn = document.getElementById('btnProMonthly');
+      if (proBtn) { proBtn.textContent = 'Current plan'; proBtn.disabled = true; proBtn.classList.remove('solid'); proBtn.classList.add('outline'); proBtn.onclick = null; }
+    }
+    if (plan === 'pro2') {
+      const pro2Btn = document.getElementById('btnPro2Monthly');
+      if (pro2Btn) { pro2Btn.textContent = 'Current plan'; pro2Btn.disabled = true; pro2Btn.classList.remove('gold'); pro2Btn.classList.add('outline'); pro2Btn.onclick = null; }
+    }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', initPricingPage);
 
 async function startCheckout(plan, billing) {
   const btnId = plan === 'pro' ? 'btnProMonthly' : 'btnPro2Monthly';

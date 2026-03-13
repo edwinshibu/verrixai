@@ -947,6 +947,9 @@ function renderScanPill() {
   const pips  = document.getElementById('scanPips');
   const label = document.getElementById('scanLabel');
   if (!currentUser || !userProfile) { pill.style.display = 'none'; return; }
+  // Hide pill entirely for paid users — they have 300/700 scans, pips are meaningless
+  const plan = userProfile?.plan || 'free';
+  if (plan === 'pro' || plan === 'pro2') { pill.style.display = 'none'; return; }
   pill.style.display = 'flex';
   const used  = userProfile?.scans_used || 0;
   const total = userProfile?.scans_limit || USER_LIMIT;
@@ -1057,6 +1060,47 @@ async function startCheckout(plan) {
 }
 
 function openPricingModal() {
+  const plan = userProfile?.plan || 'free';
+
+  // Reset all buttons first
+  document.getElementById('btnProCheckout').textContent  = 'Get Pro';
+  document.getElementById('btnProCheckout').disabled     = false;
+  document.getElementById('btnPro2Checkout').textContent = 'Get Pro 2';
+  document.getElementById('btnPro2Checkout').disabled    = false;
+
+  // Update header text based on plan
+  const h2 = document.querySelector('#pricingModal .pm-header h2');
+  const sub = document.querySelector('#pricingModal .pm-header p');
+  if (plan === 'pro' || plan === 'pro2') {
+    h2.innerHTML  = 'Manage your <em>plan</em>';
+    sub.textContent = 'You\'re on a paid plan. Upgrade or manage below.';
+  } else {
+    h2.innerHTML  = 'You\'ve used all your <em>free</em> scans';
+    sub.textContent = 'Choose a plan to keep analysing documents — cancel anytime.';
+  }
+
+  // Free card button
+  const freeBtn = document.querySelector('#pricingModal .pm-plan:first-child button');
+  if (plan === 'free') {
+    freeBtn.textContent = 'Current plan';
+    freeBtn.disabled    = true;
+  } else {
+    freeBtn.textContent = 'Free plan';
+    freeBtn.disabled    = false;
+    freeBtn.onclick     = () => closePricingModal();
+  }
+
+  // Pro card
+  if (plan === 'pro') {
+    document.getElementById('btnProCheckout').textContent = 'Current plan';
+    document.getElementById('btnProCheckout').disabled    = true;
+  }
+  // Pro2 card
+  if (plan === 'pro2') {
+    document.getElementById('btnPro2Checkout').textContent = 'Current plan';
+    document.getElementById('btnPro2Checkout').disabled    = true;
+  }
+
   document.getElementById('pricingModal').classList.add('visible');
 }
 function closePricingModal() {

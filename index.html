@@ -1615,9 +1615,14 @@ async function startAnalysis() {
     // 40s client timeout — extended for slow connections and large docs
     const timeoutId = setTimeout(() => activeController.abort(), 55000);
 
-    // Show upload phase message
+    // Show "Sending" briefly, then switch to "Analysing" after 1.5s.
+    // Non-streaming means fetch only resolves when fully complete,
+    // so we update the message on a timer rather than on response headers.
     const msgEl = document.getElementById('loadingMsg');
     if (msgEl) msgEl.textContent = 'Sending your document…';
+    const analysingTimer = setTimeout(() => {
+      if (msgEl) msgEl.textContent = 'Analysing your document…';
+    }, 1500);
 
     try {
       const res = await fetch('/api/analyse', {
@@ -1627,7 +1632,7 @@ async function startAnalysis() {
         signal: activeController.signal
       });
 
-      if (msgEl) msgEl.textContent = 'Analysing your document…';
+      clearTimeout(analysingTimer);
       clearTimeout(timeoutId);
       activeController = null;
 
@@ -1639,6 +1644,7 @@ async function startAnalysis() {
       return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
 
     } catch(e) {
+      clearTimeout(analysingTimer);
       clearTimeout(timeoutId);
       activeController = null;
       return null;

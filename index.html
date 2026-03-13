@@ -921,7 +921,9 @@ if (urlSource) sessionStorage.setItem('vrx_source', urlSource);
   let pingTimer = null;
 
   function ping() {
-    fetch('/api/ping').catch(() => {}); // fire and forget — errors are irrelevant
+    // OPTIONS hits the CORS preflight in analyse.js — returns 204 instantly,
+    // costs nothing, but keeps the exact function that matters warm.
+    fetch('/api/analyse', { method: 'OPTIONS' }).catch(() => {});
   }
 
   function start() {

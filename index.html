@@ -2097,6 +2097,10 @@ function switchBatchTab(idx, opts) {
     <div class="privacy-note" style="margin-top:16px;">
       <span class="privacy-icon">🛡️</span>
       <div class="privacy-text"><strong>Your documents were never stored or shared.</strong>Processed securely and deleted immediately after analysis.</div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;gap:8px;flex-wrap:wrap;">
+      <button onclick="resetBatch()" style="display:inline-flex;align-items:center;gap:8px;padding:13px 32px;background:var(--accent);color:white;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:all 0.2s;">← New Batch</button>
+      ${userProfile?.plan === 'pro2' ? `<button onclick="exportToPdf()" style="display:inline-flex;align-items:center;gap:8px;padding:13px 32px;background:var(--gold);color:white;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:all 0.2s;">⬇ Export PDF</button>` : ''}
     </div>`;
 
   // Wire up section toggles

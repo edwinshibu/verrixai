@@ -1497,7 +1497,7 @@ async function startAnalysis() {
     ['summary','risks','keypoints','simplify'].forEach(s => {
       document.getElementById(`sec-${s}`).style.display = opts.includes(s) ? '' : 'none';
     });
-  }, 45000);
+  }, 58000);
 
   // Instruction now lives server-side in analyse.js (prompt caching).
   // Client sends only raw document content + selected options.
@@ -1584,7 +1584,7 @@ async function startAnalysis() {
     activeController = new AbortController();
 
     // 40s client timeout — extended for slow connections and large docs
-    const timeoutId = setTimeout(() => activeController.abort(), 40000);
+    const timeoutId = setTimeout(() => activeController.abort(), 55000);
 
     // Show upload phase message
     const msgEl = document.getElementById('loadingMsg');
@@ -1940,7 +1940,7 @@ async function prepareFileContent(fileObj) {
 // ── Run analysis for one file ──────────────────────────────
 async function analyseOneFile(userContent, opts) {
   const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), 28000);
+  const timeoutId  = setTimeout(() => controller.abort(), 55000);
   try {
     const res = await fetch('/api/analyse', {
       method: 'POST',

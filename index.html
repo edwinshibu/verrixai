@@ -1475,6 +1475,29 @@ async function startAnalysis() {
   document.getElementById('loadingState').classList.add('visible');
   const stepsPromise = animateSteps();
 
+  // ── Timers set HERE — before any async file work ──────────────
+  // This guarantees they fire even if DOCX/FileReader/JSZip hangs
+  if (stillWorkingTimer) clearTimeout(stillWorkingTimer);
+  stillWorkingTimer = setTimeout(() => {
+    if (analysisGen !== myGen) return;
+    const msgEl = document.getElementById('loadingMsg');
+    if (msgEl) msgEl.textContent = 'Still working — large documents take a moment…';
+  }, 15000);
+
+  if (activeEscape) clearTimeout(activeEscape);
+  activeEscape = setTimeout(() => {
+    if (analysisGen !== myGen) return;
+    activeEscape = null;
+    if (stillWorkingTimer) { clearTimeout(stillWorkingTimer); stillWorkingTimer = null; }
+    stepsPromise.finish();
+    document.getElementById('loadingState').classList.remove('visible');
+    renderTimeout();
+    document.getElementById('resultsArea').classList.add('visible');
+    ['summary','risks','keypoints','simplify'].forEach(s => {
+      document.getElementById(`sec-${s}`).style.display = opts.includes(s) ? '' : 'none';
+    });
+  }, 45000);
+
   const sections = [];
   if (opts.includes('summary'))   sections.push('SUMMARY: 3-5 sentence overview.');
   if (opts.includes('risks'))     sections.push('RISKS: JSON array [{level,title,desc}] with 3-6 items, level = HIGH/MEDIUM/LOW.');
@@ -1506,8 +1529,9 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
       try {
         const arrayBuffer = await new Promise((resolve, reject) => {
           const r = new FileReader();
-          r.onload = e => resolve(e.target.result);
-          r.onerror = reject;
+          const t = setTimeout(() => reject(new Error('FileReader timed out')), 10000);
+          r.onload = e => { clearTimeout(t); resolve(e.target.result); };
+          r.onerror = e => { clearTimeout(t); reject(e); };
           r.readAsArrayBuffer(loadedFile._rawFile);
         });
 
@@ -1622,28 +1646,7 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
     }
   }
 
-  // "Still working" message — reassures user after 15s
-  if (stillWorkingTimer) clearTimeout(stillWorkingTimer);
-  stillWorkingTimer = setTimeout(() => {
-    if (analysisGen !== myGen) return;
-    const msgEl = document.getElementById('loadingMsg');
-    if (msgEl) msgEl.textContent = 'Still working — large documents take a moment…';
-  }, 15000);
-
-  // Hard escape hatch — UI always exits within 45s no matter what
-  if (activeEscape) clearTimeout(activeEscape);
-  activeEscape = setTimeout(() => {
-    if (analysisGen !== myGen) return;
-    activeEscape = null;
-    if (stillWorkingTimer) { clearTimeout(stillWorkingTimer); stillWorkingTimer = null; }
-    stepsPromise.finish();
-    document.getElementById('loadingState').classList.remove('visible');
-    renderTimeout();
-    document.getElementById('resultsArea').classList.add('visible');
-    ['summary','risks','keypoints','simplify'].forEach(s => {
-      document.getElementById(`sec-${s}`).style.display = opts.includes(s) ? '' : 'none';
-    });
-  }, 45000);
+  // "Still working" and escape hatch timers are set at the top of startAnalysis (before file prep)
 
   try {
     result = await attemptAnalysis();

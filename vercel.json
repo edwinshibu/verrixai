@@ -1,4 +1,5 @@
 {
+  "cleanUrls": true,
   "functions": {
     "api/knowmore.js":        { "maxDuration": 60 },
     "api/delete-account.js": { "maxDuration": 60 },

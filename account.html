@@ -223,6 +223,16 @@
         <span>Need more scans?</span>
         <a class="btn-nav primary" href="/?pricing=1" style="font-size:12px;padding:7px 16px;">View plans</a>
       </div>
+      <!-- Pro → Pro 2 upgrade nudge (shown for Pro users only) -->
+      <div id="pro2Nudge" style="display:none;margin-top:18px;padding:14px 16px;background:#FFFBF0;border:1px solid #E8D9B0;border-radius:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:13px;font-weight:500;color:#1A1A18;margin-bottom:2px;">Upgrade to Pro 2</div>
+            <div style="font-size:12px;color:#6B6B62;">700 scans/mo + PDF export — from $15/mo</div>
+          </div>
+          <a href="/pricing.html" style="flex-shrink:0;background:#B8963E;color:white;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:8px 16px;border-radius:999px;text-decoration:none;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background='#9a7c35'" onmouseout="this.style.background='#B8963E'">Upgrade to Pro 2 →</a>
+        </div>
+      </div>
     </div>
 
     <!-- Account details card -->
@@ -365,6 +375,8 @@
     if (isPaid) {
       statusEl.textContent = `${rem} scan${rem !== 1 ? 's' : ''} remaining this month.`;
       document.getElementById('upgradePrompt').style.display = 'none';
+      // Show Pro 2 nudge only for Pro users, not Pro 2
+      document.getElementById('pro2Nudge').style.display = planRaw === 'pro' ? 'block' : 'none';
     } else if (rem === 0) {
       statusEl.textContent = 'You have no scans remaining. Upgrade to keep going.';
       statusEl.style.color = 'var(--risk-high)';

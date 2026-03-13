@@ -1,6 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+  (function(){
+    var t = localStorage.getItem('vrx-theme') ||
+            (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+
+// ─── DARK MODE ────────────────────────────────────────────────
+const MOON_ICON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+const SUN_ICON  = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const icon = document.getElementById('themeIcon');
+  if (icon) icon.innerHTML = theme === 'dark' ? SUN_ICON : MOON_ICON;
+  localStorage.setItem('vrx-theme', theme);
+}
+function toggleTheme() {
+  applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+// Init on load — icon syncs to current theme
+document.addEventListener('DOMContentLoaded', function() {
+  applyTheme(localStorage.getItem('vrx-theme') || (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light'));
+});
+
+</script>
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Terms of Service — VerrixAI</title>
@@ -34,12 +60,36 @@
     .footer-logo { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 500; color: var(--ink); }
   .footer-logo span { color: var(--gold); }
   footer { border-top: 1px solid var(--border); padding: 28px 48px; display: flex; align-items: center; justify-content: center; }
+  
+  /* ── DARK MODE TOGGLE ─────────────────────────────────────── */
+  .theme-toggle { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; color: var(--ink-muted); flex-shrink: 0; padding: 0; }
+  .theme-toggle:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* ── DARK MODE VARIABLES ─────────────────────────────────── */
+  :root {
+    --warn-bg: #FEF9EE; --warn-border: #E8D9B0;
+    --timeout-bg: #F5F0FA; --timeout-border: #D9CCF0;
+  }
+  [data-theme="dark"] {
+    --bg: #181A18; --surface: #222522; --ink: #EDEAE3; --ink-muted: #8A8A7E;
+    --accent: #2A5240; --accent-light: #52A876; --gold: #C9A84C;
+    --border: #2E322E; --risk-high: #E05555; --risk-med: #E8924A; --risk-low: #45C875;
+    --shadow: 0 4px 24px rgba(0,0,0,0.35); --shadow-lg: 0 12px 48px rgba(0,0,0,0.45);
+    --warn-bg: #272218; --warn-border: #4A3E28;
+    --timeout-bg: #1E1A28; --timeout-border: #3A3050;
+  }
+
+  [data-theme="dark"] .section { border-color: var(--border); }
+  [data-theme="dark"] .highlight { background: #1E2E22; border-color: #2A3E2A; }
   </style>
 </head>
 <body>
 <nav>
   <div class="logo" onclick="window.location.href='/'">Verrix<span>AI</span></div>
   <a class="btn-nav" href="/">Try Free</a>
+  <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
+    <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+  </button>
 </nav>
 <div class="container">
   <div class="page-label">Legal</div>
@@ -100,7 +150,7 @@
   <h2>15. Changes to These Terms</h2>
   <p>We may update these Terms of Service from time to time. We will notify registered users by email of any material changes at least 14 days before they take effect. Continued use of VerrixAI after the effective date constitutes acceptance of the updated terms.</p>
   <h2>16. Contact</h2>
-  <p>For any questions regarding these terms, contact us at <a href="mailto:admin@verrixai.com">admin@verrixai.com</a>.</p>
+  <p>For any questions regarding these terms, contact us at <a href="/cdn-cgi/l/email-protection#8eefeae3e7e0cef8ebfcfce7f6efe7a0ede1e3"><span class="__cf_email__" data-cfemail="355451585c5b75435047475c4d545c1b565a58">[email&#160;protected]</span></a>.</p>
 </div>
 <footer>
   <div style="max-width:1100px;margin:0 auto;width:100%;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
@@ -110,10 +160,4 @@
       <a href="/pricing.html" style="color:var(--ink-muted);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-muted)'">Pricing</a>
       <a href="/" style="color:var(--ink-muted);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-muted)'">Home</a>
     </div>
-    <div style="font-size:12px;color:var(--ink-muted);text-align:right;line-height:1.6;">
-      <div>© 2026 VerrixAI. All rights reserved.</div>
-    </div>
-  </div>
-</footer>
-</body>
-</html>
+    <div style="font-size:12px;color:var(--ink-muted);text

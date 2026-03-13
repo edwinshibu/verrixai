@@ -374,7 +374,7 @@
   </div>
   <div class="faq-item">
     <button class="faq-q" onclick="toggleFaq(this)">Can I get a refund? <span class="faq-arrow">▾</span></button>
-    <div class="faq-a">Yes. We offer a full refund within 7 days of your initial subscription if you're unsatisfied. Contact us at <a href="mailto:admin@verrixai.com">admin@verrixai.com</a> and we'll sort it out promptly.</div>
+    <div class="faq-a">Yes. We offer a full refund within 7 days of your initial subscription if you're unsatisfied. Contact us at <a href="/cdn-cgi/l/email-protection#e382878e8a8da3958691918a9b828acd808c8e"><span class="__cf_email__" data-cfemail="b6d7d2dbdfd8f6c0d3c4c4dfced7df98d5d9db">[email&#160;protected]</span></a> and we'll sort it out promptly.</div>
   </div>
 </div>
 
@@ -391,12 +391,12 @@
     <a href="/pricing.html">Pricing</a>
     <a href="/privacy.html">Privacy</a>
     <a href="/terms.html">Terms</a>
-    <a href="mailto:admin@verrixai.com">Contact</a>
+    <a href="/cdn-cgi/l/email-protection#debfbab3b7b09ea8bbacacb7a6bfb7f0bdb1b3">Contact</a>
   </div>
   <div>© 2026 VerrixAI · Not legal advice</div>
 </footer>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 function toggleFaq(btn) {
   const item = btn.closest('.faq-item');
   const isOpen = item.classList.contains('open');
@@ -434,4 +434,15 @@ async function startCheckout(plan, billing) {
       body: JSON.stringify({ plan, billing })
     });
     const data = await res.json();
-    if (!res.ok || !data.url) throw new Error(data.error ||
+    if (!res.ok || !data.url) throw new Error(data.error || 'Failed');
+    window.location.href = data.url;
+  } catch(err) {
+    console.error('Checkout error:', err);
+    btn.disabled = false;
+    btn.textContent = origText;
+    alert('Something went wrong. Please try again or contact admin@verrixai.com.');
+  }
+}
+</script>
+</body>
+</html>

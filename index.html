@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+  (function(){
+    var t = localStorage.getItem('vrx-theme') ||
+            (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>VerrixAI — Understand Every Agreement</title>
@@ -426,7 +434,50 @@
     .drop-zone h3 { font-size: 15px; }
     .pm-plans { padding: 16px; }
   }
-</style>
+
+  /* ── DARK MODE TOGGLE ─────────────────────────────────────── */
+  .theme-toggle { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; color: var(--ink-muted); flex-shrink: 0; padding: 0; }
+  .theme-toggle:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* ── DARK MODE VARIABLES ─────────────────────────────────── */
+  :root {
+    --warn-bg: #FEF9EE; --warn-border: #E8D9B0;
+    --timeout-bg: #F5F0FA; --timeout-border: #D9CCF0;
+  }
+  [data-theme="dark"] {
+    --bg: #181A18; --surface: #222522; --ink: #EDEAE3; --ink-muted: #8A8A7E;
+    --accent: #2A5240; --accent-light: #52A876; --gold: #C9A84C;
+    --border: #2E322E; --risk-high: #E05555; --risk-med: #E8924A; --risk-low: #45C875;
+    --shadow: 0 4px 24px rgba(0,0,0,0.35); --shadow-lg: 0 12px 48px rgba(0,0,0,0.45);
+    --warn-bg: #272218; --warn-border: #4A3E28;
+    --timeout-bg: #1E1A28; --timeout-border: #3A3050;
+  }
+
+  [data-theme="dark"] nav { background: rgba(24,26,24,0.92); }
+  [data-theme="dark"] .hero-eyebrow,
+  [data-theme="dark"] .pm-eyebrow,
+  [data-theme="dark"] .save-badge,
+  [data-theme="dark"] .dropdown-plan,
+  [data-theme="dark"] .pm-scans,
+  [data-theme="dark"] .kp-bullet { background: #1E2E22; color: var(--accent-light); }
+  [data-theme="dark"] .security-badge { background: #1E2E22; border-color: #2A3E2A; color: var(--accent-light); }
+  [data-theme="dark"] .pm-plan.pm-featured { background: #1C2820; }
+  [data-theme="dark"] .risk-badge.high  { background: #2A1818; color: var(--risk-high); }
+  [data-theme="dark"] .risk-badge.medium { background: #2A1E10; color: var(--risk-med); }
+  [data-theme="dark"] .risk-badge.low   { background: #162018; color: var(--risk-low); }
+  [data-theme="dark"] .privacy-note { background: #162018; border-color: #2A3E2A; }
+  [data-theme="dark"] .modal-error { background: #2A1818; }
+  [data-theme="dark"] .modal-success { background: #162018; }
+  [data-theme="dark"] .drop-zone:hover, [data-theme="dark"] .drop-zone.drag-over,
+  [data-theme="dark"] .batch-drop-zone:hover, [data-theme="dark"] .batch-drop-zone.drag-over { background: #1C2A1E; }
+  [data-theme="dark"] .dropdown-item.danger:hover { background: #2A1818; }
+  [data-theme="dark"] .btn-pm.dark { background: #EDEAE3; color: #181A18; }
+  [data-theme="dark"] .btn-pm.dark:hover { background: #FFFFFF; }
+  [data-theme="dark"] .price-orig { color: #4A4A42; }
+  [data-theme="dark"] .batch-file-item.done   { border-color: #2A3E2A; background: #162018; }
+  [data-theme="dark"] .batch-file-item.failed { border-color: #3A1818; background: #2A1818; }
+  [data-theme="dark"] .form-field input:focus { background: var(--surface); }
+  </style>
 </head>
 <body>
 
@@ -434,6 +485,9 @@
 <nav>
   <div class="logo" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="cursor:pointer;">Verrix<span>AI</span></div>
   <div class="nav-right">
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
+    <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+  </button>
     <!-- Scan counter -->
     <div class="scan-pill" id="scanPill" style="display:none">
       <div class="scan-pips" id="scanPips"></div>
@@ -510,8 +564,8 @@
     <div class="form-field" id="passwordField">
       <label>Password</label>
       <input type="password" id="authPassword" placeholder="Create a password" onkeydown="if(event.key==='Enter')handleAuth()" oninput="checkPasswordStrength(this.value)" />
-      <div id="pwRequirements" style="display:none;margin-top:10px;padding:12px 14px;background:#FAFAF8;border:1px solid #E2E0D8;border-radius:10px;animation:fadeUp 0.2s ease;">
-        <p style="font-size:11px;font-weight:600;color:#1A1A18;margin:0 0 8px;letter-spacing:0.04em;text-transform:uppercase;">Password requirements</p>
+      <div id="pwRequirements" style="display:none;margin-top:10px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;animation:fadeUp 0.2s ease;">
+        <p style="font-size:11px;font-weight:600;color:var(--ink);margin:0 0 8px;letter-spacing:0.04em;text-transform:uppercase;">Password requirements</p>
         <div style="display:flex;flex-direction:column;gap:5px;">
           <div id="req-length"  class="pw-req"><span class="pw-dot">○</span> At least 8 characters</div>
           <div id="req-upper"   class="pw-req"><span class="pw-dot">○</span> One uppercase letter</div>
@@ -676,7 +730,7 @@
     <!-- Upgrade wall -->
     <div id="upgradeWall" style="display:none;">
       <div class="upgrade-wall">
-        <div id="zeroScansBanner" style="display:none;margin-bottom:16px;padding:10px 14px;background:#FEF9EE;border:1px solid #E8D9B0;border-radius:8px;font-size:13px;color:#7A5C1E;text-align:center;">
+        <div id="zeroScansBanner" style="display:none;margin-bottom:16px;padding:10px 14px;background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:8px;font-size:13px;color:#7A5C1E;text-align:center;">
           You've used all your free scans. Upgrade to keep going.
         </div>
         <div class="upgrade-icon">🔒</div>
@@ -697,11 +751,11 @@
       </div>
 
       <!-- Non-legal warning banner (hidden by default) -->
-      <div id="nonLegalBanner" style="display:none;margin-bottom:20px;padding:14px 18px;background:#FEF9EE;border:1px solid #E8D9B0;border-radius:var(--radius);align-items:flex-start;gap:12px;">
+      <div id="nonLegalBanner" style="display:none;margin-bottom:20px;padding:14px 18px;background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:var(--radius);align-items:flex-start;gap:12px;">
         <span style="font-size:18px;flex-shrink:0;">⚠️</span>
         <div>
-          <strong style="font-size:13px;color:#1A1A18;display:block;margin-bottom:3px;">This doesn't appear to be a legal document</strong>
-          <span style="font-size:12px;color:#6B6B62;line-height:1.6;">VerrixAI is designed for contracts, agreements, terms & conditions, and similar documents. We've done our best to analyse what you uploaded, but results may not be meaningful.</span>
+          <strong style="font-size:13px;color:var(--ink);display:block;margin-bottom:3px;">This doesn't appear to be a legal document</strong>
+          <span style="font-size:12px;color:var(--ink-muted);line-height:1.6;">VerrixAI is designed for contracts, agreements, terms & conditions, and similar documents. We've done our best to analyse what you uploaded, but results may not be meaningful.</span>
         </div>
       </div>
       <div class="result-section open" id="sec-summary">
@@ -1027,7 +1081,7 @@ function showSuccessMoment(message) {
   el.innerHTML = `
     <div style="text-align:center;animation:scaleUp 0.3s ease;">
       <div style="font-size:40px;margin-bottom:16px;">✓</div>
-      <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:500;color:#1A3A2A;margin-bottom:8px;">${message}</div>
+      <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:500;color:var(--accent);margin-bottom:8px;">${message}</div>
     </div>`;
   document.body.appendChild(el);
   setTimeout(() => {
@@ -1575,11 +1629,11 @@ async function startAnalysis() {
             document.getElementById(`sec-${s}`).style.display = opts.includes(s) ? '' : 'none';
           });
           document.getElementById('body-summary').innerHTML = `
-            <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:#FEF9EE;border:1px solid #E8D9B0;border-radius:8px;">
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:8px;">
               <span style="font-size:16px;flex-shrink:0;">🖼️</span>
               <div>
-                <strong style="font-size:13px;color:#1A1A18;display:block;margin-bottom:4px;">Document contains mostly images</strong>
-                <span style="font-size:12px;color:#6B6B62;line-height:1.6;">This document appears to contain mostly images and very little text. For best results, please export it as a PDF — VerrixAI can read images and diagrams inside PDFs.</span>
+                <strong style="font-size:13px;color:var(--ink);display:block;margin-bottom:4px;">Document contains mostly images</strong>
+                <span style="font-size:12px;color:var(--ink-muted);line-height:1.6;">This document appears to contain mostly images and very little text. For best results, please export it as a PDF — VerrixAI can read images and diagrams inside PDFs.</span>
               </div>
             </div>`;
           ['risks','keypoints','simplify'].forEach(s => {
@@ -1741,11 +1795,11 @@ function renderTimeout() {
   if (exportBtn) exportBtn.style.display = 'none';
   if (exportBtnBottom) exportBtnBottom.style.display = 'none';
   document.getElementById('body-summary').innerHTML = `
-    <div style="display:flex;align-items:flex-start;gap:10px;padding:16px 18px;background:#F5F0FA;border:1px solid #D9CCF0;border-radius:8px;">
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:16px 18px;background:var(--timeout-bg);border:1px solid var(--timeout-border);border-radius:8px;">
       <span style="font-size:20px;flex-shrink:0;">⏱</span>
       <div style="flex:1;">
-        <strong style="font-size:13px;color:#1A1A18;display:block;margin-bottom:4px;">Analysis timed out</strong>
-        <span style="font-size:12px;color:#6B6B62;line-height:1.6;">This can happen with large documents or slow connections. Your file is still loaded — click Try Again below.</span>
+        <strong style="font-size:13px;color:var(--ink);display:block;margin-bottom:4px;">Analysis timed out</strong>
+        <span style="font-size:12px;color:var(--ink-muted);line-height:1.6;">This can happen with large documents or slow connections. Your file is still loaded — click Try Again below.</span>
         <div style="margin-top:12px;">
           <button onclick="retryAnalysis()" style="padding:9px 22px;background:#1A3A2A;color:white;border:none;border-radius:999px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='#2E5C42'" onmouseout="this.style.background='#1A3A2A'">↺ Try Again</button>
         </div>
@@ -2096,10 +2150,10 @@ function switchBatchTab(idx, opts) {
     : '';
 
   const nonLegalBanner = result.IS_LEGAL === false
-    ? `<div style="margin-bottom:16px;padding:14px 18px;background:#FEF9EE;border:1px solid #E8D9B0;border-radius:var(--radius);display:flex;align-items:flex-start;gap:12px;">
+    ? `<div style="margin-bottom:16px;padding:14px 18px;background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:var(--radius);display:flex;align-items:flex-start;gap:12px;">
         <span style="font-size:18px;flex-shrink:0;">⚠️</span>
-        <div><strong style="font-size:13px;color:#1A1A18;display:block;margin-bottom:3px;">This doesn't appear to be a legal document</strong>
-        <span style="font-size:12px;color:#6B6B62;line-height:1.6;">VerrixAI is designed for contracts, agreements, terms & conditions. Results may not be meaningful.</span></div>
+        <div><strong style="font-size:13px;color:var(--ink);display:block;margin-bottom:3px;">This doesn't appear to be a legal document</strong>
+        <span style="font-size:12px;color:var(--ink-muted);line-height:1.6;">VerrixAI is designed for contracts, agreements, terms & conditions. Results may not be meaningful.</span></div>
       </div>` : '';
 
   let sectionsHTML = '';
@@ -2346,6 +2400,24 @@ function exportToPdf() {
 
   doc.save(`${name}-verrixai-analysis.pdf`);
 }
+
+// ─── DARK MODE ────────────────────────────────────────────────
+const MOON_ICON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+const SUN_ICON  = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const icon = document.getElementById('themeIcon');
+  if (icon) icon.innerHTML = theme === 'dark' ? SUN_ICON : MOON_ICON;
+  localStorage.setItem('vrx-theme', theme);
+}
+function toggleTheme() {
+  applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+// Init on load — icon syncs to current theme
+document.addEventListener('DOMContentLoaded', function() {
+  applyTheme(localStorage.getItem('vrx-theme') || (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light'));
+});
+
 </script>
 </body>
 </html>

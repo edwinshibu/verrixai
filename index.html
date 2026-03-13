@@ -921,9 +921,9 @@ if (urlSource) sessionStorage.setItem('vrx_source', urlSource);
   let pingTimer = null;
 
   function ping() {
-    // OPTIONS hits the CORS preflight in analyse.js — returns 204 instantly,
-    // costs nothing, but keeps the exact function that matters warm.
-    fetch('/api/analyse', { method: 'OPTIONS' }).catch(() => {});
+    // GET hits analyse.js directly — returns 200 instantly, zero cost,
+    // keeps the exact function warm. No streaming, no Anthropic call.
+    fetch('/api/analyse').catch(() => {});
   }
 
   function start() {
@@ -1627,26 +1627,15 @@ async function startAnalysis() {
         signal: activeController.signal
       });
 
-      // Upload complete — now Claude is working
       if (msgEl) msgEl.textContent = 'Analysing your document…';
       clearTimeout(timeoutId);
       activeController = null;
 
       if (!res.ok) return null;
 
-      // Read the stream chunk by chunk, accumulate into a string
-      const reader  = res.body.getReader();
-      const decoder = new TextDecoder();
-      let accumulated = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        accumulated += decoder.decode(value, { stream: true });
-      }
-
-      // Parse JSON from accumulated text
-      const jsonMatch = accumulated.match(/\{[\s\S]*\}/);
+      // Non-streaming — wait for the complete response, then parse
+      const text = await res.text();
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
       return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
 
     } catch(e) {
@@ -1979,15 +1968,9 @@ async function analyseOneFile(userContent, opts) {
     });
     clearTimeout(timeoutId);
     if (!res.ok) return null;
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let accumulated = '';
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      accumulated += decoder.decode(value, { stream: true });
-    }
-    const match = accumulated.match(/\{[\s\S]*\}/);
+    // Non-streaming — full response in one go
+    const text = await res.text();
+    const match = text.match(/\{[\s\S]*\}/);
     return match ? JSON.parse(match[0]) : null;
   } catch(e) {
     clearTimeout(timeoutId);

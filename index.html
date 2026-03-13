@@ -1499,31 +1499,15 @@ async function startAnalysis() {
     });
   }, 45000);
 
-  const sections = [];
-  if (opts.includes('summary'))   sections.push('SUMMARY: 3-5 sentence overview.');
-  if (opts.includes('risks'))     sections.push('RISKS: JSON array [{level,title,desc}] with 3-6 items, level = HIGH/MEDIUM/LOW.');
-  if (opts.includes('keypoints')) sections.push('KEY_POINTS: JSON array of 4-7 important points as strings.');
-  if (opts.includes('simplify'))  sections.push('SIMPLIFIED: Plain-English rewrite, 3-5 sentences, no jargon.');
-
-  const instruction = `You are a document analyst. You MUST respond ONLY with a single valid JSON object — no markdown, no preamble, no text outside the JSON.
-
-Analyse the document and return this JSON:
-{"IS_LEGAL":true/false,"SUMMARY":"...","RISKS":[{"level":"HIGH","title":"...","desc":"..."}],"KEY_POINTS":["..."],"SIMPLIFIED":"..."}
-
-IS_LEGAL: true if this is a legal/contractual/business document. false for anything else (CV, academic, personal docs etc).
-
-CRITICAL: Always populate every field with real analysis. Never leave fields empty or null. If not a legal document, still analyse what the document contains and note what type it is.
-
-Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.split(':')[0]).join(', ') : ''}.`
-
+  // Instruction now lives server-side in analyse.js (prompt caching).
+  // Client sends only raw document content + selected options.
   let userContent;
   if (loadedFile) {
     const isDocx = loadedFile.name.toLowerCase().endsWith('.docx');
     if (loadedFile.mediaType === 'application/pdf' || loadedFile.name.toLowerCase().endsWith('.pdf')) {
-      // PDF — send natively, Claude reads it directly
+      // PDF — send natively as document block (no instruction text block needed)
       userContent = [
-        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: loadedFile.base64 } },
-        { type: 'text', text: instruction }
+        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: loadedFile.base64 } }
       ];
     } else if (isDocx) {
       // DOCX — extract text client-side using JSZip (no server needed, no size limits)
@@ -1575,7 +1559,7 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
           return;
         }
 
-        userContent = instruction + '\n\nDOCUMENT:\n"""\n' + text.slice(0, 48000) + '\n"""';
+        userContent = text.slice(0, 48000);
       } catch(e) {
         console.error('DOCX extraction failed:', e);
         await stepsPromise;
@@ -1586,10 +1570,10 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
       }
     } else {
       // TXT or other text file — decode base64 and send as text
-      userContent = instruction + '\n\nDOCUMENT:\n"""\n' + atob(loadedFile.base64).slice(0, 48000) + '\n"""';
+      userContent = atob(loadedFile.base64).slice(0, 48000);
     }
   } else {
-    userContent = instruction + '\n\nDOCUMENT:\n"""\n' + pasteText.slice(0, 48000) + '\n"""';
+    userContent = pasteText.slice(0, 48000);
   }
 
   let result = null;
@@ -1610,11 +1594,7 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
       const res = await fetch('/api/analyse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 4000,
-          messages: [{ role: 'user', content: userContent }]
-        }),
+        body: JSON.stringify({ options: opts, content: userContent }),
         signal: activeController.signal
       });
 
@@ -1920,7 +1900,7 @@ batchFileInput.addEventListener('change', e => {
 });
 
 // ── Prepare content for a single file (shared logic) ──────
-async function prepareFileContent(fileObj, instruction) {
+async function prepareFileContent(fileObj) {
   const file = fileObj.file;
   const name = file.name.toLowerCase();
 
@@ -1931,10 +1911,8 @@ async function prepareFileContent(fileObj, instruction) {
       r.onerror = rej;
       r.readAsDataURL(file);
     });
-    return [
-      { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
-      { type: 'text', text: instruction }
-    ];
+    // PDF — return as document block only (instruction is server-side)
+    return [{ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } }];
   }
 
   if (name.endsWith('.docx')) {
@@ -1949,25 +1927,25 @@ async function prepareFileContent(fileObj, instruction) {
       .replace(/<w:br[^>]*\/>/gi, '\n').replace(/<w:p[ >][^>]*>/gi, '\n').replace(/<[^>]+>/g, '')
       .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#x[0-9A-Fa-f]+;/g,'')
       .replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n').trim();
-    return instruction + '\n\nDOCUMENT:\n"""\n' + text.slice(0, 48000) + '\n"""';
+    return text.slice(0, 48000);
   }
 
   // TXT or other — read as text
   const text = await new Promise((res, rej) => {
     const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = rej; r.readAsText(file);
   });
-  return instruction + '\n\nDOCUMENT:\n"""\n' + text.slice(0, 48000) + '\n"""';
+  return text.slice(0, 48000);
 }
 
 // ── Run analysis for one file ──────────────────────────────
-async function analyseOneFile(userContent) {
+async function analyseOneFile(userContent, opts) {
   const controller = new AbortController();
   const timeoutId  = setTimeout(() => controller.abort(), 28000);
   try {
     const res = await fetch('/api/analyse', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 4000, messages: [{ role: 'user', content: userContent }] }),
+      body: JSON.stringify({ options: opts || [], content: userContent }),
       signal: controller.signal
     });
     clearTimeout(timeoutId);
@@ -1997,17 +1975,7 @@ async function startBatchAnalysis() {
   const scansLeft = Math.max(0, (userProfile?.scans_limit || 0) - (userProfile?.scans_used || 0));
   const filesToProcess = batchFiles.slice(0, scansLeft);
 
-  const instruction = `You are a document analyst. You MUST respond ONLY with a single valid JSON object — no markdown, no preamble, no text outside the JSON.
-
-Analyse the document and return this JSON:
-{"IS_LEGAL":true/false,"SUMMARY":"...","RISKS":[{"level":"HIGH","title":"...","desc":"..."}],"KEY_POINTS":["..."],"SIMPLIFIED":"..."}
-
-IS_LEGAL: true if this is a legal/contractual/business document. false for anything else.
-
-CRITICAL: Always populate every field with real analysis. Never leave fields empty or null.
-
-Only include these keys: IS_LEGAL${opts.length ? ', ' + opts.map(o => o === 'summary' ? 'SUMMARY' : o === 'risks' ? 'RISKS' : o === 'keypoints' ? 'KEY_POINTS' : 'SIMPLIFIED').join(', ') : ''}.`;
-
+  // Instruction is server-side (prompt caching) — no need to build it here.
   // Hide input, show loading
   document.getElementById('batchInputState').style.display  = 'none';
   document.getElementById('batchLoadingState').style.display = 'block';
@@ -2025,12 +1993,12 @@ Only include these keys: IS_LEGAL${opts.length ? ', ' + opts.map(o => o === 'sum
 
     let result = null;
     try {
-      const userContent = await prepareFileContent(f, instruction);
-      result = await analyseOneFile(userContent);
+      const userContent = await prepareFileContent(f);
+      result = await analyseOneFile(userContent, opts);
       // One retry on failure
       if (!result) {
         await new Promise(r => setTimeout(r, 1500));
-        result = await analyseOneFile(userContent);
+        result = await analyseOneFile(userContent, opts);
       }
     } catch(e) {
       console.error('Batch file error:', e);

@@ -1,8 +1,8 @@
 {
   "functions": {
-    "api/knowmore.js":        { "maxDuration": 10 },
-    "api/delete-account.js": { "maxDuration": 10 },
-    "api/stripe-webhook.js": { "maxDuration": 10 }
+    "api/knowmore.js":        { "maxDuration": 60 },
+    "api/delete-account.js": { "maxDuration": 60 },
+    "api/stripe-webhook.js": { "maxDuration": 60 }
   },
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" },

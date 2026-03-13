@@ -913,6 +913,33 @@ let stillWorkingTimer = null; // "still working" message timer
 const urlSource = new URLSearchParams(window.location.search).get('source');
 if (urlSource) sessionStorage.setItem('vrx_source', urlSource);
 
+// ─── KEEPALIVE PING ───────────────────────────────────────────
+// Pings /api/ping every 2 minutes to keep the Edge function warm.
+// Stops when the tab is hidden (no point pinging in the background).
+// Restarts immediately when the tab becomes visible again.
+(function keepAlive() {
+  let pingTimer = null;
+
+  function ping() {
+    fetch('/api/ping').catch(() => {}); // fire and forget — errors are irrelevant
+  }
+
+  function start() {
+    ping(); // ping immediately on (re)activation
+    pingTimer = setInterval(ping, 2 * 60 * 1000); // then every 2 minutes
+  }
+
+  function stop() {
+    if (pingTimer) { clearInterval(pingTimer); pingTimer = null; }
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    document.hidden ? stop() : start();
+  });
+
+  start(); // kick off on page load
+})();
+
 // ─── BOOT ────────────────────────────────────────────────────
 (async () => {
   const { data: { session } } = await sb.auth.getSession();

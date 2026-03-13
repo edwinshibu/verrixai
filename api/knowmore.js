@@ -23,7 +23,7 @@ function sanitise(str, maxLen = 100) {
   return String(str).replace(/[<>'"&]/g, '').trim().slice(0, maxLen);
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -198,7 +198,7 @@ module.exports = async function handler(req, res) {
           <p style="font-family:Georgia,serif;font-size:20px;font-weight:500;color:#1A1A18;margin:0 0 16px;">Simple, transparent pricing</p>
           <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;border-radius:12px;overflow:hidden;border:1px solid #E2E0D8;">
             <tr style="background:#EAF2EC;">
-              <td style="padding:12px 16px;border-bottom:1px solid #E2E0D8;"><p style="font-size:13px;font-weight:700;color:#1A3A2A;margin:0;">Free</p><p style="font-size:12px;color:#2E5C42;margin:2px 0 0;">5 scans — no credit card required</p></td>
+              <td style="padding:12px 16px;border-bottom:1px solid #E2E0D8;"><p style="font-size:13px;font-weight:700;color:#1A3A2A;margin:0;">Free</p><p style="font-size:12px;color:#2E5C42;margin:2px 0 0;">10 scans — no credit card required</p></td>
               <td style="padding:12px 16px;border-bottom:1px solid #E2E0D8;text-align:right;"><p style="font-family:Georgia,serif;font-size:18px;font-weight:600;color:#1A3A2A;margin:0;">$0</p></td>
             </tr>
             <tr>
@@ -260,8 +260,7 @@ module.exports = async function handler(req, res) {
       'Authorization': `Bearer ${RESEND_KEY}`
     },
     body: JSON.stringify({
-      from:    'VerrixAI <info@verrixai.com>',
-      reply_to: 'noreply@verrixai.com',
+      from:    'VerrixAI <onboarding@resend.dev>',
       to:      safeEmail,
       subject: `Here is everything about VerrixAI, ${safeName}`,
       html:    emailHtml

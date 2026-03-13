@@ -1707,16 +1707,20 @@ function exportToPdf() {
     checkPage(14);
     doc.setFillColor(240, 244, 241);
     doc.roundedRect(marginL, y, contentW, 9, 2, 2, 'F');
-    doc.setTextColor(...darkGreen);
+    // Symbol in gold
+    doc.setTextColor(...gold);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text(`${icon}  ${title}`, marginL + 4, y + 6);
+    doc.text(icon, marginL + 4, y + 6);
+    // Title in dark green
+    doc.setTextColor(...darkGreen);
+    doc.text(title, marginL + 10, y + 6);
     y += 14;
   }
 
   // ── SUMMARY ──────────────────────────────────────────────────
   if (opts.includes('summary') && r.SUMMARY) {
-    sectionTitle('📋', 'Document Summary');
+    sectionTitle('>', 'Document Summary');
     const lines = wrapText(r.SUMMARY, marginL, contentW, 10);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...ink);
@@ -1726,7 +1730,7 @@ function exportToPdf() {
 
   // ── RISK FLAGS ───────────────────────────────────────────────
   if (opts.includes('risks') && r.RISKS) {
-    sectionTitle('⚠️', 'Risk Flags');
+    sectionTitle('!', 'Risk Flags');
     let risks = r.RISKS;
     if (typeof risks === 'string') { try { risks = JSON.parse(risks); } catch(e) { risks = []; } }
     risks.forEach(risk => {
@@ -1759,7 +1763,7 @@ function exportToPdf() {
 
   // ── KEY POINTS ───────────────────────────────────────────────
   if (opts.includes('keypoints') && r.KEY_POINTS) {
-    sectionTitle('🔑', 'Key Points');
+    sectionTitle('*', 'Key Points');
     let pts = r.KEY_POINTS;
     if (typeof pts === 'string') pts = pts.split('\n').filter(Boolean);
     pts.forEach((pt, i) => {
@@ -1784,7 +1788,7 @@ function exportToPdf() {
 
   // ── PLAIN LANGUAGE ───────────────────────────────────────────
   if (opts.includes('simplify') && r.SIMPLIFIED) {
-    sectionTitle('✨', 'Plain-Language Version');
+    sectionTitle('#', 'Plain-Language Version');
     const lines = wrapText(r.SIMPLIFIED, marginL, contentW, 10);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...ink);

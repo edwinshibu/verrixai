@@ -26,13 +26,10 @@
     a { color: var(--accent-light); text-decoration: underline; text-underline-offset: 2px; }
     .highlight-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin: 32px 0; }
     .highlight-box p { margin: 0; font-size: 14px; }
-    footer { border-top: 1px solid var(--border); padding: 28px 48px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--ink-muted); flex-wrap: wrap; gap: 12px; }
+    @media (max-width: 600px) { nav { padding: 16px 20px; } h1 { font-size: 28px; } footer { padding: 24px 20px; } footer > div { flex-direction: column; align-items: center !important; text-align: center; gap: 16px; } footer > div > div { text-align: center !important; } }
     .footer-logo { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 500; color: var(--ink); }
-    .footer-logo span { color: var(--gold); }
-    .footer-links { display: flex; gap: 20px; }
-    .footer-links a { color: var(--ink-muted); text-decoration: none; font-size: 12px; }
-    .footer-links a:hover { color: var(--ink); }
-    @media (max-width: 600px) { nav { padding: 16px 20px; } h1 { font-size: 28px; } footer { flex-direction: column; padding: 24px 20px; text-align: center; } }
+  .footer-logo span { color: var(--gold); }
+  footer { border-top: 1px solid var(--border); padding: 28px 48px; display: flex; align-items: center; justify-content: center; }
   </style>
 </head>
 <body>
@@ -91,7 +88,7 @@
   <h2>8. Cookies</h2>
   <p>VerrixAI uses only essential cookies required for authentication (to keep you logged in). We do not use advertising, tracking, or analytics cookies.</p>
   <h2>9. Your Rights (Australian Privacy Act 1988)</h2>
-  <p>You have the right to access, correct, or request deletion of the personal information we hold about you. To exercise any of these rights, contact us at <a href="mailto:admin@verrixai.com">admin@verrixai.com</a>. We will respond within 30 days.</p>
+  <p>You have the right to access, correct, or request deletion of the personal information we hold about you. To exercise any of these rights, contact us at <a href="/cdn-cgi/l/email-protection#08696c656166487e6d7a7a61706961266b6765"><span class="__cf_email__" data-cfemail="5233363f3b3c12243720203b2a333b7c313d3f">[email&#160;protected]</span></a>. We will respond within 30 days.</p>
   <p>Account data (email address and scan count) is deleted within 30 days of account closure upon request.</p>
   <h2>10. Children</h2>
   <p>VerrixAI is not intended for individuals under the age of 18. We do not knowingly collect personal information from minors.</p>
@@ -101,13 +98,17 @@
   <p>For privacy-related questions, contact us at <a href="mailto:admin@verrixai.com">admin@verrixai.com</a>.</p>
 </div>
 <footer>
-  <div class="footer-logo">Verrix<span>AI</span></div>
-  <div class="footer-links">
-    <a href="/privacy.html">Privacy Policy</a>
-    <a href="/terms.html">Terms of Service</a>
-    <a href="/">Home</a>
+  <div style="max-width:1100px;margin:0 auto;width:100%;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+    <div class="footer-logo">Verrix<span>AI</span></div>
+    <div style="display:flex;gap:24px;align-items:center;">
+      <a href="/terms.html" style="color:var(--ink-muted);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-muted)'">Terms of Service</a>
+      <a href="/pricing.html" style="color:var(--ink-muted);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-muted)'">Pricing</a>
+      <a href="/" style="color:var(--ink-muted);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-muted)'">Home</a>
+    </div>
+    <div style="font-size:12px;color:var(--ink-muted);text-align:right;line-height:1.6;">
+      <div>© 2026 VerrixAI. All rights reserved.</div>
+    </div>
   </div>
-  <div>&copy; 2026 VerrixAI. Not legal advice.</div>
 </footer>
 </body>
 </html>

@@ -26,13 +26,10 @@
     a { color: var(--accent-light); text-decoration: underline; text-underline-offset: 2px; }
     .highlight-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin: 32px 0; }
     .highlight-box p { margin: 0; font-size: 14px; }
-    footer { border-top: 1px solid var(--border); padding: 28px 48px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--ink-muted); flex-wrap: wrap; gap: 12px; }
+    @media (max-width: 600px) { nav { padding: 16px 20px; } h1 { font-size: 28px; } footer { padding: 24px 20px; } footer > div { flex-direction: column; align-items: center !important; text-align: center; gap: 16px; } footer > div > div { text-align: center !important; } }
     .footer-logo { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 500; color: var(--ink); }
-    .footer-logo span { color: var(--gold); }
-    .footer-links { display: flex; gap: 20px; }
-    .footer-links a { color: var(--ink-muted); text-decoration: none; font-size: 12px; }
-    .footer-links a:hover { color: var(--ink); }
-    @media (max-width: 600px) { nav { padding: 16px 20px; } h1 { font-size: 28px; } footer { flex-direction: column; padding: 24px 20px; text-align: center; } }
+  .footer-logo span { color: var(--gold); }
+  footer { border-top: 1px solid var(--border); padding: 28px 48px; display: flex; align-items: center; justify-content: center; }
   </style>
 </head>
 <body>
@@ -61,12 +58,12 @@
   </ul>
   <p>Always consult a qualified legal professional for advice specific to your situation.</p>
   <h2>4. Accounts & Access</h2>
-  <p>To access certain features, you must create an account. You are responsible for maintaining the confidentiality of your login credentials and for all activity that occurs under your account. You must provide accurate information when registering and notify us immediately of any unauthorised access at <a href="mailto:admin@verrixai.com">admin@verrixai.com</a>.</p>
+  <p>To access certain features, you must create an account. You are responsible for maintaining the confidentiality of your login credentials and for all activity that occurs under your account. You must provide accurate information when registering and notify us immediately of any unauthorised access at <a href="/cdn-cgi/l/email-protection#e48580898d8aa4928196968d9c858dca878b89"><span class="__cf_email__" data-cfemail="442520292d2a04322136362d3c252d6a272b29">[email&#160;protected]</span></a>.</p>
   <h2>5. Free & Paid Plans</h2>
   <p>VerrixAI offers a free tier with a limited number of scans per account. Paid plans provide additional scans and features. Pricing is displayed on the <a href="/pricing.html">Pricing page</a>. We reserve the right to change pricing with reasonable notice to existing subscribers.</p>
   <h2>6. Payments & Refunds</h2>
   <p>Paid subscriptions are billed via Stripe. By subscribing, you authorise recurring charges to your payment method. Subscriptions renew automatically unless cancelled before the renewal date. Unused scans are forfeited upon cancellation.</p>
-  <p><strong>Refund Policy:</strong> We offer a full refund within 7 days of your initial subscription payment if you are unsatisfied with the Service. After 7 days, refunds are considered on a case-by-case basis at our discretion. To request a refund, contact us at <a href="mailto:admin@verrixai.com">admin@verrixai.com</a> with your account email and reason for the request. We aim to respond within 2 business days.</p>
+  <p><strong>Refund Policy:</strong> We offer a full refund within 7 days of your initial subscription payment if you are unsatisfied with the Service. After 7 days, refunds are considered on a case-by-case basis at our discretion. To request a refund, contact us at <a href="/cdn-cgi/l/email-protection#2140454c484f6157445353485940480f424e4c"><span class="__cf_email__" data-cfemail="345550595d5a74425146465d4c555d1a575b59">[email&#160;protected]</span></a> with your account email and reason for the request. We aim to respond within 2 business days.</p>
   <p>Refunds will not be issued for:</p>
   <ul>
     <li>Partial months where scans have already been used.</li>
@@ -93,13 +90,26 @@
   <h2>12. Termination</h2>
   <p>We reserve the right to suspend or terminate accounts that violate these terms, without notice. You may cancel your account at any time. Upon termination, your account data will be deleted in accordance with our Privacy Policy.</p>
   <h2>13. Dispute Resolution</h2>
-  <p>Before pursuing any formal legal action, both parties agree to first attempt to resolve any dispute informally by contacting us at <a href="mailto:admin@verrixai.com">admin@verrixai.com</a>. We will make reasonable efforts to resolve the matter within 14 days.</p>
+  <p>Before pursuing any formal legal action, both parties agree to first attempt to resolve any dispute informally by contacting us at <a href="/cdn-cgi/l/email-protection#83e2e7eeeaedc3f5e6f1f1eafbe2eaade0ecee"><span class="__cf_email__" data-cfemail="2f4e4b4246416f594a5d5d46574e46014c4042">[email&#160;protected]</span></a>. We will make reasonable efforts to resolve the matter within 14 days.</p>
   <h2>14. Governing Law</h2>
   <p>These terms are governed by the laws of Australia. Any disputes that cannot be resolved informally shall be subject to the exclusive jurisdiction of the courts of Australia.</p>
   <h2>15. Changes to These Terms</h2>
-  <p>We may update these terms from time to time. We will notify registered users by email of material changes. Continued use of the Service after changes are posted constitutes acceptance of the revised terms.</p>
+  <p>We may update these Terms of Service from time to time. We will notify registered users by email of any material changes at least 14 days before they take effect. Continued use of VerrixAI after the effective date constitutes acceptance of the updated terms.</p>
   <h2>16. Contact</h2>
-  <p>For questions about these terms, contact us at <a href="mailto:admin@verrixai.com">admin@verrixai.com</a>.</p>
+  <p>For any questions regarding these terms, contact us at <a href="mailto:admin@verrixai.com">admin@verrixai.com</a>.</p>
 </div>
+<footer>
+  <div style="max-width:1100px;margin:0 auto;width:100%;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+    <div class="footer-logo">Verrix<span>AI</span></div>
+    <div style="display:flex;gap:24px;align-items:center;">
+      <a href="/privacy.html" style="color:var(--ink-muted);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-muted)'">Privacy Policy</a>
+      <a href="/pricing.html" style="color:var(--ink-muted);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-muted)'">Pricing</a>
+      <a href="/" style="color:var(--ink-muted);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-muted)'">Home</a>
+    </div>
+    <div style="font-size:12px;color:var(--ink-muted);text-align:right;line-height:1.6;">
+      <div>© 2026 VerrixAI. All rights reserved.</div>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

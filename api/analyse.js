@@ -6,8 +6,6 @@ const ALLOWED_MODEL   = 'claude-sonnet-4-20250514';
 const MAX_TOKENS      = 4000;
 
 // ── Cached system prompt ────────────────────────────────────
-// Identical on every request → Anthropic caches it for 5 minutes.
-// Cached input tokens cost 90% less than uncached.
 const SYSTEM_PROMPT = `You are a document analyst. You MUST respond ONLY with a single valid JSON object — no markdown, no preamble, no text outside the JSON.
 
 Analyse the document and return this JSON:
@@ -22,7 +20,6 @@ SIMPLIFIED must be a plain string, plain-English rewrite, 3–5 sentences, no ja
 
 CRITICAL: Always populate every requested field with real analysis. Never leave fields empty or null. If not a legal document, still analyse what the document contains and note what type it is.`;
 
-// Map client option names to JSON key names
 const KEY_MAP = { summary: 'SUMMARY', risks: 'RISKS', keypoints: 'KEY_POINTS', simplify: 'SIMPLIFIED' };
 
 export default async function handler(req) {
@@ -33,8 +30,20 @@ export default async function handler(req) {
       status: 204,
       headers: {
         'Access-Control-Allow-Origin':  ALLOWED_ORIGIN,
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
+      }
+    });
+  }
+
+  // ── Keepalive ping — GET returns instantly, keeps function warm ──
+  if (req.method === 'GET') {
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: {
+        'Content-Type':                'application/json',
+        'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+        'Cache-Control':               'no-store',
       }
     });
   }
@@ -54,9 +63,6 @@ export default async function handler(req) {
     return json({ error: 'Invalid JSON body' }, 400);
   }
 
-  // Support two formats:
-  //   New: { options: ['summary','risks',...], content: <string|array> }
-  //   Legacy: { messages: [{ role:'user', content }] }
   let rawContent;
   let options = [];
 
@@ -98,7 +104,6 @@ export default async function handler(req) {
   }
 
   // ── Build user message ─────────────────────────────────────
-  // Dynamic instruction (varies per request — kept small, not cached)
   const requestedKeys = options.length
     ? ['IS_LEGAL', ...options.map(o => KEY_MAP[o]).filter(Boolean)]
     : ['IS_LEGAL', 'SUMMARY', 'RISKS', 'KEY_POINTS', 'SIMPLIFIED'];
@@ -108,12 +113,13 @@ export default async function handler(req) {
   if (typeof rawContent === 'string') {
     userContent = `${dynamicInstruction}\n\nDOCUMENT:\n"""\n${rawContent}\n"""`;
   } else {
-    // PDF array — strip any existing text block, append fresh dynamic instruction
     const docBlocks = rawContent.filter(p => p.type !== 'text');
     userContent = [...docBlocks, { type: 'text', text: dynamicInstruction }];
   }
 
-  // ── Call Anthropic with streaming + prompt caching ─────────
+  // ── Call Anthropic — no streaming ──────────────────────────
+  // Non-streaming is more reliable across all network conditions.
+  // The full response arrives as one complete JSON object.
   const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -125,7 +131,7 @@ export default async function handler(req) {
     body: JSON.stringify({
       model:      ALLOWED_MODEL,
       max_tokens: MAX_TOKENS,
-      stream:     true,
+      stream:     false,
       system: [
         {
           type:          'text',
@@ -142,52 +148,17 @@ export default async function handler(req) {
     return json({ error: err.error?.message || 'Anthropic API error' }, anthropicRes.status);
   }
 
-  // ── Transform SSE stream → plain text stream ───────────────
-  const decoder = new TextDecoder();
+  const data = await anthropicRes.json();
+  const text = data?.content?.[0]?.text;
+  if (!text) return json({ error: 'Empty response from Anthropic' }, 502);
 
-  const readable = new ReadableStream({
-    async start(controller) {
-      const reader = anthropicRes.body.getReader();
-      let buffer = '';
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop();
-
-          for (const line of lines) {
-            if (!line.startsWith('data: ')) continue;
-            const data = line.slice(6).trim();
-            if (data === '[DONE]') continue;
-            try {
-              const parsed = JSON.parse(data);
-              if (parsed.type === 'content_block_delta' && parsed.delta?.type === 'text_delta') {
-                controller.enqueue(new TextEncoder().encode(parsed.delta.text));
-              }
-            } catch(e) {
-              // Ignore malformed SSE lines
-            }
-          }
-        }
-      } catch(e) {
-        console.error('Stream read error:', e);
-      } finally {
-        controller.close();
-      }
-    }
-  });
-
-  return new Response(readable, {
+  // Return the raw text — client parses JSON from it
+  return new Response(text, {
     status: 200,
     headers: {
       'Content-Type':                'text/plain; charset=utf-8',
       'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
-      'Cache-Control':               'no-cache',
-      'X-Accel-Buffering':           'no',
+      'Cache-Control':               'no-store',
     }
   });
 }

@@ -735,7 +735,10 @@
           It was processed securely and deleted immediately after analysis. Nothing is saved to any server.
         </div>
       </div>
-      <div style="text-align:center;padding:24px 0 8px;">
+      <div style="text-align:center;padding:24px 0 8px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;">
+        <button id="btnExportPdfBottom" onclick="exportToPdf()" style="display:none;align-items:center;gap:8px;padding:13px 32px;background:var(--gold);color:white;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:all 0.2s;letter-spacing:0.01em;">
+          ⬇ Export PDF
+        </button>
         <button onclick="resetTool()" style="display:inline-flex;align-items:center;gap:8px;padding:13px 32px;background:var(--accent);color:white;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:all 0.2s;letter-spacing:0.01em;">
           ← Analyse Another Document
         </button>
@@ -1408,7 +1411,10 @@ function handleFile(file) {
     loadedFile = { base64: ev.target.result.split(',')[1], mediaType: file.type || 'application/pdf', name: file.name, _rawFile: file };
     window._currentFileName = file.name.replace(/\.[^/.]+$/, '');
     document.getElementById('dropLabel').textContent = `✓ ${file.name}`;
-    document.getElementById('dropSub').textContent   = 'File ready for analysis';
+    const sizeStr = file.size < 1024*1024
+      ? (file.size/1024).toFixed(0) + ' KB'
+      : (file.size/(1024*1024)).toFixed(1) + ' MB';
+    document.getElementById('dropSub').textContent = `${sizeStr} · File ready for analysis`;
     dropZone.style.borderColor = 'var(--gold)'; dropZone.style.background = '#FDFBF5'; dropZone.style.pointerEvents = 'none';
     document.getElementById('clearFileRow').style.display   = 'block';
     document.getElementById('pasteToggleRow').style.display = 'none';
@@ -1660,10 +1666,12 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
 }
 
 function renderResults(r, opts) {
-  // Show export button for Pro 2 users
-  const exportBtn = document.getElementById('btnExportPdf');
-  if (userProfile?.plan === 'pro2') exportBtn.style.display = '';
-  else exportBtn.style.display = 'none';
+  // Show export buttons for Pro 2 users
+  const exportBtn       = document.getElementById('btnExportPdf');
+  const exportBtnBottom = document.getElementById('btnExportPdfBottom');
+  const showExport = userProfile?.plan === 'pro2';
+  exportBtn.style.display       = showExport ? '' : 'none';
+  exportBtnBottom.style.display = showExport ? 'inline-flex' : 'none';
   // Store last result for export
   window._lastResult = r;
   window._lastOpts   = opts;

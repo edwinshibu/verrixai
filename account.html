@@ -211,7 +211,7 @@
             <span id="scansUsed">0</span>
             <span> / <span id="scansTotal">5</span></span>
           </div>
-          <div class="scan-sub">scans used this account</div>
+          <div class="scan-sub" id="scanSubLabel">scans used this account</div>
         </div>
         <div style="font-size:28px;">📄</div>
       </div>
@@ -346,18 +346,26 @@
     document.getElementById('heroEmail').textContent    = user.email;
     document.getElementById('heroProvider').innerHTML    = providerBadge;
 
+    // Plan label — must be declared before isPaid check below
+    const planRaw   = profile?.plan || 'free';
+    const planLabel = planRaw === 'pro' ? 'Pro' : planRaw === 'pro2' ? 'Pro 2' : 'Free';
+    const isPaid    = planRaw === 'pro' || planRaw === 'pro2';
+
     // Populate scan usage
     document.getElementById('scansUsed').textContent  = used;
     document.getElementById('scansTotal').textContent = total;
+    document.getElementById('scanSubLabel').textContent = isPaid ? 'scans used this month' : 'scans used this account';
 
     const bar = document.getElementById('scanBar');
-    // Animate bar after paint
     setTimeout(() => { bar.style.width = pct + '%'; }, 80);
     if (pct >= 100)      bar.classList.add('empty');
     else if (pct >= 60)  bar.classList.add('low');
 
     const statusEl = document.getElementById('scanStatus');
-    if (rem === 0) {
+    if (isPaid) {
+      statusEl.textContent = `${rem} scan${rem !== 1 ? 's' : ''} remaining this month.`;
+      document.getElementById('upgradePrompt').style.display = 'none';
+    } else if (rem === 0) {
       statusEl.textContent = 'You have no scans remaining. Upgrade to keep going.';
       statusEl.style.color = 'var(--risk-high)';
       document.getElementById('upgradePrompt').style.display = 'flex';
@@ -369,14 +377,11 @@
       statusEl.textContent = `${rem} scan${rem !== 1 ? 's' : ''} remaining.`;
     }
 
-    // Plan label
-    const planRaw = profile?.plan || 'free';
-    const planLabel = planRaw === 'pro' ? 'Pro' : planRaw === 'pro2' ? 'Pro 2' : 'Free';
-    document.getElementById('heroPlan').textContent          = `${planLabel} Plan`;
-    document.getElementById('detailEmail').textContent       = user.email;
-    document.getElementById('detailProvider').innerHTML      = providerLabel;
-    document.getElementById('detailSince').textContent       = since;
-    document.getElementById('detailPlan').textContent        = planLabel;
+    document.getElementById('heroPlan').textContent   = `${planLabel} Plan`;
+    document.getElementById('detailEmail').textContent = user.email;
+    document.getElementById('detailProvider').innerHTML = providerLabel;
+    document.getElementById('detailSince').textContent  = since;
+    document.getElementById('detailPlan').textContent   = planLabel;
 
     // Show account state
     document.getElementById('loadingState').style.display  = 'none';

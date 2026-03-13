@@ -247,6 +247,73 @@
   .privacy-text { font-size: 12px; color: var(--accent-light); line-height: 1.6; }
   .privacy-text strong { display: block; margin-bottom: 2px; font-weight: 600; }
 
+  /* BATCH UPLOAD (Pro 2) */
+  .mode-tabs-row { padding: 16px 36px 0; display: none; }
+  .mode-tabs { display: inline-flex; background: var(--bg); border: 1px solid var(--border); border-radius: 999px; padding: 3px; gap: 2px; }
+  .mode-tab { padding: 7px 20px; border-radius: 999px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; background: none; color: var(--ink-muted); font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
+  .mode-tab.active { background: var(--surface); color: var(--ink); box-shadow: 0 1px 4px rgba(26,26,24,0.1); }
+  .pro2-badge { font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: var(--gold); color: white; padding: 2px 6px; border-radius: 999px; margin-left: 6px; vertical-align: middle; }
+
+  /* Batch input area */
+  .batch-input-state { display: none; }
+  .batch-drop-zone { margin: 24px 36px 0; border: 2px dashed var(--border); border-radius: var(--radius); padding: 36px 24px; text-align: center; cursor: pointer; transition: all 0.25s; background: var(--bg); position: relative; }
+  .batch-drop-zone:hover, .batch-drop-zone.drag-over { border-color: var(--gold); background: #FDFBF5; }
+  .batch-drop-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .batch-drop-icon { font-size: 28px; margin-bottom: 8px; }
+  .batch-drop-title { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+  .batch-drop-sub { font-size: 13px; color: var(--ink-muted); }
+
+  .batch-file-list { margin: 16px 36px 0; display: flex; flex-direction: column; gap: 8px; }
+  .batch-file-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; transition: all 0.2s; }
+  .batch-file-item.done { border-color: #C6DEC9; background: #F2F9F3; }
+  .batch-file-item.failed { border-color: #F5D0CC; background: #FEF7F6; }
+  .batch-file-item.analysing { border-color: var(--gold); background: #FDFBF5; }
+  .batch-file-icon { font-size: 18px; flex-shrink: 0; }
+  .batch-file-info { flex: 1; min-width: 0; }
+  .batch-file-name { font-size: 13px; font-weight: 500; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .batch-file-size { font-size: 11px; color: var(--ink-muted); margin-top: 1px; }
+  .batch-file-status { font-size: 11px; font-weight: 500; flex-shrink: 0; }
+  .batch-file-status.pending  { color: var(--ink-muted); }
+  .batch-file-status.analysing { color: var(--gold); }
+  .batch-file-status.done     { color: var(--risk-low); }
+  .batch-file-status.failed   { color: var(--risk-high); }
+  .batch-file-remove { background: none; border: none; cursor: pointer; color: var(--ink-muted); font-size: 16px; padding: 2px 6px; border-radius: 4px; flex-shrink: 0; line-height: 1; transition: color 0.15s; }
+  .batch-file-remove:hover { color: var(--risk-high); }
+
+  .batch-scan-warning { margin: 12px 36px 0; padding: 10px 14px; background: #FEF9EE; border: 1px solid #E8D9B0; border-radius: 8px; font-size: 13px; color: #7A5C1E; display: none; }
+
+  .batch-btn-row { padding: 20px 36px 28px; }
+  .btn-batch-analyse { width: 100%; padding: 14px; background: var(--gold); color: white; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; letter-spacing: 0.01em; }
+  .btn-batch-analyse:hover { background: #9a7c35; }
+  .btn-batch-analyse:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Batch loading */
+  .batch-loading-state { display: none; padding: 48px 36px; text-align: center; }
+  .batch-loading-state.visible { display: block; }
+  .batch-progress-label { font-size: 14px; color: var(--ink-muted); margin: 16px 0 20px; }
+  .batch-progress-bar-wrap { background: var(--bg); border-radius: 999px; height: 6px; overflow: hidden; max-width: 320px; margin: 0 auto; }
+  .batch-progress-bar-fill { height: 100%; background: var(--gold); border-radius: 999px; transition: width 0.5s ease; }
+
+  /* Batch results */
+  .batch-results-area { display: none; padding: 0 36px 36px; }
+  .batch-results-area.visible { display: block; animation: fadeUp 0.5s ease both; }
+  .batch-results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-top: 8px; flex-wrap: wrap; gap: 10px; }
+  .batch-tab-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+  .batch-tab { padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg); font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; color: var(--ink-muted); transition: all 0.2s; white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+  .batch-tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .batch-tab.failed { border-color: #F5D0CC; color: var(--risk-high); }
+  .batch-tab.failed.active { background: var(--risk-high); color: white; border-color: var(--risk-high); }
+
+  @media (max-width: 680px) {
+    .mode-tabs-row { padding: 14px 20px 0; }
+    .batch-drop-zone { margin: 20px 20px 0; padding: 28px 16px; }
+    .batch-file-list { margin: 14px 20px 0; }
+    .batch-scan-warning { margin: 10px 20px 0; }
+    .batch-btn-row { padding: 16px 20px 24px; }
+    .batch-loading-state { padding: 36px 20px; }
+    .batch-results-area { padding: 0 20px 28px; }
+  }
+
   /* KNOW MORE SECTION */
   .knowmore-section { max-width: 680px; margin: 0 auto 100px; padding: 0 24px; text-align: center; }
   .knowmore-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 52px 48px; box-shadow: var(--shadow); }
@@ -556,6 +623,14 @@
       <div class="security-badge">🔐 Secure Session</div>
     </div>
 
+    <!-- Mode toggle (Pro 2 only — shown by renderNavUser) -->
+    <div class="mode-tabs-row" id="modeTabsRow">
+      <div class="mode-tabs">
+        <button class="mode-tab active" id="tabSingle" onclick="switchMode('single')">Single</button>
+        <button class="mode-tab" id="tabBatch" onclick="switchMode('batch')">Batch <span class="pro2-badge">Pro 2</span></button>
+      </div>
+    </div>
+
     <!-- Input -->
     <div id="inputState">
       <div class="drop-zone" id="dropZone">
@@ -665,6 +740,42 @@
           ← Analyse Another Document
         </button>
       </div>
+    </div>
+
+    <!-- ── BATCH INPUT (Pro 2) ──────────────────────────── -->
+    <div class="batch-input-state" id="batchInputState">
+      <div class="batch-drop-zone" id="batchDropZone">
+        <input type="file" id="batchFileInput" accept=".pdf,.docx,.txt" multiple />
+        <div class="batch-drop-icon">📂</div>
+        <div class="batch-drop-title">Drop up to 10 documents here</div>
+        <div class="batch-drop-sub">PDF, DOCX, or TXT · Each file costs one scan</div>
+      </div>
+      <div class="batch-file-list" id="batchFileList"></div>
+      <div class="batch-scan-warning" id="batchScanWarning"></div>
+      <div class="batch-btn-row">
+        <button class="btn-batch-analyse" id="btnBatchAnalyse" onclick="startBatchAnalysis()" disabled>
+          Add documents to begin
+        </button>
+      </div>
+    </div>
+
+    <!-- ── BATCH LOADING ─────────────────────────────────── -->
+    <div class="batch-loading-state" id="batchLoadingState">
+      <div class="spinner"></div>
+      <div class="batch-progress-label" id="batchProgressLabel">Preparing…</div>
+      <div class="batch-progress-bar-wrap">
+        <div class="batch-progress-bar-fill" id="batchProgressBar" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- ── BATCH RESULTS ─────────────────────────────────── -->
+    <div class="batch-results-area" id="batchResultsArea">
+      <div class="batch-results-header">
+        <div class="results-title" id="batchResultsTitle">Batch Analysis Complete</div>
+        <button class="new-btn" onclick="resetBatch()">← New Batch</button>
+      </div>
+      <div class="batch-tab-bar" id="batchTabBar"></div>
+      <div id="batchResultPanel"></div>
     </div>
 
   </div>
@@ -928,6 +1039,10 @@ function renderNavUser(user) {
   const upgradeItem   = document.getElementById('dropdownUpgradeItem');
   if (pricingLink)  pricingLink.style.display  = isPaid ? 'none' : '';
   if (upgradeItem)  upgradeItem.style.display   = isPaid ? 'none' : '';
+
+  // Show batch toggle for Pro 2
+  const modeTabsRow = document.getElementById('modeTabsRow');
+  if (modeTabsRow) modeTabsRow.style.display = (plan === 'pro2') ? 'block' : 'none';
 
   renderScanPill();
 }
@@ -1637,7 +1752,378 @@ function resetTool() {
   document.getElementById('heroText').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// ─── PDF EXPORT (Pro 2) ──────────────────────────────────────
+// ─── BATCH UPLOAD (Pro 2) ────────────────────────────────────
+
+let batchMode    = false;
+let batchFiles   = [];   // [{ file, name, size, status, result }]
+let batchResults = [];   // ordered results matching batchFiles
+let batchActiveTab = 0;
+
+// ── Mode switcher ──────────────────────────────────────────
+function switchMode(mode) {
+  batchMode = (mode === 'batch');
+  document.getElementById('tabSingle').classList.toggle('active', !batchMode);
+  document.getElementById('tabBatch').classList.toggle('active',  batchMode);
+
+  // Single mode elements
+  document.getElementById('inputState').style.display       = batchMode ? 'none' : '';
+  document.getElementById('loadingState').classList.remove('visible');
+  document.getElementById('upgradeWall').style.display      = 'none';
+  document.getElementById('resultsArea').classList.remove('visible');
+
+  // Batch mode elements
+  document.getElementById('batchInputState').style.display  = batchMode ? 'block' : 'none';
+  document.getElementById('batchLoadingState').style.display = 'none';
+  document.getElementById('batchResultsArea').classList.remove('visible');
+}
+
+// ── File handling ──────────────────────────────────────────
+function formatBytes(bytes) {
+  if (bytes < 1024)       return bytes + ' B';
+  if (bytes < 1024*1024)  return (bytes/1024).toFixed(0) + ' KB';
+  return (bytes/(1024*1024)).toFixed(1) + ' MB';
+}
+
+function addBatchFiles(newFiles) {
+  for (const file of newFiles) {
+    if (batchFiles.length >= 10) break;
+    // Skip duplicates
+    if (batchFiles.find(f => f.name === file.name && f.size === file.size)) continue;
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!['pdf','docx','txt'].includes(ext)) continue;
+    batchFiles.push({ file, name: file.name, size: file.size, status: 'pending', result: null });
+  }
+  renderBatchFileList();
+  updateBatchBtn();
+}
+
+function removeBatchFile(idx) {
+  batchFiles.splice(idx, 1);
+  renderBatchFileList();
+  updateBatchBtn();
+}
+
+function renderBatchFileList() {
+  const list = document.getElementById('batchFileList');
+  if (batchFiles.length === 0) { list.innerHTML = ''; return; }
+  list.innerHTML = batchFiles.map((f, i) => {
+    const icon = f.name.toLowerCase().endsWith('.pdf') ? '📄' : f.name.toLowerCase().endsWith('.docx') ? '📝' : '📃';
+    const statusClass = f.status;
+    const statusText  = f.status === 'pending' ? 'Ready' : f.status === 'analysing' ? 'Analysing…' : f.status === 'done' ? '✓ Done' : '✕ Failed';
+    const showRemove  = f.status === 'pending';
+    return `
+      <div class="batch-file-item ${f.status !== 'pending' ? f.status : ''}" id="bfi-${i}">
+        <span class="batch-file-icon">${icon}</span>
+        <div class="batch-file-info">
+          <div class="batch-file-name" title="${esc(f.name)}">${esc(f.name)}</div>
+          <div class="batch-file-size">${formatBytes(f.size)}</div>
+        </div>
+        <span class="batch-file-status ${statusClass}">${statusText}</span>
+        ${showRemove ? `<button class="batch-file-remove" onclick="removeBatchFile(${i})" title="Remove">×</button>` : ''}
+      </div>`;
+  }).join('');
+}
+
+function updateBatchBtn() {
+  const btn     = document.getElementById('btnBatchAnalyse');
+  const warning = document.getElementById('batchScanWarning');
+  const n       = batchFiles.length;
+
+  if (n === 0) {
+    btn.disabled = true;
+    btn.textContent = 'Add documents to begin';
+    warning.style.display = 'none';
+    return;
+  }
+
+  const scansLeft = Math.max(0, (userProfile?.scans_limit || 0) - (userProfile?.scans_used || 0));
+  if (n > scansLeft) {
+    warning.style.display = 'block';
+    warning.textContent   = `You have ${scansLeft} scan${scansLeft !== 1 ? 's' : ''} remaining but selected ${n} file${n !== 1 ? 's' : ''}. Only the first ${scansLeft} will be analysed.`;
+  } else {
+    warning.style.display = 'none';
+  }
+
+  btn.disabled    = false;
+  btn.textContent = `Analyse ${n} document${n !== 1 ? 's' : ''} — ${n} scan${n !== 1 ? 's' : ''}`;
+}
+
+// ── Drag & drop for batch zone ─────────────────────────────
+const batchDropZone  = document.getElementById('batchDropZone');
+const batchFileInput = document.getElementById('batchFileInput');
+batchDropZone.addEventListener('dragover',  e => { e.preventDefault(); batchDropZone.classList.add('drag-over'); });
+batchDropZone.addEventListener('dragleave', ()  => batchDropZone.classList.remove('drag-over'));
+batchDropZone.addEventListener('drop',      e  => {
+  e.preventDefault(); batchDropZone.classList.remove('drag-over');
+  if (e.dataTransfer.files.length) addBatchFiles([...e.dataTransfer.files]);
+});
+batchFileInput.addEventListener('change', e => {
+  if (e.target.files.length) { addBatchFiles([...e.target.files]); e.target.value = ''; }
+});
+
+// ── Prepare content for a single file (shared logic) ──────
+async function prepareFileContent(fileObj, instruction) {
+  const file = fileObj.file;
+  const name = file.name.toLowerCase();
+
+  if (name.endsWith('.pdf') || file.type === 'application/pdf') {
+    const base64 = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = e => res(e.target.result.split(',')[1]);
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+    return [
+      { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
+      { type: 'text', text: instruction }
+    ];
+  }
+
+  if (name.endsWith('.docx')) {
+    const arrayBuffer = await new Promise((res, rej) => {
+      const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = rej; r.readAsArrayBuffer(file);
+    });
+    const zip    = await JSZip.loadAsync(arrayBuffer);
+    const docXml = zip.file('word/document.xml');
+    if (!docXml) throw new Error('Not a valid DOCX file');
+    const xmlStr = await docXml.async('string');
+    const text = xmlStr
+      .replace(/<w:br[^>]*\/>/gi, '\n').replace(/<w:p[ >][^>]*>/gi, '\n').replace(/<[^>]+>/g, '')
+      .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#x[0-9A-Fa-f]+;/g,'')
+      .replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n').trim();
+    return instruction + '\n\nDOCUMENT:\n"""\n' + text.slice(0, 48000) + '\n"""';
+  }
+
+  // TXT or other — read as text
+  const text = await new Promise((res, rej) => {
+    const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = rej; r.readAsText(file);
+  });
+  return instruction + '\n\nDOCUMENT:\n"""\n' + text.slice(0, 48000) + '\n"""';
+}
+
+// ── Run analysis for one file ──────────────────────────────
+async function analyseOneFile(userContent) {
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), 28000);
+  try {
+    const res = await fetch('/api/analyse', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 4000, messages: [{ role: 'user', content: userContent }] }),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    if (!res.ok) return null;
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let accumulated = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      accumulated += decoder.decode(value, { stream: true });
+    }
+    const match = accumulated.match(/\{[\s\S]*\}/);
+    return match ? JSON.parse(match[0]) : null;
+  } catch(e) {
+    clearTimeout(timeoutId);
+    return null;
+  }
+}
+
+// ── Main batch analysis orchestrator ──────────────────────
+async function startBatchAnalysis() {
+  if (!canScan()) { showUpgradeWall(); return; }
+  if (batchFiles.length === 0) return;
+
+  const opts = getActiveOptions();
+  const scansLeft = Math.max(0, (userProfile?.scans_limit || 0) - (userProfile?.scans_used || 0));
+  const filesToProcess = batchFiles.slice(0, scansLeft);
+
+  const instruction = `You are a document analyst. You MUST respond ONLY with a single valid JSON object — no markdown, no preamble, no text outside the JSON.
+
+Analyse the document and return this JSON:
+{"IS_LEGAL":true/false,"SUMMARY":"...","RISKS":[{"level":"HIGH","title":"...","desc":"..."}],"KEY_POINTS":["..."],"SIMPLIFIED":"..."}
+
+IS_LEGAL: true if this is a legal/contractual/business document. false for anything else.
+
+CRITICAL: Always populate every field with real analysis. Never leave fields empty or null.
+
+Only include these keys: IS_LEGAL${opts.length ? ', ' + opts.map(o => o === 'summary' ? 'SUMMARY' : o === 'risks' ? 'RISKS' : o === 'keypoints' ? 'KEY_POINTS' : 'SIMPLIFIED').join(', ') : ''}.`;
+
+  // Hide input, show loading
+  document.getElementById('batchInputState').style.display  = 'none';
+  document.getElementById('batchLoadingState').style.display = 'block';
+  batchResults = [];
+
+  for (let i = 0; i < filesToProcess.length; i++) {
+    const f = filesToProcess[i];
+
+    // Update progress
+    const pct = Math.round((i / filesToProcess.length) * 100);
+    document.getElementById('batchProgressLabel').textContent = `Analysing ${i + 1} of ${filesToProcess.length} — ${f.name}`;
+    document.getElementById('batchProgressBar').style.width   = pct + '%';
+    batchFiles[i].status = 'analysing';
+    renderBatchFileList();
+
+    let result = null;
+    try {
+      const userContent = await prepareFileContent(f, instruction);
+      result = await analyseOneFile(userContent);
+      // One retry on failure
+      if (!result) {
+        await new Promise(r => setTimeout(r, 1500));
+        result = await analyseOneFile(userContent);
+      }
+    } catch(e) {
+      console.error('Batch file error:', e);
+    }
+
+    if (result) {
+      batchFiles[i].status = 'done';
+      batchFiles[i].result = result;
+      await recordScan();
+    } else {
+      batchFiles[i].status = 'failed';
+    }
+    batchResults[i] = result;
+    renderBatchFileList();
+  }
+
+  // Mark any files beyond scan limit as skipped
+  for (let i = filesToProcess.length; i < batchFiles.length; i++) {
+    batchFiles[i].status = 'failed';
+    batchFiles[i].result = null;
+    batchResults[i] = null;
+  }
+
+  // Done — show results
+  document.getElementById('batchProgressBar').style.width = '100%';
+  document.getElementById('batchProgressLabel').textContent = 'Analysis complete!';
+  await new Promise(r => setTimeout(r, 600));
+
+  document.getElementById('batchLoadingState').style.display = 'none';
+  const successCount = batchResults.filter(Boolean).length;
+  document.getElementById('batchResultsTitle').textContent = `${successCount} of ${batchFiles.length} document${batchFiles.length !== 1 ? 's' : ''} analysed`;
+  renderBatchTabs(opts);
+  document.getElementById('batchResultsArea').classList.add('visible');
+}
+
+// ── Render tabs and results ────────────────────────────────
+function renderBatchTabs(opts) {
+  const tabBar = document.getElementById('batchTabBar');
+  tabBar.innerHTML = batchFiles.map((f, i) => {
+    const label    = f.name.length > 22 ? f.name.substring(0, 20) + '…' : f.name;
+    const failed   = !batchResults[i];
+    const isActive = i === batchActiveTab;
+    return `<button class="batch-tab${isActive ? ' active' : ''}${failed ? ' failed' : ''}" onclick="switchBatchTab(${i})" title="${esc(f.name)}">${esc(label)}</button>`;
+  }).join('');
+  switchBatchTab(batchActiveTab, opts);
+}
+
+function switchBatchTab(idx, opts) {
+  batchActiveTab = idx;
+  // Update tab highlights
+  document.querySelectorAll('.batch-tab').forEach((t, i) => {
+    t.classList.toggle('active', i === idx);
+  });
+
+  const panel  = document.getElementById('batchResultPanel');
+  const result = batchResults[idx];
+  const f      = batchFiles[idx];
+  const activeOpts = opts || getActiveOptions();
+
+  if (!result) {
+    panel.innerHTML = `
+      <div style="padding:24px 0;text-align:center;color:var(--ink-muted);">
+        <div style="font-size:32px;margin-bottom:12px;">⚠️</div>
+        <div style="font-size:14px;font-weight:500;color:var(--ink);margin-bottom:6px;">Analysis failed for this document</div>
+        <div style="font-size:13px;">This file could not be analysed. It may be too large, corrupted, or a connection issue occurred.</div>
+      </div>`;
+    return;
+  }
+
+  // Store for PDF export
+  window._lastResult   = result;
+  window._lastOpts     = activeOpts;
+  window._lastFileName = f.name.replace(/\.[^/.]+$/, '');
+
+  const exportBtn = userProfile?.plan === 'pro2'
+    ? `<button class="new-btn" onclick="exportToPdf()" style="background:var(--gold);color:white;border-color:var(--gold);">⬇ Export PDF</button>`
+    : '';
+
+  const nonLegalBanner = result.IS_LEGAL === false
+    ? `<div style="margin-bottom:16px;padding:14px 18px;background:#FEF9EE;border:1px solid #E8D9B0;border-radius:var(--radius);display:flex;align-items:flex-start;gap:12px;">
+        <span style="font-size:18px;flex-shrink:0;">⚠️</span>
+        <div><strong style="font-size:13px;color:#1A1A18;display:block;margin-bottom:3px;">This doesn't appear to be a legal document</strong>
+        <span style="font-size:12px;color:#6B6B62;line-height:1.6;">VerrixAI is designed for contracts, agreements, terms & conditions. Results may not be meaningful.</span></div>
+      </div>` : '';
+
+  let sectionsHTML = '';
+  if (activeOpts.includes('summary') && result.SUMMARY) {
+    sectionsHTML += buildSection('sec-b-summary', '📋', 'Document Summary', `<p>${esc(result.SUMMARY)}</p>`);
+  }
+  if (activeOpts.includes('risks') && result.RISKS) {
+    let risks = result.RISKS;
+    if (typeof risks === 'string') { try { risks = JSON.parse(risks); } catch(e){ risks=[]; } }
+    const body = risks.map(r => `
+      <div class="risk-item">
+        <div class="risk-badge ${r.level?.toLowerCase()}">${r.level}</div>
+        <div class="risk-text"><strong>${esc(r.title)}</strong><span>${esc(r.desc)}</span></div>
+      </div>`).join('') || '<p>No significant risks identified.</p>';
+    sectionsHTML += buildSection('sec-b-risks', '⚠️', 'Risk Flags', body);
+  }
+  if (activeOpts.includes('keypoints') && result.KEY_POINTS) {
+    let pts = result.KEY_POINTS;
+    if (typeof pts === 'string') pts = pts.split('\n').filter(Boolean);
+    const body = pts.map((p,i)=>`<div class="key-point"><div class="kp-bullet">${i+1}</div><div>${esc(p)}</div></div>`).join('');
+    sectionsHTML += buildSection('sec-b-keypoints', '🔑', 'Key Points', body);
+  }
+  if (activeOpts.includes('simplify') && result.SIMPLIFIED) {
+    sectionsHTML += buildSection('sec-b-simplify', '✨', 'Plain-Language Version', `<div class="simplified-block">${esc(result.SIMPLIFIED)}</div>`);
+  }
+
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px;gap:8px;">${exportBtn}</div>
+    ${nonLegalBanner}
+    ${sectionsHTML}
+    <div class="privacy-note" style="margin-top:16px;">
+      <span class="privacy-icon">🛡️</span>
+      <div class="privacy-text"><strong>Your documents were never stored or shared.</strong>Processed securely and deleted immediately after analysis.</div>
+    </div>`;
+
+  // Wire up section toggles
+  panel.querySelectorAll('.result-section-header').forEach(h => {
+    h.addEventListener('click', () => h.closest('.result-section').classList.toggle('open'));
+  });
+}
+
+function buildSection(id, icon, label, bodyHTML) {
+  return `
+    <div class="result-section open" id="${id}">
+      <div class="result-section-header">
+        <span class="section-icon">${icon}</span><span class="section-label">${label}</span><span class="section-toggle">▾</span>
+      </div>
+      <div class="result-section-body">${bodyHTML}</div>
+    </div>`;
+}
+
+// ── Reset batch ────────────────────────────────────────────
+function resetBatch() {
+  batchFiles      = [];
+  batchResults    = [];
+  batchActiveTab  = 0;
+  document.getElementById('batchResultsArea').classList.remove('visible');
+  document.getElementById('batchLoadingState').style.display = 'none';
+  document.getElementById('batchFileList').innerHTML = '';
+  document.getElementById('batchScanWarning').style.display = 'none';
+  document.getElementById('batchProgressBar').style.width = '0%';
+  document.getElementById('batchTabBar').innerHTML = '';
+  document.getElementById('batchResultPanel').innerHTML = '';
+  document.getElementById('batchInputState').style.display = 'block';
+  updateBatchBtn();
+}
+
+// ─── END BATCH UPLOAD ─────────────────────────────────────
 function exportToPdf() {
   const r    = window._lastResult;
   const opts = window._lastOpts || [];

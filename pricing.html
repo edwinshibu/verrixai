@@ -119,13 +119,6 @@
   .btn-cta { display: inline-flex; align-items: center; gap: 8px; padding: 14px 32px; background: var(--gold); color: white; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; text-decoration: none; }
   .btn-cta:hover { background: var(--gold-light); transform: translateY(-1px); }
 
-  footer { border-top: 1px solid var(--border); padding: 28px 48px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--ink-muted); background: var(--surface); flex-wrap: wrap; gap: 12px; }
-  .footer-logo { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 500; color: var(--ink); text-decoration: none; }
-  .footer-logo span { color: var(--gold); }
-  .footer-links { display: flex; gap: 20px; }
-  .footer-links a { color: var(--ink-muted); text-decoration: none; font-size: 12px; }
-  .footer-links a:hover { color: var(--ink); }
-
   @media (max-width: 860px) {
     .plans-grid { grid-template-columns: repeat(2, 1fr); }
     .plan-card.featured { transform: none; }
@@ -134,9 +127,12 @@
   @media (max-width: 560px) {
     .plans-grid { grid-template-columns: 1fr; }
     .compare-table { font-size: 12px; }
-    footer { flex-direction: column; gap: 10px; text-align: center; padding: 24px 20px; }
+    footer { padding: 24px 20px; } footer > div { flex-direction: column; align-items: center !important; text-align: center; gap: 16px; } footer > div > div { text-align: center !important; }
   }
-</style>
+  .footer-logo { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 500; color: var(--ink); }
+  .footer-logo span { color: var(--gold); }
+  footer { border-top: 1px solid var(--border); padding: 28px 48px; display: flex; align-items: center; justify-content: center; }
+  </style>
 </head>
 <body>
 
@@ -386,14 +382,17 @@
 </div>
 
 <footer>
-  <a href="/" class="footer-logo">Verrix<span>AI</span></a>
-  <div class="footer-links">
-    <a href="/pricing.html">Pricing</a>
-    <a href="/privacy.html">Privacy</a>
-    <a href="/terms.html">Terms</a>
-    <a href="/cdn-cgi/l/email-protection#debfbab3b7b09ea8bbacacb7a6bfb7f0bdb1b3">Contact</a>
+  <div style="max-width:1100px;margin:0 auto;width:100%;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+    <div class="footer-logo">Verrix<span>AI</span></div>
+    <div style="display:flex;gap:24px;align-items:center;">
+      <a href="/privacy.html" style="color:var(--ink-muted);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-muted)'">Privacy Policy</a>
+      <a href="/terms.html" style="color:var(--ink-muted);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-muted)'">Terms of Service</a>
+      <a href="/" style="color:var(--ink-muted);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-muted)'">Home</a>
+    </div>
+    <div style="font-size:12px;color:var(--ink-muted);text-align:right;line-height:1.6;">
+      <div>© 2026 VerrixAI. All rights reserved.</div>
+    </div>
   </div>
-  <div>© 2026 VerrixAI · Not legal advice</div>
 </footer>
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>

@@ -1,8 +1,6 @@
 {
-  "regions": ["sin1", "syd1", "iad1"],
   "functions": {
     "api/knowmore.js":        { "maxDuration": 10 },
-    "api/extract-docx.js":   { "maxDuration": 15 },
     "api/delete-account.js": { "maxDuration": 10 },
     "api/stripe-webhook.js": { "maxDuration": 10 }
   },

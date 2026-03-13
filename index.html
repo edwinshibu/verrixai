@@ -50,7 +50,9 @@
   .avatar-btn:hover { background: var(--accent-light); transform: scale(1.05); }
   .avatar-wrapper { position: relative; }
   .avatar-dropdown { position: absolute; top: calc(100% + 10px); right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow-lg); min-width: 200px; overflow: hidden; opacity: 0; pointer-events: none; transform: translateY(6px); transition: all 0.2s; z-index: 200; }
-  .avatar-dropdown.open { opacity: 1; pointer-events: all; transform: translateY(0); }
+  .avatar-wrapper:hover .avatar-dropdown { opacity: 1; pointer-events: all; transform: translateY(0); }
+  /* Bridge gap between avatar and dropdown so mouse travel doesn't close it */
+  .avatar-wrapper::after { content: ''; position: absolute; top: 100%; left: 0; right: 0; height: 12px; }
   .dropdown-header { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); }
   .dropdown-email { font-size: 11px; color: var(--ink-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; }
   .dropdown-plan { display: inline-block; margin-top: 4px; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; background: #EAF2EC; color: var(--accent-light); padding: 2px 8px; border-radius: 999px; }

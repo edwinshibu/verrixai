@@ -1260,7 +1260,6 @@ async function startAnalysis() {
   document.getElementById('upgradeWall').style.display = 'none';
   document.getElementById('loadingState').classList.add('visible');
   const stepsPromise = animateSteps();
-  await recordScan();
 
   const sections = [];
   if (opts.includes('summary'))   sections.push('SUMMARY: 3-5 sentence overview.');
@@ -1355,24 +1354,47 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
   }
 
   let result = null;
+
+  // ── Streaming fetch ───────────────────────────────────────────
   async function attemptAnalysis() {
-    // Cancel any previous in-flight request before starting a new one
     if (activeController) { try { activeController.abort(); } catch(e){} }
     activeController = new AbortController();
-    const timeoutId = setTimeout(() => activeController.abort(), 25000);
+
+    // 28s client timeout — gives Vercel's 30s limit breathing room
+    const timeoutId = setTimeout(() => activeController.abort(), 28000);
+
     try {
       const res = await fetch('/api/analyse', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 4000, messages: [{ role: 'user', content: userContent }] }),
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 4000,
+          messages: [{ role: 'user', content: userContent }]
+        }),
         signal: activeController.signal
       });
+
       clearTimeout(timeoutId);
       activeController = null;
+
       if (!res.ok) return null;
-      const data = await res.json();
-      const raw  = data.content?.map(b => b.text || '').join('').trim();
-      const jsonMatch = raw?.match(/\{[\s\S]*\}/);
+
+      // Read the stream chunk by chunk, accumulate into a string
+      const reader  = res.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        accumulated += decoder.decode(value, { stream: true });
+      }
+
+      // Parse JSON from accumulated text
+      const jsonMatch = accumulated.match(/\{[\s\S]*\}/);
       return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+
     } catch(e) {
       clearTimeout(timeoutId);
       activeController = null;
@@ -1380,10 +1402,10 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
     }
   }
 
-  // Hard escape hatch — no matter what happens, UI exits within 35s
+  // Hard escape hatch — UI always exits within 32s no matter what
   if (activeEscape) clearTimeout(activeEscape);
   activeEscape = setTimeout(() => {
-    if (analysisGen !== myGen) return;  // stale — a newer analysis is running
+    if (analysisGen !== myGen) return;
     activeEscape = null;
     stepsPromise.finish();
     document.getElementById('loadingState').classList.remove('visible');
@@ -1392,20 +1414,23 @@ Only include these keys: IS_LEGAL${sections.length ? ', ' + sections.map(s=>s.sp
     ['summary','risks','keypoints','simplify'].forEach(s => {
       document.getElementById(`sec-${s}`).style.display = opts.includes(s) ? '' : 'none';
     });
-  }, 35000);
+  }, 32000);
 
   try {
     result = await attemptAnalysis();
+    // One silent retry on failure — 2s gap gives cold start time to warm up
     if (!result) {
-      // Silent retry once — covers cold starts and transient failures
-      await new Promise(r => setTimeout(r, 1500));
-      result = await attemptAnalysis();
-      if (!result) result = '__timeout__';
+      await new Promise(r => setTimeout(r, 2000));
+      if (analysisGen === myGen) result = await attemptAnalysis();
     }
+    if (!result) result = '__timeout__';
   } catch(e) {
     console.error(e);
     result = '__timeout__';
   }
+
+  // Record scan only if analysis succeeded — don't charge for failures
+  if (result && result !== '__timeout__') await recordScan();
 
   if (analysisGen !== myGen) return;  // reset was clicked while we were waiting — discard result
   clearTimeout(activeEscape);

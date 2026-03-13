@@ -3,7 +3,6 @@
     "api/knowmore.js":        { "maxDuration": 10 },
     "api/extract-docx.js":   { "maxDuration": 15 },
     "api/delete-account.js": { "maxDuration": 10 },
-    "api/create-checkout.js":{ "maxDuration": 10 },
     "api/stripe-webhook.js": { "maxDuration": 10 }
   },
   "routes": [

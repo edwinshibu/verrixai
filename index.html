@@ -378,7 +378,7 @@
     </div>
     <!-- Logged-in user -->
     <div id="navUser" style="display:none;align-items:center;gap:8px;">
-      <a href="pricing.html" class="btn-nav" style="font-size:13px;text-decoration:none;">Pricing</a>
+      <a href="pricing.html" id="navPricingLink" class="btn-nav" style="font-size:13px;text-decoration:none;">Pricing</a>
       <div class="avatar-wrapper">
         <button class="avatar-btn" id="userAvatar" onclick="toggleDropdown()" aria-label="Account menu">?</button>
         <div class="avatar-dropdown" id="avatarDropdown">
@@ -389,7 +389,7 @@
           <button class="dropdown-item" onclick="closeDropdown(); window.location.href='/account.html'">
             <span class="dropdown-icon">👤</span> My Account
           </button>
-          <button class="dropdown-item" onclick="closeDropdown(); openPricingModal()">
+          <button id="dropdownUpgradeItem" class="dropdown-item" onclick="closeDropdown(); openPricingModal()">
             <span class="dropdown-icon">⚡</span> Upgrade your plan
           </button>
           <button class="dropdown-item danger" id="btnSignOut" onclick="closeDropdown(); signOut()">
@@ -913,6 +913,20 @@ function renderNavUser(user) {
   // Always reset sign out button in case it was left in a broken state
   const btn = document.getElementById('btnSignOut');
   if (btn) { btn.disabled = false; btn.innerHTML = '<span class="dropdown-icon">→</span> Sign out'; }
+
+  // Update plan badge in dropdown
+  const plan = userProfile?.plan || 'free';
+  const planLabel = plan === 'pro' ? 'Pro' : plan === 'pro2' ? 'Pro 2' : 'Free';
+  const badge = document.querySelector('.dropdown-plan');
+  if (badge) badge.textContent = `${planLabel} Plan`;
+
+  // Hide Pricing link and Upgrade item for paid users
+  const isPaid = plan === 'pro' || plan === 'pro2';
+  const pricingLink   = document.getElementById('navPricingLink');
+  const upgradeItem   = document.getElementById('dropdownUpgradeItem');
+  if (pricingLink)  pricingLink.style.display  = isPaid ? 'none' : '';
+  if (upgradeItem)  upgradeItem.style.display   = isPaid ? 'none' : '';
+
   renderScanPill();
 }
 

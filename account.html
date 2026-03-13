@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+  (function(){
+    var t = localStorage.getItem('vrx-theme') ||
+            (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My Account — VerrixAI</title>
@@ -153,6 +161,29 @@
     .footer-logo { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 500; color: var(--ink); }
   .footer-logo span { color: var(--gold); }
   footer { border-top: 1px solid var(--border); padding: 28px 48px; display: flex; align-items: center; justify-content: center; }
+  
+  /* ── DARK MODE TOGGLE ─────────────────────────────────────── */
+  .theme-toggle { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; color: var(--ink-muted); flex-shrink: 0; padding: 0; }
+  .theme-toggle:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* ── DARK MODE VARIABLES ─────────────────────────────────── */
+  :root {
+    --warn-bg: #FEF9EE; --warn-border: #E8D9B0;
+    --timeout-bg: #F5F0FA; --timeout-border: #D9CCF0;
+  }
+  [data-theme="dark"] {
+    --bg: #181A18; --surface: #222522; --ink: #EDEAE3; --ink-muted: #8A8A7E;
+    --accent: #2A5240; --accent-light: #52A876; --gold: #C9A84C;
+    --border: #2E322E; --risk-high: #E05555; --risk-med: #E8924A; --risk-low: #45C875;
+    --shadow: 0 4px 24px rgba(0,0,0,0.35); --shadow-lg: 0 12px 48px rgba(0,0,0,0.45);
+    --warn-bg: #272218; --warn-border: #4A3E28;
+    --timeout-bg: #1E1A28; --timeout-border: #3A3050;
+  }
+
+  [data-theme="dark"] .detail-row  { border-color: var(--border); }
+  [data-theme="dark"] .scan-bar-track { background: var(--border); }
+  [data-theme="dark"] .info-box { background: #1E2E22; border-color: #2A3E2A; }
+  [data-theme="dark"] .danger-zone { background: #2A1818; border-color: #3A1818; }
   </style>
 </head>
 <body>
@@ -160,6 +191,9 @@
 <nav>
   <a class="logo" href="/">Verrix<span>AI</span></a>
   <a class="btn-nav" href="/">← Back to app</a>
+  <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
+    <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+  </button>
 </nav>
 
 <!-- Loading -->
@@ -224,8 +258,8 @@
       <div id="pro2Nudge" style="display:none;margin-top:18px;padding:14px 16px;background:#FFFBF0;border:1px solid #E8D9B0;border-radius:10px;">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
           <div>
-            <div style="font-size:13px;font-weight:500;color:#1A1A18;margin-bottom:2px;">Upgrade to Pro 2</div>
-            <div style="font-size:12px;color:#6B6B62;">700 scans/mo + PDF export — from $15/mo</div>
+            <div style="font-size:13px;font-weight:500;color:var(--ink);margin-bottom:2px;">Upgrade to Pro 2</div>
+            <div style="font-size:12px;color:var(--ink-muted);">700 scans/mo + PDF export — from $15/mo</div>
           </div>
           <a href="/pricing.html" style="flex-shrink:0;background:#B8963E;color:white;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:8px 16px;border-radius:999px;text-decoration:none;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background='#9a7c35'" onmouseout="this.style.background='#B8963E'">Upgrade to Pro 2 →</a>
         </div>
@@ -510,6 +544,24 @@
     t.classList.add('visible');
     setTimeout(() => t.classList.remove('visible'), 4000);
   }
+
+// ─── DARK MODE ────────────────────────────────────────────────
+const MOON_ICON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+const SUN_ICON  = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const icon = document.getElementById('themeIcon');
+  if (icon) icon.innerHTML = theme === 'dark' ? SUN_ICON : MOON_ICON;
+  localStorage.setItem('vrx-theme', theme);
+}
+function toggleTheme() {
+  applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+// Init on load — icon syncs to current theme
+document.addEventListener('DOMContentLoaded', function() {
+  applyTheme(localStorage.getItem('vrx-theme') || (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light'));
+});
+
 </script>
 </body>
 </html>

@@ -5,6 +5,26 @@ const MAX_TEXT_LENGTH = 60000;
 const ALLOWED_MODEL   = 'claude-sonnet-4-20250514';
 const MAX_TOKENS      = 4000;
 
+// ── Cached system prompt ────────────────────────────────────
+// Identical on every request → Anthropic caches it for 5 minutes.
+// Cached input tokens cost 90% less than uncached.
+const SYSTEM_PROMPT = `You are a document analyst. You MUST respond ONLY with a single valid JSON object — no markdown, no preamble, no text outside the JSON.
+
+Analyse the document and return this JSON:
+{"IS_LEGAL":true/false,"SUMMARY":"...","RISKS":[{"level":"HIGH","title":"...","desc":"..."}],"KEY_POINTS":["..."],"SIMPLIFIED":"..."}
+
+IS_LEGAL: true if this is a legal/contractual/business document. false for anything else (CV, academic, personal docs etc).
+
+RISKS must be a JSON array of objects with keys: level (HIGH/MEDIUM/LOW), title (string), desc (string). Include 3–6 items.
+KEY_POINTS must be a JSON array of strings. Include 4–7 items.
+SUMMARY must be a plain string, 3–5 sentences.
+SIMPLIFIED must be a plain string, plain-English rewrite, 3–5 sentences, no jargon.
+
+CRITICAL: Always populate every requested field with real analysis. Never leave fields empty or null. If not a legal document, still analyse what the document contains and note what type it is.`;
+
+// Map client option names to JSON key names
+const KEY_MAP = { summary: 'SUMMARY', risks: 'RISKS', keypoints: 'KEY_POINTS', simplify: 'SIMPLIFIED' };
+
 export default async function handler(req) {
 
   // ── CORS preflight ─────────────────────────────────────────
@@ -34,26 +54,34 @@ export default async function handler(req) {
     return json({ error: 'Invalid JSON body' }, 400);
   }
 
-  if (!body?.messages || !Array.isArray(body.messages)) {
+  // Support two formats:
+  //   New: { options: ['summary','risks',...], content: <string|array> }
+  //   Legacy: { messages: [{ role:'user', content }] }
+  let rawContent;
+  let options = [];
+
+  if (body?.content !== undefined) {
+    rawContent = body.content;
+    options    = Array.isArray(body.options) ? body.options : [];
+  } else if (body?.messages && Array.isArray(body.messages)) {
+    const userMessage = body.messages.find(m => m.role === 'user');
+    if (!userMessage) return json({ error: 'No user message provided.' }, 400);
+    rawContent = userMessage.content;
+  } else {
     return json({ error: 'Invalid request format.' }, 400);
   }
 
-  const userMessage = body.messages.find(m => m.role === 'user');
-  if (!userMessage) return json({ error: 'No user message provided.' }, 400);
-
-  const userContent = userMessage.content;
-
   // ── Validate content ───────────────────────────────────────
-  if (typeof userContent === 'string') {
-    if (userContent.length > MAX_TEXT_LENGTH) {
+  if (typeof rawContent === 'string') {
+    if (rawContent.length > MAX_TEXT_LENGTH) {
       return json({ error: 'Document too large. Please reduce the size and try again.' }, 400);
     }
-  } else if (Array.isArray(userContent)) {
-    const textPart = userContent.find(p => p.type === 'text');
+  } else if (Array.isArray(rawContent)) {
+    const textPart = rawContent.find(p => p.type === 'text');
     if (textPart?.text?.length > MAX_TEXT_LENGTH) {
       return json({ error: 'Document too large. Please reduce the size and try again.' }, 400);
     }
-    const docPart = userContent.find(p => p.type === 'document');
+    const docPart = rawContent.find(p => p.type === 'document');
     if (docPart) {
       if (!docPart.source?.data || typeof docPart.source.data !== 'string') {
         return json({ error: 'Invalid document format.' }, 400);
@@ -69,19 +97,43 @@ export default async function handler(req) {
     return json({ error: 'Invalid content format.' }, 400);
   }
 
-  // ── Call Anthropic with streaming ──────────────────────────
+  // ── Build user message ─────────────────────────────────────
+  // Dynamic instruction (varies per request — kept small, not cached)
+  const requestedKeys = options.length
+    ? ['IS_LEGAL', ...options.map(o => KEY_MAP[o]).filter(Boolean)]
+    : ['IS_LEGAL', 'SUMMARY', 'RISKS', 'KEY_POINTS', 'SIMPLIFIED'];
+  const dynamicInstruction = `Only include these keys in your JSON response: ${requestedKeys.join(', ')}.`;
+
+  let userContent;
+  if (typeof rawContent === 'string') {
+    userContent = `${dynamicInstruction}\n\nDOCUMENT:\n"""\n${rawContent}\n"""`;
+  } else {
+    // PDF array — strip any existing text block, append fresh dynamic instruction
+    const docBlocks = rawContent.filter(p => p.type !== 'text');
+    userContent = [...docBlocks, { type: 'text', text: dynamicInstruction }];
+  }
+
+  // ── Call Anthropic with streaming + prompt caching ─────────
   const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type':      'application/json',
       'x-api-key':         apiKey,
       'anthropic-version': '2023-06-01',
+      'anthropic-beta':    'prompt-caching-2024-07-31',
     },
     body: JSON.stringify({
       model:      ALLOWED_MODEL,
       max_tokens: MAX_TOKENS,
       stream:     true,
-      messages:   [{ role: 'user', content: userContent }]
+      system: [
+        {
+          type:          'text',
+          text:          SYSTEM_PROMPT,
+          cache_control: { type: 'ephemeral' }
+        }
+      ],
+      messages: [{ role: 'user', content: userContent }]
     })
   });
 
@@ -91,7 +143,6 @@ export default async function handler(req) {
   }
 
   // ── Transform SSE stream → plain text stream ───────────────
-  // Extract only the text deltas and stream them straight to the browser
   const decoder = new TextDecoder();
 
   const readable = new ReadableStream({
@@ -106,7 +157,7 @@ export default async function handler(req) {
 
           buffer += decoder.decode(value, { stream: true });
           const lines = buffer.split('\n');
-          buffer = lines.pop(); // keep incomplete line in buffer
+          buffer = lines.pop();
 
           for (const line of lines) {
             if (!line.startsWith('data: ')) continue;

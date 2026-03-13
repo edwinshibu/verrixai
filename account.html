@@ -256,6 +256,27 @@
       </div>
     </div>
 
+    <!-- Billing card — paid users only -->
+    <div class="card" id="billingCard" style="display:none;">
+      <div class="card-title">Billing</div>
+      <div class="detail-row">
+        <span class="detail-label">Plan</span>
+        <span class="detail-value" id="billingPlan">—</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Billing cycle</span>
+        <span class="detail-value" id="billingCycle">—</span>
+      </div>
+      <div class="detail-row" style="border-bottom:none;padding-bottom:0;">
+        <span class="detail-label">Status</span>
+        <span class="detail-value" id="billingStatus" style="color:var(--risk-low);">Active</span>
+      </div>
+      <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--border);">
+        <button class="btn-danger" id="btnCancelSub" onclick="openCancelDialog()">Cancel subscription</button>
+        <p style="font-size:11px;color:var(--ink-muted);margin-top:10px;line-height:1.6;">You'll keep access until the end of your current billing period. No charges after that.</p>
+      </div>
+    </div>
+
     <!-- Privacy & Data -->
     <div class="card danger-card">
       <div class="card-title danger-title">Privacy & Data</div>
@@ -287,6 +308,18 @@
     <div class="dialog-actions">
       <button class="btn-nav" onclick="closeDeleteDialog()">Cancel</button>
       <button class="btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()" style="padding:10px 20px;">Yes, delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cancel subscription dialog -->
+<div class="dialog-overlay" id="cancelDialog">
+  <div class="dialog">
+    <h3>Cancel your subscription?</h3>
+    <p>You'll keep full access until the end of your current billing period. After that your account will revert to the free plan with 5 scans.</p>
+    <div class="dialog-actions">
+      <button class="btn-nav" onclick="closeCancelDialog()">Keep my plan</button>
+      <button class="btn-danger" id="confirmCancelBtn" onclick="confirmCancel()" style="padding:10px 20px;">Yes, cancel</button>
     </div>
   </div>
 </div>
@@ -395,10 +428,50 @@
     document.getElementById('detailSince').textContent  = since;
     document.getElementById('detailPlan').textContent   = planLabel;
 
+    // Show billing card for paid users
+    if (isPaid) {
+      document.getElementById('billingCard').style.display = 'block';
+      document.getElementById('billingPlan').textContent   = planLabel;
+      const cycleRaw = profile?.billing;
+      document.getElementById('billingCycle').textContent  = cycleRaw === 'annual' ? 'Annual' : cycleRaw === 'monthly' ? 'Monthly' : '—';
+    }
+
     // Show account state
     document.getElementById('loadingState').style.display  = 'none';
     document.getElementById('accountState').style.display  = 'flex';
     document.getElementById('accountState').style.flexDirection = 'column';
+  }
+
+  // ─── CANCEL SUBSCRIPTION ─────────────────────────────────────
+  function openCancelDialog()  { document.getElementById('cancelDialog').classList.add('visible'); }
+  function closeCancelDialog() { document.getElementById('cancelDialog').classList.remove('visible'); }
+
+  async function confirmCancel() {
+    const btn = document.getElementById('confirmCancelBtn');
+    btn.disabled = true; btn.textContent = 'Cancelling…';
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const res = await fetch('/api/cancel-subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+
+      closeCancelDialog();
+      // Update UI — hide billing card, show cancelled state
+      document.getElementById('billingStatus').textContent  = 'Cancelled — active until period end';
+      document.getElementById('billingStatus').style.color  = '#E67E22';
+      document.getElementById('btnCancelSub').style.display = 'none';
+      showToast('Subscription cancelled. You keep access until your billing period ends.');
+    } catch(err) {
+      console.error('Cancel error:', err);
+      btn.disabled = false; btn.textContent = 'Yes, cancel';
+      showToast('Something went wrong. Please try again or contact admin@verrixai.com.');
+    }
   }
 
   // ─── DELETE ACCOUNT ───────────────────────────────────────────

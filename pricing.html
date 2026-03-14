@@ -169,7 +169,23 @@
   [data-theme="dark"] .feat-check           { background: #1E2E22; color: var(--accent-light); }
   [data-theme="dark"] .col-featured         { background: #1A2A1E; }
   [data-theme="dark"] .compare-table tr:hover td { background: #1C2A1E; }
-  [data-theme="dark"] .plan-card.featured .plan-scans { background: #1E2E22; }
+  [data-theme="dark"] .plan-card.featured .plan-scans { background: #1E2E22; color: var(--gold); }
+  [data-theme="dark"] .plan-scans .scan-count { color: var(--gold); }
+  [data-theme="dark"] .btn-plan.enterprise       { background: var(--surface); color: var(--gold); border: 1px solid var(--gold); }
+  [data-theme="dark"] .btn-plan.enterprise:hover { background: #1E2E22; border-color: var(--gold); }
+  /* BILLING TOGGLE */
+  .billing-toggle { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 28px 0 8px; }
+  .toggle-track { width: 44px; height: 24px; background: var(--border); border-radius: 999px; position: relative; cursor: pointer; transition: background 0.25s; flex-shrink: 0; }
+  .toggle-track.on { background: var(--accent); }
+  .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; background: white; border-radius: 50%; transition: transform 0.25s; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+  .toggle-track.on .toggle-thumb { transform: translateX(20px); }
+  .toggle-label { font-size: 13px; font-weight: 500; color: var(--ink-muted); transition: color 0.2s; }
+  .toggle-label.active { color: var(--ink); }
+  .save-badge { background: #EAF2EC; color: var(--accent-light); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; }
+  .price-annual { display: none; }
+  .price-orig { font-size: 11px; color: #BBBBAA; text-decoration: line-through; margin-top: 1px; }
+  [data-theme="dark"] .save-badge { background: #1E2E22; color: var(--accent-light); }
+  [data-theme="dark"] .price-orig { color: #6A6A62; }
   </style>
 </head>
 <body>
@@ -195,6 +211,14 @@
 
 <!-- PLANS -->
 <div class="plans-section">
+  <div class="billing-toggle">
+    <span class="toggle-label active" id="label-monthly">Monthly</span>
+    <div class="toggle-track" id="billingToggle" onclick="toggleBilling()">
+      <div class="toggle-thumb"></div>
+    </div>
+    <span class="toggle-label" id="label-annual">Annual</span>
+    <span class="save-badge">Save 20%</span>
+  </div>
   <div class="plans-grid">
 
     <!-- FREE -->
@@ -226,8 +250,11 @@
       <div class="plan-name">Pro</div>
       <div class="plan-desc">For individuals and small teams reviewing documents regularly.</div>
       <div class="plan-price">
-        <div class="price-amount"><span class="currency">$</span>9</div>
-        <div class="price-period">per month, billed monthly</div>
+        <div class="price-amount monthly-price"><span class="currency">$</span>9</div>
+        <div class="price-amount annual-price" style="display:none"><span class="currency">$</span>86</div>
+        <div class="price-period monthly-sub">per month</div>
+        <div class="price-period annual-sub" style="display:none">per year <span style="color:var(--accent-light);font-weight:600;">($7/mo)</span></div>
+        <div class="price-orig annual-orig" style="display:none">was $108/yr</div>
       </div>
       <div class="plan-scans">
         <span class="scan-count">300</span>
@@ -240,7 +267,7 @@
         <li><span class="feat-check">✓</span> Email support</li>
         <li><span class="feat-check">✓</span> Cancel anytime</li>
       </ul>
-      <button class="btn-plan solid" id="btnProMonthly" onclick="startCheckout('pro', 'monthly')">Get Pro</button>
+      <button class="btn-plan solid" id="btnProMonthly" onclick="startCheckout('pro', isAnnual ? 'annual' : 'monthly')">Get Pro</button>
     </div>
 
     <!-- PRO 2 -->
@@ -248,8 +275,11 @@
       <div class="plan-name">Pro 2</div>
       <div class="plan-desc">For power users and growing teams with high document volume.</div>
       <div class="plan-price">
-        <div class="price-amount"><span class="currency">$</span>15</div>
-        <div class="price-period">per month, billed monthly</div>
+        <div class="price-amount monthly-price"><span class="currency">$</span>15</div>
+        <div class="price-amount annual-price" style="display:none"><span class="currency">$</span>144</div>
+        <div class="price-period monthly-sub">per month</div>
+        <div class="price-period annual-sub" style="display:none">per year <span style="color:var(--accent-light);font-weight:600;">($12/mo)</span></div>
+        <div class="price-orig annual-orig" style="display:none">was $180/yr</div>
       </div>
       <div class="plan-scans">
         <span class="scan-count">700</span>
@@ -262,7 +292,7 @@
         <li><span class="feat-check">✓</span> Priority email support</li>
         <li><span class="feat-check">✓</span> Cancel anytime</li>
       </ul>
-      <button class="btn-plan gold" id="btnPro2Monthly" onclick="startCheckout('pro2', 'monthly')">Get Pro 2</button>
+      <button class="btn-plan gold" id="btnPro2Monthly" onclick="startCheckout('pro2', isAnnual ? 'annual' : 'monthly')">Get Pro 2</button>
     </div>
 
     <!-- ENTERPRISE -->
@@ -437,6 +467,20 @@
 </footer>
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+let isAnnual = false;
+function toggleBilling() {
+  isAnnual = !isAnnual;
+  const track = document.getElementById('billingToggle');
+  track.classList.toggle('on', isAnnual);
+  document.getElementById('label-monthly').classList.toggle('active', !isAnnual);
+  document.getElementById('label-annual').classList.toggle('active', isAnnual);
+  document.querySelectorAll('.monthly-price').forEach(el => el.style.display = isAnnual ? 'none' : 'block');
+  document.querySelectorAll('.annual-price').forEach(el => el.style.display = isAnnual ? 'block' : 'none');
+  document.querySelectorAll('.monthly-sub').forEach(el => el.style.display = isAnnual ? 'none' : 'block');
+  document.querySelectorAll('.annual-sub').forEach(el => el.style.display = isAnnual ? 'block' : 'none');
+  document.querySelectorAll('.annual-orig').forEach(el => el.style.display = isAnnual ? 'block' : 'none');
+}
+
 function toggleFaq(btn) {
   const item = btn.closest('.faq-item');
   const isOpen = item.classList.contains('open');

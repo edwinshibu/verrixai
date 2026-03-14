@@ -57,10 +57,6 @@ export default async function handler(req, res) {
   if (body?.content !== undefined) {
     rawContent = body.content;
     options    = Array.isArray(body.options) ? body.options : [];
-  } else if (body?.messages && Array.isArray(body.messages)) {
-    const userMessage = body.messages.find(m => m.role === 'user');
-    if (!userMessage) return res.status(400).json({ error: 'No user message provided.' });
-    rawContent = userMessage.content;
   } else {
     return res.status(400).json({ error: 'Invalid request format.' });
   }
@@ -69,23 +65,6 @@ export default async function handler(req, res) {
   if (typeof rawContent === 'string') {
     if (rawContent.length > MAX_TEXT_LENGTH) {
       return res.status(400).json({ error: 'Document too large. Please reduce the size and try again.' });
-    }
-  } else if (Array.isArray(rawContent)) {
-    const textPart = rawContent.find(p => p.type === 'text');
-    if (textPart?.text?.length > MAX_TEXT_LENGTH) {
-      return res.status(400).json({ error: 'Document too large. Please reduce the size and try again.' });
-    }
-    const docPart = rawContent.find(p => p.type === 'document');
-    if (docPart) {
-      if (!docPart.source?.data || typeof docPart.source.data !== 'string') {
-        return res.status(400).json({ error: 'Invalid document format.' });
-      }
-      if (docPart.source.data.length > 13_000_000) {
-        return res.status(400).json({ error: 'Document too large.' });
-      }
-      if (docPart.source.media_type !== 'application/pdf') {
-        return res.status(400).json({ error: 'Only PDF documents are supported.' });
-      }
     }
   } else {
     return res.status(400).json({ error: 'Invalid content format.' });
@@ -97,13 +76,7 @@ export default async function handler(req, res) {
     : ['IS_LEGAL', 'SUMMARY', 'RISKS', 'KEY_POINTS', 'SIMPLIFIED'];
   const dynamicInstruction = `Only include these keys in your JSON response: ${requestedKeys.join(', ')}.`;
 
-  let userContent;
-  if (typeof rawContent === 'string') {
-    userContent = `${dynamicInstruction}\n\nDOCUMENT:\n"""\n${rawContent}\n"""`;
-  } else {
-    const docBlocks = rawContent.filter(p => p.type !== 'text');
-    userContent = [...docBlocks, { type: 'text', text: dynamicInstruction }];
-  }
+  const userContent = `${dynamicInstruction}\n\nDOCUMENT:\n"""\n${rawContent}\n"""`;
 
   // ── Call Anthropic ─────────────────────────────────────────
   try {

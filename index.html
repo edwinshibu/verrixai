@@ -1040,32 +1040,42 @@ async function extractPdfText(file) {
 }
 
 // ─── KEEPALIVE PING ───────────────────────────────────────────
-// Pings /api/analyse (GET) every 2 minutes to keep the Serverless function warm.
-// Stops when the tab is hidden (no point pinging in the background).
-// Restarts immediately when the tab becomes visible again.
+// Two-layer warm strategy:
+//
+// Layer 1 — Vercel Cron Job (vercel.json)
+//   Calls GET /api/analyse every minute server-to-server.
+//   Completely independent of browser state, tab visibility, or throttling.
+//   This is the primary warm mechanism.
+//
+// Layer 2 — Browser interaction ping (below)
+//   Fires on focus/mousedown/touchstart as a belt-and-braces backup.
+//   Debounced to once per 60s so it never spams.
+//   Handles the edge case where cron warmed a different instance than
+//   the one that will serve the user's request.
 (function keepAlive() {
-  let pingTimer = null;
+  let lastPing = 0;
+  const COOLDOWN = 60 * 1000; // don't ping more than once per 60s
 
   function ping() {
-    // GET hits analyse.js directly — returns 200 instantly, zero cost,
-    // keeps the exact function warm. No streaming, no Anthropic call.
+    const now = Date.now();
+    if (now - lastPing < COOLDOWN) return; // still warm from recent ping
+    lastPing = now;
     fetch('/api/analyse').catch(() => {});
   }
 
-  function start() {
-    ping(); // ping immediately on (re)activation
-    pingTimer = setInterval(ping, 2 * 60 * 1000); // then every 2 minutes
-  }
+  // Ping immediately on page load
+  ping();
 
-  function stop() {
-    if (pingTimer) { clearInterval(pingTimer); pingTimer = null; }
-  }
-
+  // Ping when tab becomes visible again (user switches back)
   document.addEventListener('visibilitychange', () => {
-    document.hidden ? stop() : start();
+    if (!document.hidden) ping();
   });
 
-  start(); // kick off on page load
+  // Ping on first interaction — by the time they pick a file and
+  // click Analyse, the function has had time to warm up
+  ['mousedown', 'touchstart', 'focus'].forEach(evt => {
+    window.addEventListener(evt, ping, { passive: true });
+  });
 })();
 
 // ─── BOOT ────────────────────────────────────────────────────

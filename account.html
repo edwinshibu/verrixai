@@ -115,7 +115,7 @@
     .scan-sub { font-size: 13px; color: var(--ink-muted); margin-top: 4px; }
     .scan-bar-wrap { background: var(--bg); border-radius: 999px; height: 8px; overflow: hidden; margin-bottom: 8px; }
     .scan-bar-fill { height: 100%; border-radius: 999px; background: var(--accent); transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
-    .scan-bar-fill.low { background: #E67E22; }
+    .scan-bar-fill.low { background: var(--risk-med); }
     .scan-bar-fill.empty { background: var(--risk-high); }
     .scan-upgrade { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 13px; color: var(--ink-muted); }
 
@@ -185,6 +185,10 @@
   [data-theme="dark"] .scan-bar-track { background: var(--border); }
   [data-theme="dark"] .info-box { background: #1E2E22; border-color: #2A3E2A; }
   [data-theme="dark"] .danger-zone { background: #2A1818; border-color: #3A1818; }
+  [data-theme="dark"] .badge-plan     { background: #1E2E22; color: var(--accent-light); }
+  [data-theme="dark"] .badge-provider { background: #2A2A26; color: var(--ink-muted); }
+  [data-theme="dark"] .danger-card    { border-color: #3A1818; }
+  [data-theme="dark"] .btn-danger:hover { background: #2A1818; }
   </style>
 </head>
 <body>
@@ -256,13 +260,13 @@
         <a class="btn-nav primary" href="/?pricing=1" style="font-size:12px;padding:7px 16px;">View plans</a>
       </div>
       <!-- Pro → Pro 2 upgrade nudge (shown for Pro users only) -->
-      <div id="pro2Nudge" style="display:none;margin-top:18px;padding:14px 16px;background:#FFFBF0;border:1px solid #E8D9B0;border-radius:10px;">
+      <div id="pro2Nudge" style="display:none;margin-top:18px;padding:14px 16px;background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:10px;">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
           <div>
             <div style="font-size:13px;font-weight:500;color:var(--ink);margin-bottom:2px;">Upgrade to Pro 2</div>
             <div style="font-size:12px;color:var(--ink-muted);">700 scans/mo + PDF export — from $15/mo</div>
           </div>
-          <a href="/pricing.html" style="flex-shrink:0;background:#B8963E;color:white;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:8px 16px;border-radius:999px;text-decoration:none;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background='#9a7c35'" onmouseout="this.style.background='#B8963E'">Upgrade to Pro 2 →</a>
+          <a href="/pricing.html" style="flex-shrink:0;background:var(--gold);color:white;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:8px 16px;border-radius:999px;text-decoration:none;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background='#9a7c35'" onmouseout="this.style.background='#B8963E'">Upgrade to Pro 2 →</a>
         </div>
       </div>
     </div>

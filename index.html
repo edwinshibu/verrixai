@@ -1745,58 +1745,78 @@ function animateSteps() {
 
 // ─── ANALYSIS ────────────────────────────────────────────────
 async function startAnalysis() {
-  // Show immediate visual feedback on mobile — session refresh can take 2-3s
-  // and without this the button appears unresponsive after tap
-  const analyseBtn = document.querySelector('.btn-analyze');
-  if (analyseBtn) { analyseBtn.disabled = true; analyseBtn.style.opacity = '0.7'; }
 
-  // ── Lightweight token check (only after idle) ───────────
-  // getSession() is fast normally but can hang on stale connections.
-  // Only run it if the page has been idle for 5+ minutes — otherwise
-  // the cached session is definitely still good and we skip it entirely.
-  const _idleMs = Date.now() - (window._lastActivity || Date.now());
-  if (currentUser && _idleMs > 5 * 60 * 1000) {
+  // ── 1. Validate instantly — before showing anything ───────
+  if (!canScan()) { showUpgradeWall(); return; }
+  const pasteText = document.getElementById('docText').value.trim();
+  if (!loadedFile && !pasteText) {
+    dropZone.style.borderColor = '#C0392B';
+    setTimeout(() => dropZone.style.borderColor = '', 2000);
+    return;
+  }
+
+  // ── 2. Show loading screen immediately ────────────────────
+  // User sees spinner the instant they click. Everything else happens behind it.
+  const opts  = getActiveOptions();
+  const myGen = ++analysisGen;
+  document.getElementById('inputState').style.display  = 'none';
+  document.getElementById('upgradeWall').style.display = 'none';
+  document.getElementById('loadingState').classList.add('visible');
+  const stepsPromise = animateSteps();
+
+  // ── 3. Idle check — runs silently behind the loading screen ─
+  // Only runs after 5+ mins of inactivity. 1.5s max. Never blocks UI.
+  const idleMs = Date.now() - (window._lastActivity || Date.now());
+  if (currentUser && idleMs > 5 * 60 * 1000) {
     try {
       await Promise.race([
         sb.auth.getSession(),
         new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 1500))
       ]);
-    } catch(e) {
-      console.warn('Session check skipped:', e.message);
+    } catch(e) { /* proceed with cached session */ }
+  }
+  if (analysisGen !== myGen) return; // reset clicked during idle check
+
+  // ── 4. Prepare content ────────────────────────────────────
+  let userContent;
+  if (loadedFile) {
+    if (loadedFile.isPdf || loadedFile.isDocx) {
+      userContent = loadedFile.extractedText;
+    } else {
+      userContent = atob(loadedFile.base64).slice(0, 48000);
     }
+  } else {
+    userContent = pasteText.slice(0, 48000);
   }
 
-  if (!canScan()) {
-    if (analyseBtn) { analyseBtn.disabled = false; analyseBtn.style.opacity = ''; }
-    showUpgradeWall(); return;
-  }
-  const pasteText = document.getElementById('docText').value.trim();
-  if (!loadedFile && !pasteText) {
-    if (analyseBtn) { analyseBtn.disabled = false; analyseBtn.style.opacity = ''; }
-    dropZone.style.borderColor = '#C0392B'; setTimeout(() => dropZone.style.borderColor = '', 2000); return;
-  }
-  const opts = getActiveOptions();
-  const myGen = ++analysisGen;  // capture this analysis's generation number
-  document.getElementById('inputState').style.display = 'none';
-  document.getElementById('upgradeWall').style.display = 'none';
-  document.getElementById('loadingState').classList.add('visible');
-  if (analyseBtn) { analyseBtn.disabled = false; analyseBtn.style.opacity = ''; }
-  const stepsPromise = animateSteps();
+  // ── 5. Message sequence ───────────────────────────────────
+  // Linear: Sending → Analysing at 2s → Still working at 20s
+  // Timers are set once and never reset — clean single chain.
+  const msgEl = document.getElementById('loadingMsg');
+  if (msgEl) msgEl.textContent = 'Sending your document…';
 
-  // ── Timers set HERE — before any async file work ──────────────
-  // This guarantees they fire even if DOCX/FileReader/JSZip hangs
-  if (stillWorkingTimer) clearTimeout(stillWorkingTimer);
-  stillWorkingTimer = setTimeout(() => {
+  const analysingTimer = setTimeout(() => {
     if (analysisGen !== myGen) return;
-    const msgEl = document.getElementById('loadingMsg');
+    if (msgEl) msgEl.textContent = 'Analysing your document…';
+  }, 2000);
+
+  const stillWorkingTimer = setTimeout(() => {
+    if (analysisGen !== myGen) return;
     if (msgEl) msgEl.textContent = 'Still working — large documents take a moment…';
-  }, 15000);
+  }, 20000);
 
-  if (activeEscape) clearTimeout(activeEscape);
-  activeEscape = setTimeout(() => {
+  // ── 6. Abort flag + escape hatch at 40s ───────────────────
+  // When escape fires: sets flag, aborts fetch, shows timeout.
+  // The await chain checks the flag after every step and exits cleanly.
+  let aborted = false;
+  let activeController = new AbortController();
+
+  const escapeHatch = setTimeout(() => {
     if (analysisGen !== myGen) return;
-    activeEscape = null;
-    if (stillWorkingTimer) { clearTimeout(stillWorkingTimer); stillWorkingTimer = null; }
+    aborted = true;
+    try { activeController.abort(); } catch(e) {}
+    clearTimeout(analysingTimer);
+    clearTimeout(stillWorkingTimer);
     stepsPromise.finish();
     document.getElementById('loadingState').classList.remove('visible');
     renderTimeout();
@@ -1804,114 +1824,54 @@ async function startAnalysis() {
     ['summary','risks','keypoints','simplify'].forEach(s => {
       document.getElementById(`sec-${s}`).style.display = opts.includes(s) ? '' : 'none';
     });
-  }, 58000);
+  }, 40000);
 
-  // Instruction now lives server-side in analyse.js (prompt caching).
-  // Client sends only raw document content + selected options.
-  let userContent;
-  if (loadedFile) {
-    if (loadedFile.isPdf) {
-      // PDF — text already extracted by pdf.js at load time, send as plain text
-      userContent = loadedFile.extractedText;
-    } else if (loadedFile.isDocx) {
-      // DOCX — text already extracted by JSZip at load time
-      userContent = loadedFile.extractedText;
-    } else {
-      // TXT or other text file — decode base64 and send as text
-      userContent = atob(loadedFile.base64).slice(0, 48000);
-    }
-  } else {
-    userContent = pasteText.slice(0, 48000);
-  }
-
+  // ── 7. Single fetch — no retry ────────────────────────────
   let result = null;
+  try {
+    const res = await fetch('/api/analyse', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ options: opts, content: userContent }),
+      signal:  activeController.signal
+    });
 
-  // ── Streaming fetch ───────────────────────────────────────────
-  async function attemptAnalysis() {
-    if (activeController) { try { activeController.abort(); } catch(e){} }
-    activeController = new AbortController();
-
-    // 40s client timeout — extended for slow connections and large docs
-    const timeoutId = setTimeout(() => activeController.abort(), 55000);
-
-    // Show "Sending" briefly, then switch to "Analysing" after 1.5s.
-    // Non-streaming means fetch only resolves when fully complete,
-    // so we update the message on a timer rather than on response headers.
-    const msgEl = document.getElementById('loadingMsg');
-    if (msgEl) msgEl.textContent = 'Sending your document…';
-    const analysingTimer = setTimeout(() => {
-      if (msgEl) msgEl.textContent = 'Analysing your document…';
-    }, 1500);
-
-    try {
-      const res = await fetch('/api/analyse', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ options: opts, content: userContent }),
-        signal: activeController.signal
-      });
-
-      clearTimeout(analysingTimer);
-      clearTimeout(timeoutId);
-      activeController = null;
-
-      if (!res.ok) return null;
-
-      // Non-streaming — wait for the complete response, then parse
+    if (!aborted && res.ok) {
       const text = await res.text();
       const jsonMatch = text.match(/\{[\s\S]*\}/);
-      return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
-
-    } catch(e) {
-      clearTimeout(analysingTimer);
-      clearTimeout(timeoutId);
-      activeController = null;
-      return null;
+      result = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
     }
-  }
-
-  // "Still working" and escape hatch timers are set at the top of startAnalysis (before file prep)
-
-  try {
-    result = await attemptAnalysis();
-    // One silent retry on failure — 2s gap gives cold start time to warm up
-    if (!result) {
-      const msgEl = document.getElementById('loadingMsg');
-      if (msgEl) msgEl.textContent = 'Retrying…';
-      await new Promise(r => setTimeout(r, 2000));
-      if (analysisGen === myGen) result = await attemptAnalysis();
-    }
-    if (!result) result = '__timeout__';
   } catch(e) {
-    console.error(e);
-    result = '__timeout__';
+    // Fetch failed or was aborted by escape hatch — handled below
   }
 
-  // Clear still-working timer
-  if (stillWorkingTimer) { clearTimeout(stillWorkingTimer); stillWorkingTimer = null; }
+  // ── 8. Clean up timers ────────────────────────────────────
+  clearTimeout(analysingTimer);
+  clearTimeout(stillWorkingTimer);
+  clearTimeout(escapeHatch);
 
-  // Record scan only if analysis succeeded — don't charge for failures
-  if (result && result !== '__timeout__') await recordScan();
+  // If escape hatch already fired, it handled the UI — exit silently
+  if (aborted || analysisGen !== myGen) return;
 
-  if (analysisGen !== myGen) return;  // reset was clicked while we were waiting — discard result
-  clearTimeout(activeEscape);
-  activeEscape = null;
+  // ── 9. Record scan and show result ────────────────────────
+  if (result) await recordScan();
 
   stepsPromise.finish();
   await stepsPromise;
   document.getElementById('loadingState').classList.remove('visible');
-  if (result === '__timeout__') {
-    renderTimeout();
-  } else if (result) {
+
+  if (result) {
     renderResults(result, opts);
   } else {
-    renderFallback();
+    renderTimeout();
   }
+
   document.getElementById('resultsArea').classList.add('visible');
   ['summary','risks','keypoints','simplify'].forEach(s => {
     document.getElementById(`sec-${s}`).style.display = opts.includes(s) ? '' : 'none';
   });
 }
+
 
 function renderResults(r, opts) {
   // Show export buttons for Pro 2 users

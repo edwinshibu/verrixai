@@ -1,6 +1,7 @@
 {
   "cleanUrls": true,
   "functions": {
+    "api/analyse.js":         { "maxDuration": 60 },
     "api/knowmore.js":        { "maxDuration": 60 },
     "api/delete-account.js": { "maxDuration": 60 },
     "api/stripe-webhook.js": { "maxDuration": 60 }

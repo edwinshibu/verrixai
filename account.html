@@ -456,10 +456,11 @@
       document.getElementById('upgradePrompt').style.display = 'flex';
     } else if (rem === 1) {
       statusEl.textContent = '1 scan remaining — consider upgrading soon.';
-      statusEl.style.color = '#E67E22';
+      statusEl.style.color = 'var(--risk-med)';
       document.getElementById('upgradePrompt').style.display = 'flex';
     } else {
       statusEl.textContent = `${rem} scan${rem !== 1 ? 's' : ''} remaining.`;
+      document.getElementById('upgradePrompt').style.display = 'flex';
     }
 
     document.getElementById('heroPlan').textContent   = `${planLabel} Plan`;

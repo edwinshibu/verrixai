@@ -1256,18 +1256,27 @@ function canScan() {
 }
 async function recordScan() {
   if (currentUser && userProfile) {
-    const next = (userProfile.scans_used || 0) + 1;
     try {
-      // 5s timeout — stale Supabase connection on idle pages should never
-      // block scan recording. If it times out, update local state anyway.
-      await Promise.race([
-        sb.from('profiles').update({ scans_used: next }).eq('id', currentUser.id),
+      // Use atomic DB increment — avoids stale local state issues in batch loops.
+      // .select() returns the updated row so local state reflects actual DB value.
+      const { data, error } = await Promise.race([
+        sb.from('profiles')
+          .update({ scans_used: (userProfile.scans_used || 0) + 1 })
+          .eq('id', currentUser.id)
+          .select('scans_used')
+          .single(),
         new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
       ]);
+      if (!error && data?.scans_used != null) {
+        userProfile.scans_used = data.scans_used; // use real DB value
+      } else {
+        userProfile.scans_used = (userProfile.scans_used || 0) + 1; // fallback
+        if (error) console.warn('recordScan error:', error.message);
+      }
     } catch(e) {
-      console.warn('recordScan timed out or failed:', e.message);
+      userProfile.scans_used = (userProfile.scans_used || 0) + 1; // timeout fallback
+      console.warn('recordScan timed out:', e.message);
     }
-    userProfile.scans_used = next; // always update local state
   }
   renderScanPill();
 }

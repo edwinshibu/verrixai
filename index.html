@@ -20,7 +20,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js">
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -967,8 +969,46 @@ let stillWorkingTimer = null; // "still working" message timer
 const urlSource = new URLSearchParams(window.location.search).get('source');
 if (urlSource) sessionStorage.setItem('vrx_source', urlSource);
 
+
+// ─── PDF.JS SETUP ─────────────────────────────────────────────
+// Set worker source — required by pdf.js before any extraction
+if (typeof pdfjsLib !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+// ─── PDF TEXT EXTRACTION ──────────────────────────────────────
+// Extracts readable text from a PDF File object using pdf.js.
+// Returns { text, pageCount, isScanned }
+// isScanned = true when no meaningful text found (image-only PDF)
+async function extractPdfText(file) {
+  const MIN_CHARS = 150; // below this = likely scanned image
+
+  const arrayBuffer = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    const timer  = setTimeout(() => reject(new Error('FileReader timed out')), 15000);
+    reader.onload  = e => { clearTimeout(timer); resolve(e.target.result); };
+    reader.onerror = () => { clearTimeout(timer); reject(new Error('FileReader error')); };
+    reader.readAsArrayBuffer(file);
+  });
+
+  const pdf       = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const pageCount = pdf.numPages;
+  const parts     = [];
+
+  for (let i = 1; i <= pageCount; i++) {
+    const page    = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items.map(item => item.str).join(' ');
+    if (pageText.trim()) parts.push(pageText);
+  }
+
+  const text = parts.join('\n\n').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+  return { text, pageCount, isScanned: text.length < MIN_CHARS };
+}
+
 // ─── KEEPALIVE PING ───────────────────────────────────────────
-// Pings /api/ping every 2 minutes to keep the Edge function warm.
+// Pings /api/analyse (GET) every 2 minutes to keep the Serverless function warm.
 // Stops when the tab is hidden (no point pinging in the background).
 // Restarts immediately when the tab becomes visible again.
 (function keepAlive() {
@@ -1491,22 +1531,78 @@ function handleFile(file) {
     document.getElementById('fileInput').value = '';
     return;
   }
-  const reader = new FileReader();
-  reader.onload = ev => {
-    loadedFile = { base64: ev.target.result.split(',')[1], mediaType: file.type || 'application/pdf', name: file.name, _rawFile: file };
+
+  const isPdf = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+  const sizeStr = file.size < 1024*1024
+    ? (file.size/1024).toFixed(0) + ' KB'
+    : (file.size/(1024*1024)).toFixed(1) + ' MB';
+
+  if (isPdf) {
+    // ── PDF: extract text client-side immediately using pdf.js ──
+    // Shows feedback instantly. Scanned PDFs caught here, not after a 40s timeout.
     window._currentFileName = file.name.replace(/\.[^/.]+$/, '');
-    document.getElementById('dropLabel').textContent = `✓ ${file.name}`;
-    const sizeStr = file.size < 1024*1024
-      ? (file.size/1024).toFixed(0) + ' KB'
-      : (file.size/(1024*1024)).toFixed(1) + ' MB';
-    document.getElementById('dropSub').textContent = `${sizeStr} · File ready for analysis`;
+    document.getElementById('dropLabel').textContent = '⏳ Reading PDF…';
+    document.getElementById('dropSub').textContent   = 'Extracting text from document…';
     dropZone.style.borderColor = 'var(--gold)'; dropZone.style.background = '#FDFBF5'; dropZone.style.pointerEvents = 'none';
-    document.getElementById('clearFileRow').style.display   = 'block';
-    document.getElementById('pasteToggleRow').style.display = 'none';
-    document.getElementById('pasteDivider').style.display   = 'none';
-    document.getElementById('docText').style.display        = 'none';
-  };
-  reader.readAsDataURL(file);
+
+    extractPdfText(file).then(({ text, pageCount, isScanned }) => {
+      if (isScanned) {
+        // Scanned image PDF — no usable text. Tell user immediately.
+        loadedFile = null;
+        dropZone.style.borderColor = '#C0392B'; dropZone.style.background = ''; dropZone.style.pointerEvents = '';
+        document.getElementById('dropLabel').textContent = '⚠ Scanned PDF detected';
+        document.getElementById('dropSub').textContent   = 'This PDF has no readable text. Please copy-paste the text using the option below.';
+        document.getElementById('fileInput').value = '';
+        document.getElementById('clearFileRow').style.display   = 'none';
+        document.getElementById('pasteToggleRow').style.display = 'block';
+        setTimeout(() => {
+          dropZone.style.borderColor = '';
+          document.getElementById('dropLabel').textContent = 'Drop your document here';
+          document.getElementById('dropSub').textContent   = 'PDF, DOCX, or TXT accepted';
+        }, 6000);
+        return;
+      }
+
+      loadedFile = { extractedText: text.slice(0, 48000), name: file.name, isPdf: true };
+      document.getElementById('dropLabel').textContent = `✓ ${file.name}`;
+      document.getElementById('dropSub').textContent   = `${sizeStr} · ${pageCount} page${pageCount !== 1 ? 's' : ''} · Text extracted`;
+      document.getElementById('clearFileRow').style.display   = 'block';
+      document.getElementById('pasteToggleRow').style.display = 'none';
+      document.getElementById('pasteDivider').style.display   = 'none';
+      document.getElementById('docText').style.display        = 'none';
+
+    }).catch(err => {
+      console.error('PDF extraction failed:', err);
+      loadedFile = null;
+      dropZone.style.borderColor = '#C0392B'; dropZone.style.background = ''; dropZone.style.pointerEvents = '';
+      document.getElementById('dropLabel').textContent = '⚠ Could not read PDF';
+      document.getElementById('dropSub').textContent   = 'Try a different file, or copy-paste the text instead.';
+      document.getElementById('fileInput').value = '';
+      document.getElementById('clearFileRow').style.display   = 'none';
+      document.getElementById('pasteToggleRow').style.display = 'block';
+      setTimeout(() => {
+        dropZone.style.borderColor = '';
+        document.getElementById('dropLabel').textContent = 'Drop your document here';
+        document.getElementById('dropSub').textContent   = 'PDF, DOCX, or TXT accepted';
+      }, 6000);
+    });
+
+  } else {
+    // ── DOCX / TXT: existing FileReader base64 path — unchanged ──
+    const reader = new FileReader();
+    reader.onload = ev => {
+      loadedFile = { base64: ev.target.result.split(',')[1], mediaType: file.type, name: file.name, _rawFile: file };
+      window._currentFileName = file.name.replace(/\.[^/.]+$/, '');
+      document.getElementById('dropLabel').textContent = `✓ ${file.name}`;
+      document.getElementById('dropSub').textContent   = `${sizeStr} · File ready for analysis`;
+      dropZone.style.borderColor = 'var(--gold)'; dropZone.style.background = '#FDFBF5'; dropZone.style.pointerEvents = 'none';
+      document.getElementById('clearFileRow').style.display   = 'block';
+      document.getElementById('pasteToggleRow').style.display = 'none';
+      document.getElementById('pasteDivider').style.display   = 'none';
+      document.getElementById('docText').style.display        = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
 }
 function clearFile() {
   loadedFile = null; pasteMode = false;
@@ -1587,11 +1683,9 @@ async function startAnalysis() {
   let userContent;
   if (loadedFile) {
     const isDocx = loadedFile.name.toLowerCase().endsWith('.docx');
-    if (loadedFile.mediaType === 'application/pdf' || loadedFile.name.toLowerCase().endsWith('.pdf')) {
-      // PDF — send natively as document block (no instruction text block needed)
-      userContent = [
-        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: loadedFile.base64 } }
-      ];
+    if (loadedFile.isPdf) {
+      // PDF — text already extracted by pdf.js at load time, send as plain text
+      userContent = loadedFile.extractedText;
     } else if (isDocx) {
       // DOCX — extract text client-side using JSZip (no server needed, no size limits)
       try {
@@ -1983,14 +2077,12 @@ async function prepareFileContent(fileObj) {
   const name = file.name.toLowerCase();
 
   if (name.endsWith('.pdf') || file.type === 'application/pdf') {
-    const base64 = await new Promise((res, rej) => {
-      const r = new FileReader();
-      r.onload = e => res(e.target.result.split(',')[1]);
-      r.onerror = rej;
-      r.readAsDataURL(file);
-    });
-    // PDF — return as document block only (instruction is server-side)
-    return [{ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } }];
+    // PDF — extract text client-side using pdf.js (same as single upload)
+    const { text, isScanned } = await extractPdfText(file);
+    if (isScanned || text.length < 150) {
+      throw new Error('SCANNED_PDF');
+    }
+    return text.slice(0, 48000);
   }
 
   if (name.endsWith('.docx')) {

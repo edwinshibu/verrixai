@@ -290,7 +290,7 @@
   .batch-file-remove { background: none; border: none; cursor: pointer; color: var(--ink-muted); font-size: 16px; padding: 2px 6px; border-radius: 4px; flex-shrink: 0; line-height: 1; transition: color 0.15s; }
   .batch-file-remove:hover { color: var(--risk-high); }
 
-  .batch-scan-warning { margin: 12px 36px 0; padding: 10px 14px; background: #FEF9EE; border: 1px solid #E8D9B0; border-radius: 8px; font-size: 13px; color: #7A5C1E; display: none; }
+  .batch-scan-warning { margin: 12px 36px 0; padding: 10px 14px; background: var(--warn-bg); border: 1px solid var(--warn-border); border-radius: 8px; font-size: 13px; color: var(--ink-muted); display: none; }
 
   .batch-btn-row { padding: 20px 36px 28px; }
   .btn-batch-analyse { width: 100%; padding: 14px; background: var(--gold); color: white; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; letter-spacing: 0.01em; }
@@ -475,10 +475,16 @@
   [data-theme="dark"] .dropdown-item.danger:hover { background: #2A1818; }
   [data-theme="dark"] .btn-pm.dark { background: #EDEAE3; color: #181A18; }
   [data-theme="dark"] .btn-pm.dark:hover { background: #FFFFFF; }
-  [data-theme="dark"] .price-orig { color: #4A4A42; }
-  [data-theme="dark"] .batch-file-item.done   { border-color: #2A3E2A; background: #162018; }
-  [data-theme="dark"] .batch-file-item.failed { border-color: #3A1818; background: #2A1818; }
+  [data-theme="dark"] .price-orig { color: #6A6A62; }
+  [data-theme="dark"] .batch-file-item.done      { border-color: #2A3E2A; background: #162018; }
+  [data-theme="dark"] .batch-file-item.failed    { border-color: #3A1818; background: #2A1818; }
+  [data-theme="dark"] .batch-file-item.analysing { border-color: var(--gold); background: #1C2A1E; }
   [data-theme="dark"] .form-field input:focus { background: var(--surface); }
+  [data-theme="dark"] .doc-textarea::placeholder { color: #5A5A52; }
+  [data-theme="dark"] .knowmore-input::placeholder { color: #5A5A52; }
+  [data-theme="dark"] .pw-req { color: var(--ink-muted); }
+  [data-theme="dark"] .pw-req.met { color: var(--accent-light); }
+  [data-theme="dark"] .pw-req.met .pw-dot { color: var(--accent-light); }
   </style>
 </head>
 <body>
@@ -732,7 +738,7 @@
     <!-- Upgrade wall -->
     <div id="upgradeWall" style="display:none;">
       <div class="upgrade-wall">
-        <div id="zeroScansBanner" style="display:none;margin-bottom:16px;padding:10px 14px;background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:8px;font-size:13px;color:#7A5C1E;text-align:center;">
+        <div id="zeroScansBanner" style="display:none;margin-bottom:16px;padding:10px 14px;background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:8px;font-size:13px;color:var(--ink-muted);text-align:center;">
           You've used all your free scans. Upgrade to keep going.
         </div>
         <div class="upgrade-icon">🔒</div>
@@ -1587,7 +1593,7 @@ function handleFile(file) {
     window._currentFileName = file.name.replace(/\.[^/.]+$/, '');
     document.getElementById('dropLabel').textContent = '⏳ Reading PDF…';
     document.getElementById('dropSub').textContent   = 'Extracting text from document…';
-    dropZone.style.borderColor = 'var(--gold)'; dropZone.style.background = '#FDFBF5'; dropZone.style.pointerEvents = 'none';
+    dropZone.style.borderColor = 'var(--gold)'; dropZone.style.background = ''; dropZone.style.pointerEvents = 'none';
 
     extractPdfText(file).then(({ text, pageCount, isScanned }) => {
       if (isScanned) {
@@ -1639,7 +1645,7 @@ function handleFile(file) {
     window._currentFileName = file.name.replace(/\.[^/.]+$/, '');
     document.getElementById('dropLabel').textContent = '⏳ Reading document…';
     document.getElementById('dropSub').textContent   = 'Extracting text from document…';
-    dropZone.style.borderColor = 'var(--gold)'; dropZone.style.background = '#FDFBF5'; dropZone.style.pointerEvents = 'none';
+    dropZone.style.borderColor = 'var(--gold)'; dropZone.style.background = ''; dropZone.style.pointerEvents = 'none';
 
     extractDocxText(file).then(({ text, isEmpty }) => {
       if (isEmpty) {
@@ -1693,7 +1699,7 @@ function handleFile(file) {
       window._currentFileName = file.name.replace(/\.[^/.]+$/, '');
       document.getElementById('dropLabel').textContent = `✓ ${file.name}`;
       document.getElementById('dropSub').textContent   = `${sizeStr} · File ready for analysis`;
-      dropZone.style.borderColor = 'var(--gold)'; dropZone.style.background = '#FDFBF5'; dropZone.style.pointerEvents = 'none';
+      dropZone.style.borderColor = 'var(--gold)'; dropZone.style.background = ''; dropZone.style.pointerEvents = 'none';
       document.getElementById('clearFileRow').style.display   = 'block';
       document.getElementById('pasteToggleRow').style.display = 'none';
       document.getElementById('pasteDivider').style.display   = 'none';
@@ -1921,7 +1927,7 @@ function renderTimeout() {
         <strong style="font-size:13px;color:var(--ink);display:block;margin-bottom:4px;">Analysis timed out</strong>
         <span style="font-size:12px;color:var(--ink-muted);line-height:1.6;">This can happen with large documents or slow connections. Your file is still loaded — click Try Again below.</span>
         <div style="margin-top:12px;">
-          <button onclick="retryAnalysis()" style="padding:9px 22px;background:#1A3A2A;color:white;border:none;border-radius:999px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='#2E5C42'" onmouseout="this.style.background='#1A3A2A'">↺ Try Again</button>
+          <button onclick="retryAnalysis()" style="padding:9px 22px;background:var(--accent);color:white;border:none;border-radius:999px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='var(--accent-light)'" onmouseout="this.style.background='var(--accent)'">↺ Try Again</button>
         </div>
       </div>
     </div>`;

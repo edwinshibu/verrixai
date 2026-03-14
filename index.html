@@ -1733,6 +1733,28 @@ function animateSteps() {
 
 // ─── ANALYSIS ────────────────────────────────────────────────
 async function startAnalysis() {
+  // ── Refresh Supabase session before doing anything ────────
+  // Idle tabs can have expired tokens. Force a fresh session check
+  // so canScan() and recordScan() never operate on a stale token.
+  if (currentUser) {
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session?.user) {
+        // Session is valid — refresh profile data too in case scans_used changed
+        await onSignIn(session.user);
+      } else {
+        // Session genuinely expired — sign out cleanly
+        await sb.auth.signOut();
+        currentUser = null; userProfile = null;
+        renderNavGuest();
+        return;
+      }
+    } catch(e) {
+      console.warn('Session refresh failed, proceeding with cached session:', e);
+      // Don't block — proceed with whatever we have cached
+    }
+  }
+
   if (!canScan()) { showUpgradeWall(); return; }
   const pasteText = document.getElementById('docText').value.trim();
   if (!loadedFile && !pasteText) {

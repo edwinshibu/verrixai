@@ -977,6 +977,38 @@ if (typeof pdfjsLib !== 'undefined') {
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 
+
+// ─── DOCX TEXT EXTRACTION ─────────────────────────────────────
+// Extracts readable text from a DOCX File object using JSZip.
+// Returns { text, isEmpty }
+async function extractDocxText(file) {
+  const MIN_CHARS = 200;
+
+  const arrayBuffer = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    const timer  = setTimeout(() => reject(new Error('FileReader timed out')), 15000);
+    reader.onload  = e => { clearTimeout(timer); resolve(e.target.result); };
+    reader.onerror = () => { clearTimeout(timer); reject(new Error('FileReader error')); };
+    reader.readAsArrayBuffer(file);
+  });
+
+  const zip    = await JSZip.loadAsync(arrayBuffer);
+  const docXml = zip.file('word/document.xml');
+  if (!docXml) throw new Error('Not a valid DOCX file');
+
+  const xmlStr = await docXml.async('string');
+  const text = xmlStr
+    .replace(/<w:br[^>]*\/>/gi, '\n')
+    .replace(/<w:p[ >][^>]*>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#x[0-9A-Fa-f]+;/g, '')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+  return { text, isEmpty: text.length < MIN_CHARS };
+}
+
 // ─── PDF TEXT EXTRACTION ──────────────────────────────────────
 // Extracts readable text from a PDF File object using pdf.js.
 // Returns { text, pageCount, isScanned }
@@ -1587,11 +1619,59 @@ function handleFile(file) {
       }, 6000);
     });
 
+  } else if (file.name.toLowerCase().endsWith('.docx')) {
+    // ── DOCX: extract text immediately using JSZip — same pattern as PDF ──
+    window._currentFileName = file.name.replace(/\.[^/.]+$/, '');
+    document.getElementById('dropLabel').textContent = '⏳ Reading document…';
+    document.getElementById('dropSub').textContent   = 'Extracting text from document…';
+    dropZone.style.borderColor = 'var(--gold)'; dropZone.style.background = '#FDFBF5'; dropZone.style.pointerEvents = 'none';
+
+    extractDocxText(file).then(({ text, isEmpty }) => {
+      if (isEmpty) {
+        loadedFile = null;
+        dropZone.style.borderColor = '#C0392B'; dropZone.style.background = ''; dropZone.style.pointerEvents = '';
+        document.getElementById('dropLabel').textContent = '⚠ Document appears empty';
+        document.getElementById('dropSub').textContent   = 'This file contains very little text. Try copy-pasting the content instead.';
+        document.getElementById('fileInput').value = '';
+        document.getElementById('clearFileRow').style.display   = 'none';
+        document.getElementById('pasteToggleRow').style.display = 'block';
+        setTimeout(() => {
+          dropZone.style.borderColor = '';
+          document.getElementById('dropLabel').textContent = 'Drop your document here';
+          document.getElementById('dropSub').textContent   = 'PDF, DOCX, or TXT accepted';
+        }, 6000);
+        return;
+      }
+
+      loadedFile = { extractedText: text.slice(0, 48000), name: file.name, isDocx: true };
+      document.getElementById('dropLabel').textContent = `✓ ${file.name}`;
+      document.getElementById('dropSub').textContent   = `${sizeStr} · Text extracted`;
+      document.getElementById('clearFileRow').style.display   = 'block';
+      document.getElementById('pasteToggleRow').style.display = 'none';
+      document.getElementById('pasteDivider').style.display   = 'none';
+      document.getElementById('docText').style.display        = 'none';
+
+    }).catch(err => {
+      console.error('DOCX extraction failed:', err);
+      loadedFile = null;
+      dropZone.style.borderColor = '#C0392B'; dropZone.style.background = ''; dropZone.style.pointerEvents = '';
+      document.getElementById('dropLabel').textContent = '⚠ Could not read document';
+      document.getElementById('dropSub').textContent   = 'Try a different file, or copy-paste the text instead.';
+      document.getElementById('fileInput').value = '';
+      document.getElementById('clearFileRow').style.display   = 'none';
+      document.getElementById('pasteToggleRow').style.display = 'block';
+      setTimeout(() => {
+        dropZone.style.borderColor = '';
+        document.getElementById('dropLabel').textContent = 'Drop your document here';
+        document.getElementById('dropSub').textContent   = 'PDF, DOCX, or TXT accepted';
+      }, 6000);
+    });
+
   } else {
-    // ── DOCX / TXT: existing FileReader base64 path — unchanged ──
+    // ── TXT: base64 path — unchanged ──
     const reader = new FileReader();
     reader.onload = ev => {
-      loadedFile = { base64: ev.target.result.split(',')[1], mediaType: file.type, name: file.name, _rawFile: file };
+      loadedFile = { base64: ev.target.result.split(',')[1], mediaType: file.type, name: file.name };
       window._currentFileName = file.name.replace(/\.[^/.]+$/, '');
       document.getElementById('dropLabel').textContent = `✓ ${file.name}`;
       document.getElementById('dropSub').textContent   = `${sizeStr} · File ready for analysis`;
@@ -1682,69 +1762,12 @@ async function startAnalysis() {
   // Client sends only raw document content + selected options.
   let userContent;
   if (loadedFile) {
-    const isDocx = loadedFile.name.toLowerCase().endsWith('.docx');
     if (loadedFile.isPdf) {
       // PDF — text already extracted by pdf.js at load time, send as plain text
       userContent = loadedFile.extractedText;
-    } else if (isDocx) {
-      // DOCX — extract text client-side using JSZip (no server needed, no size limits)
-      try {
-        const arrayBuffer = await new Promise((resolve, reject) => {
-          const r = new FileReader();
-          const t = setTimeout(() => reject(new Error('FileReader timed out')), 10000);
-          r.onload = e => { clearTimeout(t); resolve(e.target.result); };
-          r.onerror = e => { clearTimeout(t); reject(e); };
-          r.readAsArrayBuffer(loadedFile._rawFile);
-        });
-
-        const zip = await JSZip.loadAsync(arrayBuffer);
-        const docXml = zip.file('word/document.xml');
-        if (!docXml) throw new Error('Not a valid DOCX file');
-
-        const xmlStr = await docXml.async('string');
-        // Strip XML tags, decode basic entities, collapse whitespace
-        const text = xmlStr
-          .replace(/<w:br[^>]*\/>/gi, '\n')
-          .replace(/<w:p[ >][^>]*>/gi, '\n')
-          .replace(/<[^>]+>/g, '')
-          .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#x[0-9A-Fa-f]+;/g, '')
-          .replace(/[ \t]+/g, ' ')
-          .replace(/\n{3,}/g, '\n\n')
-          .trim();
-
-        const MIN_TEXT = 200;
-        if (text.length < MIN_TEXT) {
-          // Image-heavy — show warning
-          await stepsPromise;
-          document.getElementById('loadingState').classList.remove('visible');
-          document.getElementById('resultsArea').classList.add('visible');
-          document.getElementById('nonLegalBanner').style.display = 'none';
-          ['summary','risks','keypoints','simplify'].forEach(s => {
-            document.getElementById(`sec-${s}`).style.display = opts.includes(s) ? '' : 'none';
-          });
-          document.getElementById('body-summary').innerHTML = `
-            <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:8px;">
-              <span style="font-size:16px;flex-shrink:0;">🖼️</span>
-              <div>
-                <strong style="font-size:13px;color:var(--ink);display:block;margin-bottom:4px;">Document contains mostly images</strong>
-                <span style="font-size:12px;color:var(--ink-muted);line-height:1.6;">This document appears to contain mostly images and very little text. For best results, please export it as a PDF — VerrixAI can read images and diagrams inside PDFs.</span>
-              </div>
-            </div>`;
-          ['risks','keypoints','simplify'].forEach(s => {
-            document.getElementById(`body-${s}`).innerHTML = '<p style="color:var(--ink-muted);font-size:13px;font-style:italic;">No analysis available.</p>';
-          });
-          return;
-        }
-
-        userContent = text.slice(0, 48000);
-      } catch(e) {
-        console.error('DOCX extraction failed:', e);
-        await stepsPromise;
-        document.getElementById('loadingState').classList.remove('visible');
-        renderFallback();
-        document.getElementById('resultsArea').classList.add('visible');
-        return;
-      }
+    } else if (loadedFile.isDocx) {
+      // DOCX — text already extracted by JSZip at load time
+      userContent = loadedFile.extractedText;
     } else {
       // TXT or other text file — decode base64 and send as text
       userContent = atob(loadedFile.base64).slice(0, 48000);
@@ -2086,17 +2109,9 @@ async function prepareFileContent(fileObj) {
   }
 
   if (name.endsWith('.docx')) {
-    const arrayBuffer = await new Promise((res, rej) => {
-      const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = rej; r.readAsArrayBuffer(file);
-    });
-    const zip    = await JSZip.loadAsync(arrayBuffer);
-    const docXml = zip.file('word/document.xml');
-    if (!docXml) throw new Error('Not a valid DOCX file');
-    const xmlStr = await docXml.async('string');
-    const text = xmlStr
-      .replace(/<w:br[^>]*\/>/gi, '\n').replace(/<w:p[ >][^>]*>/gi, '\n').replace(/<[^>]+>/g, '')
-      .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#x[0-9A-Fa-f]+;/g,'')
-      .replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n').trim();
+    // DOCX — use shared extractDocxText helper (same as single upload)
+    const { text, isEmpty } = await extractDocxText(file);
+    if (isEmpty) throw new Error('EMPTY_DOCX');
     return text.slice(0, 48000);
   }
 

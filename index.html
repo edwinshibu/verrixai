@@ -1744,25 +1744,18 @@ async function startAnalysis() {
   const analyseBtn = document.querySelector('.btn-analyze');
   if (analyseBtn) { analyseBtn.disabled = true; analyseBtn.style.opacity = '0.7'; }
 
-  // ── Refresh Supabase session before doing anything ────────
-  // Idle tabs can have expired tokens. Force a fresh session check
-  // so canScan() and recordScan() never operate on a stale token.
+  // ── Lightweight token check ──────────────────────────────
+  // Hard 3s timeout — stale Supabase connection on idle pages can hang
+  // indefinitely. We just need to know the token is alive, not re-run
+  // the full onSignIn flow. Proceed with cached session on any failure.
   if (currentUser) {
     try {
-      const { data: { session } } = await sb.auth.getSession();
-      if (session?.user) {
-        // Session is valid — refresh profile data too in case scans_used changed
-        await onSignIn(session.user);
-      } else {
-        // Session genuinely expired — sign out cleanly
-        await sb.auth.signOut();
-        currentUser = null; userProfile = null;
-        renderNavGuest();
-        return;
-      }
+      await Promise.race([
+        sb.auth.getSession(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
+      ]);
     } catch(e) {
-      console.warn('Session refresh failed, proceeding with cached session:', e);
-      // Don't block — proceed with whatever we have cached
+      console.warn('Session check skipped:', e.message);
     }
   }
 

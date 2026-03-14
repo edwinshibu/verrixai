@@ -195,7 +195,7 @@
   .drop-icon { font-size: 36px; margin-bottom: 14px; opacity: 0.5; display: block; }
   .drop-zone h3 { font-family: 'Playfair Display', serif; font-weight: 500; font-size: 17px; margin-bottom: 8px; }
   .drop-zone p { font-size: 13px; color: var(--ink-muted); }
-  .drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .drop-zone input[type=file] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 16px; /* prevents iOS zoom on focus */ -webkit-appearance: none; }
   .divider { display: flex; align-items: center; gap: 16px; padding: 0 36px; margin-bottom: 4px; color: var(--ink-muted); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
   .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
   .doc-textarea { margin: 12px 36px 28px; width: calc(100% - 72px); height: 180px; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink); background: var(--surface); resize: vertical; outline: none; transition: border-color 0.2s; line-height: 1.7; }
@@ -206,7 +206,7 @@
   .opt-chip.active { background: var(--accent); color: white; border-color: var(--accent); }
   .opt-chip:hover:not(.active) { border-color: var(--ink-muted); }
   .btn-row { padding: 0 36px 32px; }
-  .btn-analyze { width: 100%; padding: 16px 24px; background: var(--accent); color: white; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.25s ease; letter-spacing: 0.02em; }
+  .btn-analyze { width: 100%; padding: 16px 24px; background: var(--accent); color: white; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.25s ease; letter-spacing: 0.02em; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   .btn-analyze:hover { background: var(--accent-light); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(26,58,42,0.3); }
   .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
@@ -268,7 +268,7 @@
   .batch-input-state { display: none; }
   .batch-drop-zone { margin: 24px 36px 0; border: 2px dashed var(--border); border-radius: var(--radius); padding: 36px 24px; text-align: center; cursor: pointer; transition: all 0.25s; background: var(--bg); position: relative; }
   .batch-drop-zone:hover, .batch-drop-zone.drag-over { border-color: var(--gold); background: #FDFBF5; }
-  .batch-drop-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .batch-drop-zone input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 16px; -webkit-appearance: none; }
   .batch-drop-icon { font-size: 28px; margin-bottom: 8px; }
   .batch-drop-title { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
   .batch-drop-sub { font-size: 13px; color: var(--ink-muted); }
@@ -365,7 +365,7 @@
 
   @media (max-width: 680px) {
     /* NAV */
-    nav { padding: 12px 16px; gap: 8px; }
+    nav { padding: 12px 16px; gap: 8px; backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--bg) !important; }
     .nav-right { gap: 6px; }
     .nav-security { display: none !important; }
     .scan-pill { display: none !important; }
@@ -1733,6 +1733,11 @@ function animateSteps() {
 
 // ─── ANALYSIS ────────────────────────────────────────────────
 async function startAnalysis() {
+  // Show immediate visual feedback on mobile — session refresh can take 2-3s
+  // and without this the button appears unresponsive after tap
+  const analyseBtn = document.querySelector('.btn-analyze');
+  if (analyseBtn) { analyseBtn.disabled = true; analyseBtn.style.opacity = '0.7'; }
+
   // ── Refresh Supabase session before doing anything ────────
   // Idle tabs can have expired tokens. Force a fresh session check
   // so canScan() and recordScan() never operate on a stale token.
@@ -1755,9 +1760,13 @@ async function startAnalysis() {
     }
   }
 
-  if (!canScan()) { showUpgradeWall(); return; }
+  if (!canScan()) {
+    if (analyseBtn) { analyseBtn.disabled = false; analyseBtn.style.opacity = ''; }
+    showUpgradeWall(); return;
+  }
   const pasteText = document.getElementById('docText').value.trim();
   if (!loadedFile && !pasteText) {
+    if (analyseBtn) { analyseBtn.disabled = false; analyseBtn.style.opacity = ''; }
     dropZone.style.borderColor = '#C0392B'; setTimeout(() => dropZone.style.borderColor = '', 2000); return;
   }
   const opts = getActiveOptions();
@@ -1765,6 +1774,7 @@ async function startAnalysis() {
   document.getElementById('inputState').style.display = 'none';
   document.getElementById('upgradeWall').style.display = 'none';
   document.getElementById('loadingState').classList.add('visible');
+  if (analyseBtn) { analyseBtn.disabled = false; analyseBtn.style.opacity = ''; }
   const stepsPromise = animateSteps();
 
   // ── Timers set HERE — before any async file work ──────────────

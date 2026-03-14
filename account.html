@@ -113,10 +113,10 @@
     .scan-numbers { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 500; line-height: 1; }
     .scan-numbers span { color: var(--ink-muted); font-size: 18px; }
     .scan-sub { font-size: 13px; color: var(--ink-muted); margin-top: 4px; }
-    .scan-bar-wrap { background: #DDD9CE; border-radius: 999px; height: 10px; overflow: hidden; margin-bottom: 10px; }
-    .scan-bar-fill { height: 100%; border-radius: 999px; background: #1A3A2A; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
-    .scan-bar-fill.low { background: var(--risk-med); }
-    .scan-bar-fill.empty { background: var(--risk-high); }
+    .scan-bar-wrap { background: #D4D0C8; border-radius: 999px; height: 10px; overflow: hidden; margin: 12px 0 10px; }
+    .scan-bar-fill { height: 100%; background: #1A3A2A; transition: width 0.8s ease; }
+    .scan-bar-fill.low { background: #E67E22 !important; }
+    .scan-bar-fill.empty { background: #C0392B !important; }
     .scan-upgrade { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 13px; color: var(--ink-muted); }
 
     /* ACCOUNT DETAILS */
@@ -440,9 +440,11 @@
     document.getElementById('scanSubLabel').textContent = isPaid ? 'scans used this month' : 'scans used this account';
 
     const bar = document.getElementById('scanBar');
-    setTimeout(() => { bar.style.width = pct + '%'; }, 80);
-    if (pct >= 100)      bar.classList.add('empty');
-    else if (pct >= 60)  bar.classList.add('low');
+    setTimeout(() => {
+      bar.style.width = pct + '%';
+      if (pct >= 100)     bar.classList.add('empty');
+      else if (pct >= 60) bar.classList.add('low');
+    }, 80);
 
     const statusEl = document.getElementById('scanStatus');
     if (isPaid) {

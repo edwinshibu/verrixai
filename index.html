@@ -960,8 +960,8 @@ let userProfile   = null;
 let loadedFile       = null;
 let pasteMode        = false;
 let modalMode        = 'signup';
-let activeController = null;  // AbortController for in-flight analysis
-let activeEscape     = null;  // escape hatch timer for in-flight analysis
+// activeController and activeEscape are now local to startAnalysis()
+// analysisGen bump in resetTool() is sufficient to cancel in-flight requests
 let analysisGen      = 0;     // incremented on each new analysis; stale continuations bail out
 let stillWorkingTimer = null; // "still working" message timer
 
@@ -1962,9 +1962,8 @@ function retryAnalysis() {
 function resetTool() {
   // Kill any in-flight analysis immediately — bump generation so its continuation bails
   analysisGen++;
-  if (activeEscape)      { clearTimeout(activeEscape); activeEscape = null; }
-  if (stillWorkingTimer) { clearTimeout(stillWorkingTimer); stillWorkingTimer = null; }
-  if (activeController)  { try { activeController.abort(); } catch(e){} activeController = null; }
+  // activeController is local to startAnalysis — analysisGen bump above
+  // causes any in-flight fetch to exit silently when it checks the guard
   // Reset loading message
   const msgEl = document.getElementById('loadingMsg');
   if (msgEl) msgEl.textContent = 'Sending your document…';

@@ -943,27 +943,14 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ─── STATE ───────────────────────────────────────────────────
-function setCookie(name, value, days) {
-  const expires = new Date(Date.now() + days * 864e5).toUTCString();
-  document.cookie = `${name}=${value};expires=${expires};path=/;SameSite=Lax`;
-}
-function getCookie(name) {
-  return document.cookie.split('; ').reduce((acc, c) => {
-    const [k, v] = c.split('=');
-    return k === name ? v : acc;
-  }, null);
-}
+
 
 const USER_LIMIT  = 5;
 let currentUser   = null;
 let userProfile   = null;
 let loadedFile       = null;
-let pasteMode        = false;
 let modalMode        = 'signup';
-// activeController and activeEscape are now local to startAnalysis()
-// analysisGen bump in resetTool() is sufficient to cancel in-flight requests
-let analysisGen      = 0;     // incremented on each new analysis; stale continuations bail out
-let stillWorkingTimer = null; // "still working" message timer
+let analysisGen = 0; // incremented on each new analysis — stale continuations bail out
 
 // ─── INVITE SOURCE TRACKING ──────────────────────────────────
 const urlSource = new URLSearchParams(window.location.search).get('source');
@@ -1716,8 +1703,7 @@ function handleFile(file) {
   }
 }
 function clearFile() {
-  loadedFile = null; pasteMode = false;
-  document.getElementById('fileInput').value = '';
+  loadedFile = null; document.getElementById('fileInput').value = '';
   document.getElementById('dropLabel').textContent = 'Drop your document here';
   document.getElementById('dropSub').textContent   = 'PDF, DOCX, or TXT accepted';
   dropZone.style.borderColor = ''; dropZone.style.background = ''; dropZone.style.pointerEvents = '';
@@ -1727,7 +1713,6 @@ function clearFile() {
   document.getElementById('docText').style.display        = 'none';
 }
 function showPaste() {
-  pasteMode = true;
   document.getElementById('pasteToggleRow').style.display = 'none';
   document.getElementById('pasteDivider').style.display   = 'flex';
   document.getElementById('docText').style.display        = 'block';
@@ -1944,15 +1929,7 @@ function renderTimeout() {
     document.getElementById(`body-${s}`).innerHTML = '<p style="color:var(--ink-muted);font-size:13px;font-style:italic;">No analysis available.</p>';
   });
 }
-function renderFallback() {
-  // Show the banner above sections — single disclaimer, nowhere else
-  const banner = document.getElementById('nonLegalBanner');
-  banner.style.display = 'flex';
-  // Neutral message in all section bodies — no duplicate disclaimer
-  ['summary','risks','keypoints','simplify'].forEach(s => {
-    document.getElementById(`body-${s}`).innerHTML = '<p style="color:var(--ink-muted);font-size:13px;font-style:italic;">Analysis could not be completed for this document.</p>';
-  });
-}
+
 function esc(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function toggleSection(id) { document.getElementById(id).classList.toggle('open'); }
 
@@ -1977,7 +1954,7 @@ function resetTool() {
   // Reset loading message
   const msgEl = document.getElementById('loadingMsg');
   if (msgEl) msgEl.textContent = 'Sending your document…';
-  loadedFile = null; pasteMode = false;
+  loadedFile = null;
   ['resultsArea'].forEach(id => document.getElementById(id).classList.remove('visible'));
   document.getElementById('loadingState').classList.remove('visible');
   document.getElementById('upgradeWall').style.display = 'none';

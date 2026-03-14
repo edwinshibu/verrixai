@@ -1257,18 +1257,14 @@ function canScan() {
 async function recordScan() {
   if (currentUser && userProfile) {
     try {
-      // Use atomic DB increment — avoids stale local state issues in batch loops.
-      // .select() returns the updated row so local state reflects actual DB value.
+      // Atomic server-side increment — DB does scans_used + 1 itself.
+      // Eliminates race conditions in batch loops entirely.
       const { data, error } = await Promise.race([
-        sb.from('profiles')
-          .update({ scans_used: (userProfile.scans_used || 0) + 1 })
-          .eq('id', currentUser.id)
-          .select('scans_used')
-          .single(),
+        sb.rpc('increment_scans_used', { user_id: currentUser.id }),
         new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
       ]);
-      if (!error && data?.scans_used != null) {
-        userProfile.scans_used = data.scans_used; // use real DB value
+      if (!error && data != null) {
+        userProfile.scans_used = data; // real DB value returned
       } else {
         userProfile.scans_used = (userProfile.scans_used || 0) + 1; // fallback
         if (error) console.warn('recordScan error:', error.message);

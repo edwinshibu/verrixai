@@ -1608,6 +1608,7 @@ function handleFile(file) {
       loadedFile = { extractedText: text.slice(0, 48000), name: file.name, isPdf: true };
       document.getElementById('dropLabel').textContent = `✓ ${file.name}`;
       document.getElementById('dropSub').textContent   = `${sizeStr} · ${pageCount} page${pageCount !== 1 ? 's' : ''} · Text extracted`;
+      dropZone.style.pointerEvents = ''; // restore — was disabled during extraction
       document.getElementById('clearFileRow').style.display   = 'block';
       document.getElementById('pasteToggleRow').style.display = 'none';
       document.getElementById('pasteDivider').style.display   = 'none';
@@ -1656,6 +1657,7 @@ function handleFile(file) {
       loadedFile = { extractedText: text.slice(0, 48000), name: file.name, isDocx: true };
       document.getElementById('dropLabel').textContent = `✓ ${file.name}`;
       document.getElementById('dropSub').textContent   = `${sizeStr} · Text extracted`;
+      dropZone.style.pointerEvents = ''; // restore — was disabled during extraction
       document.getElementById('clearFileRow').style.display   = 'block';
       document.getElementById('pasteToggleRow').style.display = 'none';
       document.getElementById('pasteDivider').style.display   = 'none';

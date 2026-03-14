@@ -1264,8 +1264,17 @@ function canScan() {
 async function recordScan() {
   if (currentUser && userProfile) {
     const next = (userProfile.scans_used || 0) + 1;
-    await sb.from('profiles').update({ scans_used: next }).eq('id', currentUser.id);
-    userProfile.scans_used = next;
+    try {
+      // 5s timeout — stale Supabase connection on idle pages should never
+      // block scan recording. If it times out, update local state anyway.
+      await Promise.race([
+        sb.from('profiles').update({ scans_used: next }).eq('id', currentUser.id),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
+      ]);
+    } catch(e) {
+      console.warn('recordScan timed out or failed:', e.message);
+    }
+    userProfile.scans_used = next; // always update local state
   }
   renderScanPill();
 }
@@ -1856,7 +1865,7 @@ async function startAnalysis() {
   if (aborted || analysisGen !== myGen) return;
 
   // ── 8. Record scan and show result ────────────────────────
-  if (result) await recordScan();
+  if (result) recordScan().catch(() => {}); // fire and forget — never block results
 
   stepsPromise.finish();
   document.getElementById('loadingState').classList.remove('visible');

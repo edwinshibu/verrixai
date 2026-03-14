@@ -19,7 +19,7 @@
 <meta name="theme-color" content="#1A3A2A">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js">
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -1746,7 +1746,7 @@ function animateSteps() {
 // ─── ANALYSIS ────────────────────────────────────────────────
 async function startAnalysis() {
 
-  // ── 1. Validate instantly — before showing anything ───────
+  // ── 1. Validate instantly ─────────────────────────────────
   if (!canScan()) { showUpgradeWall(); return; }
   const pasteText = document.getElementById('docText').value.trim();
   if (!loadedFile && !pasteText) {
@@ -1756,7 +1756,6 @@ async function startAnalysis() {
   }
 
   // ── 2. Show loading screen immediately ────────────────────
-  // User sees spinner the instant they click. Everything else happens behind it.
   const opts  = getActiveOptions();
   const myGen = ++analysisGen;
   document.getElementById('inputState').style.display  = 'none';
@@ -1764,20 +1763,7 @@ async function startAnalysis() {
   document.getElementById('loadingState').classList.add('visible');
   const stepsPromise = animateSteps();
 
-  // ── 3. Idle check — runs silently behind the loading screen ─
-  // Only runs after 5+ mins of inactivity. 1.5s max. Never blocks UI.
-  const idleMs = Date.now() - (window._lastActivity || Date.now());
-  if (currentUser && idleMs > 5 * 60 * 1000) {
-    try {
-      await Promise.race([
-        sb.auth.getSession(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 1500))
-      ]);
-    } catch(e) { /* proceed with cached session */ }
-  }
-  if (analysisGen !== myGen) return; // reset clicked during idle check
-
-  // ── 4. Prepare content ────────────────────────────────────
+  // ── 3. Prepare content ────────────────────────────────────
   let userContent;
   if (loadedFile) {
     if (loadedFile.isPdf || loadedFile.isDocx) {
@@ -1789,9 +1775,7 @@ async function startAnalysis() {
     userContent = pasteText.slice(0, 48000);
   }
 
-  // ── 5. Message sequence ───────────────────────────────────
-  // Linear: Sending → Analysing at 2s → Still working at 20s
-  // Timers are set once and never reset — clean single chain.
+  // ── 4. Message sequence (cosmetic — throttling of these is fine) ──
   const msgEl = document.getElementById('loadingMsg');
   if (msgEl) msgEl.textContent = 'Sending your document…';
 
@@ -1805,18 +1789,34 @@ async function startAnalysis() {
     if (msgEl) msgEl.textContent = 'Still working — large documents take a moment…';
   }, 20000);
 
-  // ── 6. Abort flag + escape hatch at 40s ───────────────────
-  // When escape fires: sets flag, aborts fetch, shows timeout.
-  // The await chain checks the flag after every step and exits cleanly.
+  // ── 5. Web Worker escape hatch at 40s ─────────────────────
+  // Web Workers run on a separate thread — NOT subject to browser tab
+  // throttling. This timer fires at exactly 40s even on idle tabs,
+  // unlike setTimeout which can be suppressed for minutes on idle pages.
   let aborted = false;
   let activeController = new AbortController();
+  let escapeWorker = null;
 
-  const escapeHatch = setTimeout(() => {
-    if (analysisGen !== myGen) return;
+  function startEscapeWorker() {
+    if (typeof Worker === 'undefined') {
+      // Fallback for environments without Worker support
+      return setTimeout(() => triggerTimeout(), 40000);
+    }
+    const blob = new Blob([`
+      setTimeout(() => { postMessage('timeout'); }, 40000);
+    `], { type: 'application/javascript' });
+    const worker = new Worker(URL.createObjectURL(blob));
+    worker.onmessage = () => triggerTimeout();
+    return worker;
+  }
+
+  function triggerTimeout() {
+    if (analysisGen !== myGen || aborted) return;
     aborted = true;
     try { activeController.abort(); } catch(e) {}
     clearTimeout(analysingTimer);
     clearTimeout(stillWorkingTimer);
+    if (escapeWorker && escapeWorker.terminate) escapeWorker.terminate();
     stepsPromise.finish();
     document.getElementById('loadingState').classList.remove('visible');
     renderTimeout();
@@ -1824,9 +1824,11 @@ async function startAnalysis() {
     ['summary','risks','keypoints','simplify'].forEach(s => {
       document.getElementById(`sec-${s}`).style.display = opts.includes(s) ? '' : 'none';
     });
-  }, 40000);
+  }
 
-  // ── 7. Single fetch — no retry ────────────────────────────
+  escapeWorker = startEscapeWorker();
+
+  // ── 6. Single fetch ───────────────────────────────────────
   let result = null;
   try {
     const res = await fetch('/api/analyse', {
@@ -1842,18 +1844,18 @@ async function startAnalysis() {
       result = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
     }
   } catch(e) {
-    // Fetch failed or was aborted by escape hatch — handled below
+    // Fetch failed or aborted by Worker escape hatch
   }
 
-  // ── 8. Clean up timers ────────────────────────────────────
+  // ── 7. Clean up ───────────────────────────────────────────
   clearTimeout(analysingTimer);
   clearTimeout(stillWorkingTimer);
-  clearTimeout(escapeHatch);
+  if (escapeWorker && escapeWorker.terminate) escapeWorker.terminate();
+  else if (escapeWorker && escapeWorker.clearTimeout) clearTimeout(escapeWorker);
 
-  // If escape hatch already fired, it handled the UI — exit silently
   if (aborted || analysisGen !== myGen) return;
 
-  // ── 9. Record scan and show result ────────────────────────
+  // ── 8. Record scan and show result ────────────────────────
   if (result) await recordScan();
 
   stepsPromise.finish();

@@ -113,8 +113,8 @@
     .scan-numbers { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 500; line-height: 1; }
     .scan-numbers span { color: var(--ink-muted); font-size: 18px; }
     .scan-sub { font-size: 13px; color: var(--ink-muted); margin-top: 4px; }
-    .scan-bar-wrap { background: var(--bg); border-radius: 999px; height: 8px; overflow: hidden; margin-bottom: 8px; }
-    .scan-bar-fill { height: 100%; border-radius: 999px; background: var(--accent); transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+    .scan-bar-wrap { background: #E8E5DC; border-radius: 999px; height: 10px; overflow: hidden; margin-bottom: 10px; box-shadow: inset 0 1px 3px rgba(26,26,24,0.08); }
+    .scan-bar-fill { height: 100%; border-radius: 999px; background: var(--accent); transition: width 0.8s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 1px 3px rgba(26,58,42,0.25); }
     .scan-bar-fill.low { background: var(--risk-med); }
     .scan-bar-fill.empty { background: var(--risk-high); }
     .scan-upgrade { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 13px; color: var(--ink-muted); }
@@ -154,7 +154,7 @@
       .card { padding: 22px 20px; }
       .page-title { font-size: 28px; }
       .account-hero { flex-direction: column; align-items: flex-start; gap: 14px; }
-      .scan-numbers { font-size: 26px; }
+      .scan-numbers { font-size: 28px; }
       footer { padding: 24px 20px; } footer > div { flex-direction: column; align-items: center !important; text-align: center; gap: 16px; } footer > div > div { text-align: center !important; }
       .dialog { padding: 28px 22px; }
     }
@@ -182,7 +182,7 @@
 
   [data-theme="dark"] nav { background: rgba(24,26,24,0.92); }
   [data-theme="dark"] .detail-row  { border-color: var(--border); }
-  [data-theme="dark"] .scan-bar-track { background: var(--border); }
+  [data-theme="dark"] .scan-bar-wrap  { background: #2A2E2A; box-shadow: inset 0 1px 3px rgba(0,0,0,0.3); }
   [data-theme="dark"] .info-box { background: #1E2E22; border-color: #2A3E2A; }
   [data-theme="dark"] .danger-zone { background: #2A1818; border-color: #3A1818; }
   [data-theme="dark"] .badge-plan     { background: #1E2E22; color: var(--accent-light); }
@@ -266,7 +266,7 @@
             <div style="font-size:13px;font-weight:500;color:var(--ink);margin-bottom:2px;">Upgrade to Pro 2</div>
             <div style="font-size:12px;color:var(--ink-muted);">700 scans/mo + PDF export — from $15/mo</div>
           </div>
-          <a href="/pricing.html" style="flex-shrink:0;background:var(--gold);color:white;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:8px 16px;border-radius:999px;text-decoration:none;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background='#9a7c35'" onmouseout="this.style.background='#B8963E'">Upgrade to Pro 2 →</a>
+          <a href="/pricing.html" style="flex-shrink:0;background:var(--gold);color:white;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:8px 16px;border-radius:999px;text-decoration:none;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background='var(--accent-light)'" onmouseout="this.style.background='var(--gold)'">Upgrade to Pro 2 →</a>
         </div>
       </div>
     </div>

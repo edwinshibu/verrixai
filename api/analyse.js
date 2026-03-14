@@ -1,4 +1,6 @@
-export const config = { runtime: 'edge' };
+// Serverless function — supports full 60s maxDuration on Vercel Pro.
+// Edge runtime was removed: Edge has a hard 25s CPU limit regardless of plan,
+// which was causing all analysis timeouts.
 
 const ALLOWED_ORIGIN  = 'https://verrixai.com';
 const MAX_TEXT_LENGTH = 60000;

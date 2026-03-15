@@ -219,7 +219,7 @@
   </div>
   <div class="plans-grid">
 
-    <!-- FREE -->
+<!-- FREE -->
     <div class="plan-card">
       <div class="plan-name">Free</div>
       <div class="plan-desc">Try VerrixAI with no commitment. Perfect for occasional use.</div>
@@ -240,6 +240,31 @@
         <li><span class="feat-check">✓</span> Zero data retention</li>
       </ul>
       <button class="btn-plan outline" id="btnFreeStart" onclick="window.location.href='/'">Get started free</button>
+    </div>
+
+    <!-- STARTER -->
+    <div class="plan-card">
+      <div class="plan-name">Starter</div>
+      <div class="plan-desc">For individuals who need a little more than free. Perfect for light regular use.</div>
+      <div class="plan-price">
+        <div class="price-amount monthly-price" style="display:none"><span class="currency">A$</span>5</div>
+        <div class="price-amount annual-price" style="display:block"><span class="currency">A$</span>48</div>
+        <div class="price-period monthly-sub" style="display:none">per month</div>
+        <div class="price-period annual-sub" style="display:block">per year <span style="color:var(--accent-light);font-weight:600;">(A$4/mo)</span></div>
+        <div class="price-orig annual-orig" style="display:block">was A$60/yr</div>
+      </div>
+      <div class="plan-scans">
+        <span class="scan-count">30</span>
+        <span>scans per month</span>
+      </div>
+      <ul class="plan-features">
+        <li><span class="feat-check">✓</span> Everything in Free</li>
+        <li><span class="feat-check">✓</span> 30 scans per month</li>
+        <li><span class="feat-check">✓</span> Scans reset monthly</li>
+        <li><span class="feat-check">✓</span> Email support</li>
+        <li><span class="feat-check">✓</span> Cancel anytime</li>
+      </ul>
+      <button class="btn-plan outline" id="btnStarterMonthly" onclick="startCheckout('starter', isAnnual ? 'annual' : 'monthly')">Get Starter</button>
     </div>
 
     <!-- PRO -->
@@ -293,36 +318,13 @@
       <button class="btn-plan gold" id="btnPro2Monthly" onclick="startCheckout('pro2', isAnnual ? 'annual' : 'monthly')">Get Pro 2</button>
     </div>
 
-    <!-- STARTER -->
-    <div class="plan-card">
-      <div class="plan-name">Starter</div>
-      <div class="plan-desc">For individuals who need a little more than free. Perfect for light regular use.</div>
-      <div class="plan-price">
-        <div class="price-amount monthly-price"><span class="currency">A$</span>5</div>
-        <div class="price-amount annual-price" style="display:none"><span class="currency">A$</span>48</div>
-        <div class="price-period monthly-sub">per month</div>
-        <div class="price-period annual-sub" style="display:none">per year <span style="color:var(--accent-light);font-weight:600;">(A$4/mo)</span></div>
-        <div class="price-orig annual-orig" style="display:none">was A$60/yr</div>
-      </div>
-      <div class="plan-scans">
-        <span class="scan-count">30</span>
-        <span>scans per month</span>
-      </div>
-      <ul class="plan-features">
-        <li><span class="feat-check">✓</span> Everything in Free</li>
-        <li><span class="feat-check">✓</span> 30 scans per month</li>
-        <li><span class="feat-check">✓</span> Scans reset monthly</li>
-        <li><span class="feat-check">✓</span> Email support</li>
-        <li><span class="feat-check">✓</span> Cancel anytime</li>
-      </ul>
-      <button class="btn-plan outline" id="btnStarterMonthly" onclick="startCheckout('starter', isAnnual ? 'annual' : 'monthly')">Get Starter</button>
-    </div>
+  
 
   </div>
 </div>
 
 <div style="text-align:center;margin:-40px 0 60px;font-size:13px;color:var(--ink-muted);">
-  Need more than 10 seats or a custom build? <a href="mailto:admin@verrixai.com?subject=Custom Enquiry" style="color:var(--accent-light);text-decoration:underline;text-underline-offset:2px;">Get in touch →</a>
+  Need more than 10 seats or a custom build? <a href="/cdn-cgi/l/email-protection#d1b0b5bcb8bf91a7b4a3a3b8a9b0b8ffb2bebceea2a4b3bbb4b2a5ec92a4a2a5bebcf194bfa0a4b8a3a8" style="color:var(--accent-light);text-decoration:underline;text-underline-offset:2px;">Get in touch →</a>
 </div>
 
 <!-- COMPARE TABLE -->
@@ -471,7 +473,7 @@
   </div>
 </footer>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 let isAnnual = true;
 function toggleBilling() {
   isAnnual = !isAnnual;
@@ -580,7 +582,6 @@ function toggleTheme() {
 document.addEventListener('DOMContentLoaded', function() {
   applyTheme(localStorage.getItem('vrx-theme') || (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light'));
 });
-
 </script>
 </body>
 </html>

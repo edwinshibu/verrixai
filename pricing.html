@@ -518,12 +518,15 @@ async function initPricingPage() {
     if (disabled) btn.onclick = null;
   }
 
-  // Hide cards below current plan
+  // All cards visible — hide buttons on lower plans only
   const planIndex = { free: 0, starter: 1, pro: 2, pro2: 3 };
   const userIndex = planIndex[plan] ?? 0;
   ['free','starter','pro','pro2'].forEach((p, i) => {
     const card = document.getElementById(`card-${p}`);
-    if (card) card.style.display = (i < userIndex) ? 'none' : '';
+    if (!card) return;
+    card.style.display = ''; // always show card
+    const btn = card.querySelector('button');
+    if (btn && i < userIndex) btn.style.display = 'none'; // hide button only
   });
 
   // Free button — hide for paid users

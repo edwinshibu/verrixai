@@ -208,13 +208,13 @@
     </p>
     <div class="error-actions">
       <a class="action-primary" href="/">Back to VerrixAI</a>
-      <a class="action-secondary" href="mailto:admin@verrixai.com">Contact support</a>
+      <a class="action-secondary" href="/cdn-cgi/l/email-protection#19787d747077596f7c6b6b70617870377a7674">Contact support</a>
     </div>
   </div>
 </main>
 
 <footer>
-  <div class="footer-logo">Verrix<span>AI</span></div>
+  <div class="footer-logo"><img src="/favicon-32.png" alt="" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-right:8px;">Verrix<span>AI</span></div>
   <div class="footer-links">
     <a href="/privacy.html">Privacy Policy</a>
     <a href="/terms.html">Terms of Service</a>
@@ -223,7 +223,7 @@
   <div>&copy; 2026 VerrixAI. All rights reserved.</div>
 </footer>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 const MOON_ICON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
 const SUN_ICON  = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
 function applyTheme(theme) {
@@ -236,6 +236,7 @@ function toggleTheme() {
   applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
 }
 document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function() {
   applyTheme(localStorage.getItem('vrx-theme') || (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light'));
 });
 </script>

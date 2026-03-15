@@ -717,7 +717,7 @@
         <div class="opt-chip active" data-opt="summary">📋 Summary</div>
         <div class="opt-chip active" data-opt="risks">⚠️ Risk Flags</div>
         <div class="opt-chip active" data-opt="keypoints">🔑 Key Points</div>
-        <div class="opt-chip active" data-opt="simplify">✨ Simplify</div>
+        <div class="opt-chip active" data-opt="simplify">✨ In Simple Terms</div>
       </div>
       <div class="btn-row">
         <button class="btn-analyze" onclick="startAnalysis()">
@@ -790,7 +790,7 @@
       </div>
       <div class="result-section open" id="sec-simplify">
         <div class="result-section-header" onclick="toggleSection('sec-simplify')">
-          <span class="section-icon">✨</span><span class="section-label">Plain-Language Version</span><span class="section-toggle">▾</span>
+          <span class="section-icon">✨</span><span class="section-label">In Simple Terms</span><span class="section-toggle">▾</span>
         </div>
         <div class="result-section-body" id="body-simplify">Loading…</div>
       </div>
@@ -854,7 +854,7 @@
 <div class="how-section">
   <div class="how-header">
     <h2>How it works</h2>
-    <p>Three steps to complete clarity in seconds.</p>
+    <p>Three steps to complete clarity — in under 30 seconds.</p>
   </div>
   <div class="how-grid">
     <div class="how-card"><div class="how-num">01</div><h3>Drop or paste your document</h3><p>Upload a PDF, DOCX, or simply paste the raw text of any agreement or legal document.</p></div>
@@ -2300,7 +2300,7 @@ function switchBatchTab(idx, opts) {
     sectionsHTML += buildSection('sec-b-keypoints', '🔑', 'Key Points', body);
   }
   if (activeOpts.includes('simplify') && result.SIMPLIFIED) {
-    sectionsHTML += buildSection('sec-b-simplify', '✨', 'Plain-Language Version', `<div class="simplified-block">${esc(result.SIMPLIFIED)}</div>`);
+    sectionsHTML += buildSection('sec-b-simplify', '✨', 'In Simple Terms', `<div class="simplified-block">${esc(result.SIMPLIFIED)}</div>`);
   }
 
   panel.innerHTML = `
@@ -2499,7 +2499,7 @@ function exportToPdf() {
 
   // ── PLAIN LANGUAGE ───────────────────────────────────────────
   if (opts.includes('simplify') && r.SIMPLIFIED) {
-    sectionTitle('#', 'Plain-Language Version');
+    sectionTitle('#', 'In Simple Terms');
     const lines = wrapText(r.SIMPLIFIED, marginL, contentW, 10);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...ink);

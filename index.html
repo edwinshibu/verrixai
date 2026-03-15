@@ -1389,13 +1389,18 @@ function openPricingModal() {
   const freeBtn = document.getElementById('pm-card-free')?.querySelector('button');
   if (freeBtn) {
     if (plan === 'guest') {
-      freeBtn.textContent = 'Get started free';
-      freeBtn.disabled    = false;
-      freeBtn.onclick     = () => { closePricingModal(); openModal('signup'); };
+      freeBtn.textContent  = 'Get started free';
+      freeBtn.disabled     = false;
+      freeBtn.onclick      = () => { closePricingModal(); openModal('signup'); };
+      freeBtn.style.display = '';
+    } else if (plan === 'free') {
+      freeBtn.textContent  = 'Current plan';
+      freeBtn.disabled     = true;
+      freeBtn.onclick      = null;
+      freeBtn.style.display = '';
     } else {
-      freeBtn.textContent = 'Current plan';
-      freeBtn.disabled    = true;
-      freeBtn.onclick     = null;
+      // Paid users — hide free card button
+      freeBtn.style.display = 'none';
     }
   }
 

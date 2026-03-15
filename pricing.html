@@ -171,8 +171,6 @@
   [data-theme="dark"] .compare-table tr:hover td { background: #1C2A1E; }
   [data-theme="dark"] .plan-card.featured .plan-scans { background: #1E2E22; color: var(--gold); }
   [data-theme="dark"] .plan-scans .scan-count { color: var(--gold); }
-  [data-theme="dark"] .btn-plan.enterprise       { background: var(--surface); color: var(--gold); border: 1px solid var(--gold); }
-  [data-theme="dark"] .btn-plan.enterprise:hover { background: #1E2E22; border-color: var(--gold); }
   /* BILLING TOGGLE */
   .billing-toggle { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 40px 0 40px; }
   .toggle-track { width: 44px; height: 24px; background: var(--border); border-radius: 999px; position: relative; cursor: pointer; transition: background 0.25s; flex-shrink: 0; }
@@ -212,11 +210,11 @@
 <!-- PLANS -->
 <div class="plans-section">
   <div class="billing-toggle">
-    <span class="toggle-label active" id="label-monthly">Monthly</span>
-    <div class="toggle-track" id="billingToggle" onclick="toggleBilling()">
+    <span class="toggle-label" id="label-monthly">Monthly</span>
+    <div class="toggle-track on" id="billingToggle" onclick="toggleBilling()">
       <div class="toggle-thumb"></div>
     </div>
-    <span class="toggle-label" id="label-annual">Annual</span>
+    <span class="toggle-label active" id="label-annual">Annual</span>
     <span class="save-badge">Save 20%</span>
   </div>
   <div class="plans-grid">
@@ -250,11 +248,11 @@
       <div class="plan-name">Pro</div>
       <div class="plan-desc">For individuals and small teams reviewing documents regularly.</div>
       <div class="plan-price">
-        <div class="price-amount monthly-price"><span class="currency">A$</span>9</div>
-        <div class="price-amount annual-price" style="display:none"><span class="currency">A$</span>86</div>
-        <div class="price-period monthly-sub">per month</div>
-        <div class="price-period annual-sub" style="display:none">per year <span style="color:var(--accent-light);font-weight:600;">(A$7/mo)</span></div>
-        <div class="price-orig annual-orig" style="display:none">was A$108/yr</div>
+        <div class="price-amount monthly-price" style="display:none"><span class="currency">A$</span>9</div>
+        <div class="price-amount annual-price" style="display:block"><span class="currency">A$</span>86</div>
+        <div class="price-period monthly-sub" style="display:none">per month</div>
+        <div class="price-period annual-sub" style="display:block">per year <span style="color:var(--accent-light);font-weight:600;">(A$7/mo)</span></div>
+        <div class="price-orig annual-orig" style="display:block">was A$108/yr</div>
       </div>
       <div class="plan-scans">
         <span class="scan-count">300</span>
@@ -275,11 +273,11 @@
       <div class="plan-name">Pro 2</div>
       <div class="plan-desc">For power users and growing teams with high document volume.</div>
       <div class="plan-price">
-        <div class="price-amount monthly-price"><span class="currency">A$</span>15</div>
-        <div class="price-amount annual-price" style="display:none"><span class="currency">A$</span>144</div>
-        <div class="price-period monthly-sub">per month</div>
-        <div class="price-period annual-sub" style="display:none">per year <span style="color:var(--accent-light);font-weight:600;">(A$12/mo)</span></div>
-        <div class="price-orig annual-orig" style="display:none">was A$180/yr</div>
+        <div class="price-amount monthly-price" style="display:none"><span class="currency">A$</span>15</div>
+        <div class="price-amount annual-price" style="display:block"><span class="currency">A$</span>144</div>
+        <div class="price-period monthly-sub" style="display:none">per month</div>
+        <div class="price-period annual-sub" style="display:block">per year <span style="color:var(--accent-light);font-weight:600;">(A$12/mo)</span></div>
+        <div class="price-orig annual-orig" style="display:block">was A$180/yr</div>
       </div>
       <div class="plan-scans">
         <span class="scan-count">700</span>
@@ -295,29 +293,36 @@
       <button class="btn-plan gold" id="btnPro2Monthly" onclick="startCheckout('pro2', isAnnual ? 'annual' : 'monthly')">Get Pro 2</button>
     </div>
 
-    <!-- ENTERPRISE -->
+    <!-- STARTER -->
     <div class="plan-card">
-      <div class="plan-name">Enterprise</div>
-      <div class="plan-desc">Custom solutions for law firms, enterprises, and high-volume teams.</div>
+      <div class="plan-name">Starter</div>
+      <div class="plan-desc">For individuals who need a little more than free. Perfect for light regular use.</div>
       <div class="plan-price">
-        <div class="price-free" style="font-size:28px;margin-top:6px;">Custom</div>
-        <div class="price-period">Tailored to your needs</div>
+        <div class="price-amount monthly-price"><span class="currency">A$</span>5</div>
+        <div class="price-amount annual-price" style="display:none"><span class="currency">A$</span>48</div>
+        <div class="price-period monthly-sub">per month</div>
+        <div class="price-period annual-sub" style="display:none">per year <span style="color:var(--accent-light);font-weight:600;">(A$4/mo)</span></div>
+        <div class="price-orig annual-orig" style="display:none">was A$60/yr</div>
       </div>
       <div class="plan-scans">
-        <span class="scan-count">∞</span>
-        <span>Unlimited scans</span>
+        <span class="scan-count">30</span>
+        <span>scans per month</span>
       </div>
       <ul class="plan-features">
-        <li><span class="feat-check">✓</span> Everything in Pro 2</li>
-        <li><span class="feat-check">✓</span> Unlimited scans</li>
-        <li><span class="feat-check">✓</span> Custom integrations</li>
-        <li><span class="feat-check">✓</span> Dedicated account manager</li>
-        <li><span class="feat-check">✓</span> SLA & compliance docs</li>
+        <li><span class="feat-check">✓</span> Everything in Free</li>
+        <li><span class="feat-check">✓</span> 30 scans per month</li>
+        <li><span class="feat-check">✓</span> Scans reset monthly</li>
+        <li><span class="feat-check">✓</span> Email support</li>
+        <li><span class="feat-check">✓</span> Cancel anytime</li>
       </ul>
-      <button class="btn-plan enterprise" onclick="window.location.href='mailto:admin@verrixai.com?subject=Enterprise Enquiry'">Contact us</button>
+      <button class="btn-plan outline" id="btnStarterMonthly" onclick="startCheckout('starter', isAnnual ? 'annual' : 'monthly')">Get Starter</button>
     </div>
 
   </div>
+</div>
+
+<div style="text-align:center;margin:-40px 0 60px;font-size:13px;color:var(--ink-muted);">
+  Need more than 10 seats or a custom build? <a href="mailto:admin@verrixai.com?subject=Custom Enquiry" style="color:var(--accent-light);text-decoration:underline;text-underline-offset:2px;">Get in touch →</a>
 </div>
 
 <!-- COMPARE TABLE -->
@@ -333,7 +338,7 @@
         <th>Free</th>
         <th class="col-featured">Pro</th>
         <th>Pro 2</th>
-        <th>Enterprise</th>
+        <th>Starter</th>
       </tr>
     </thead>
     <tbody>
@@ -342,7 +347,7 @@
         <td><span class="check-val">5 total</span></td>
         <td class="col-featured"><span class="check-val">300 / mo</span></td>
         <td><span class="check-val">700 / mo</span></td>
-        <td><span class="check-val">Unlimited</span></td>
+        <td><span class="check-val">30 / mo</span></td>
       </tr>
       <tr>
         <td><span class="feat-name">Monthly reset</span></td>
@@ -396,22 +401,22 @@
       <tr>
         <td><span class="feat-name">Export to PDF</span></td>
         <td><span class="check-no">—</span></td>
+        <td><span class="check-no">—</span></td>
         <td class="col-featured"><span class="check-no">—</span></td>
-        <td><span class="check-yes">✓</span></td>
         <td><span class="check-yes">✓</span></td>
       </tr>
       <tr>
         <td><span class="feat-name">Support</span></td>
         <td>Community</td>
+        <td>Email</td>
         <td class="col-featured">Email</td>
         <td>Priority email</td>
-        <td>Dedicated</td>
       </tr>
       <tr>
-        <td><span class="feat-name">Custom integrations</span></td>
+        <td><span class="feat-name">Batch upload</span></td>
+        <td><span class="check-no">—</span></td>
         <td><span class="check-no">—</span></td>
         <td class="col-featured"><span class="check-no">—</span></td>
-        <td><span class="check-no">—</span></td>
         <td><span class="check-yes">✓</span></td>
       </tr>
     </tbody>
@@ -467,7 +472,7 @@
 </footer>
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-let isAnnual = false;
+let isAnnual = true;
 function toggleBilling() {
   isAnnual = !isAnnual;
   const track = document.getElementById('billingToggle');

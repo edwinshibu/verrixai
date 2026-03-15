@@ -1364,52 +1364,79 @@ async function startCheckout(plan) {
 }
 
 function openPricingModal() {
-  const plan = userProfile?.plan || 'free';
+  const plan = userProfile?.plan || (!currentUser ? 'guest' : 'free');
 
-  // Reset all buttons first
-  document.getElementById('btnStarterCheckout').textContent = 'Get Starter';
-  document.getElementById('btnStarterCheckout').disabled    = false;
-  document.getElementById('btnProCheckout').textContent     = 'Get Pro';
-  document.getElementById('btnProCheckout').disabled        = false;
-  document.getElementById('btnPro2Checkout').textContent    = 'Get Pro 2';
-  document.getElementById('btnPro2Checkout').disabled       = false;
-
-  // Update header text based on plan
-  const h2 = document.querySelector('#pricingModal .pm-header h2');
-  const sub = document.querySelector('#pricingModal .pm-header p');
-  if (plan === 'pro' || plan === 'pro2') {
-    h2.innerHTML  = 'Manage your <em>plan</em>';
-    sub.textContent = 'You\'re on a paid plan. Upgrade or manage below.';
-  } else {
-    h2.innerHTML  = 'You\'ve used all your <em>free</em> scans';
-    sub.textContent = 'Choose a plan to keep analysing documents — cancel anytime.';
+  // ── Helper: set button state ──────────────────────────────
+  function setBtn(id, text, disabled, action) {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.textContent = text;
+    btn.disabled    = disabled;
+    btn.onclick     = action || null;
   }
 
-  // Free card button
+  // ── Free card button (first card) ────────────────────────
   const freeBtn = document.querySelector('#pricingModal .pm-plan:first-child button');
-  if (plan === 'free') {
-    freeBtn.textContent = 'Current plan';
-    freeBtn.disabled    = true;
-  } else {
-    freeBtn.textContent = 'Free plan';
-    freeBtn.disabled    = false;
-    freeBtn.onclick     = () => closePricingModal();
+  if (freeBtn) {
+    if (plan === 'guest' || plan === 'free') {
+      // Guest: opens signup. Free: current plan.
+      freeBtn.textContent = plan === 'guest' ? 'Get started free' : 'Current plan';
+      freeBtn.disabled    = plan === 'free';
+      freeBtn.onclick     = plan === 'guest' ? () => { closePricingModal(); openModal('signup'); } : null;
+      freeBtn.style.display = '';
+    } else {
+      // Paid users — hide the free card button entirely
+      freeBtn.style.display = 'none';
+    }
   }
 
-  // Starter card
-  if (plan === 'starter') {
-    document.getElementById('btnStarterCheckout').textContent = 'Current plan';
-    document.getElementById('btnStarterCheckout').disabled    = true;
+  // ── Starter button ───────────────────────────────────────
+  if (plan === 'guest') {
+    setBtn('btnStarterCheckout', 'Get Starter', false, () => { closePricingModal(); openModal('signup'); });
+  } else if (plan === 'free') {
+    setBtn('btnStarterCheckout', 'Get Starter', false, () => startCheckout('starter'));
+  } else if (plan === 'starter') {
+    setBtn('btnStarterCheckout', 'Current plan', true, null);
+  } else {
+    // Below current plan — disabled
+    setBtn('btnStarterCheckout', 'Downgrade — cancel first', true, null);
   }
-  // Pro card
-  if (plan === 'pro') {
-    document.getElementById('btnProCheckout').textContent = 'Current plan';
-    document.getElementById('btnProCheckout').disabled    = true;
+
+  // ── Pro button ───────────────────────────────────────────
+  if (plan === 'guest') {
+    setBtn('btnProCheckout', 'Get Pro', false, () => { closePricingModal(); openModal('signup'); });
+  } else if (plan === 'free' || plan === 'starter') {
+    setBtn('btnProCheckout', plan === 'starter' ? 'Upgrade to Pro' : 'Get Pro', false, () => startCheckout('pro'));
+  } else if (plan === 'pro') {
+    setBtn('btnProCheckout', 'Current plan', true, null);
+  } else {
+    // Below current plan — disabled
+    setBtn('btnProCheckout', 'Downgrade — cancel first', true, null);
   }
-  // Pro2 card
-  if (plan === 'pro2') {
-    document.getElementById('btnPro2Checkout').textContent = 'Current plan';
-    document.getElementById('btnPro2Checkout').disabled    = true;
+
+  // ── Pro 2 button ─────────────────────────────────────────
+  if (plan === 'guest') {
+    setBtn('btnPro2Checkout', 'Get Pro 2', false, () => { closePricingModal(); openModal('signup'); });
+  } else if (plan === 'free' || plan === 'starter') {
+    setBtn('btnPro2Checkout', 'Get Pro 2', false, () => startCheckout('pro2'));
+  } else if (plan === 'pro') {
+    setBtn('btnPro2Checkout', 'Upgrade to Pro 2', false, () => startCheckout('pro2'));
+  } else {
+    setBtn('btnPro2Checkout', 'Current plan', true, null);
+  }
+
+  // ── Header text ──────────────────────────────────────────
+  const h2  = document.querySelector('#pricingModal .pm-header h2');
+  const sub = document.querySelector('#pricingModal .pm-header p');
+  if (plan === 'guest') {
+    h2.innerHTML    = 'Choose your <em>plan</em>';
+    sub.textContent = 'Start free — no credit card needed. Upgrade anytime.';
+  } else if (plan === 'free') {
+    h2.innerHTML    = 'You\'ve used all your <em>free</em> scans';
+    sub.textContent = 'Choose a plan to keep analysing documents — cancel anytime.';
+  } else {
+    h2.innerHTML    = 'Manage your <em>plan</em>';
+    sub.textContent = 'You\'re on a paid plan. Upgrade or manage below.';
   }
 
   document.getElementById('pricingModal').classList.add('visible');

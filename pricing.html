@@ -220,7 +220,7 @@
   <div class="plans-grid">
 
 <!-- FREE -->
-    <div class="plan-card">
+    <div class="plan-card" id="card-free">
       <div class="plan-name">Free</div>
       <div class="plan-desc">Try VerrixAI with no commitment. Perfect for occasional use.</div>
       <div class="plan-price">
@@ -243,7 +243,7 @@
     </div>
 
     <!-- STARTER -->
-    <div class="plan-card">
+    <div class="plan-card" id="card-starter">
       <div class="plan-name">Starter</div>
       <div class="plan-desc">For individuals who need a little more than free. Perfect for light regular use.</div>
       <div class="plan-price">
@@ -268,7 +268,7 @@
     </div>
 
     <!-- PRO -->
-    <div class="plan-card featured">
+    <div class="plan-card featured" id="card-pro">
       <div class="featured-badge">Most Popular</div>
       <div class="plan-name">Pro</div>
       <div class="plan-desc">For individuals and small teams reviewing documents regularly.</div>
@@ -295,7 +295,7 @@
     </div>
 
     <!-- PRO 2 -->
-    <div class="plan-card">
+    <div class="plan-card" id="card-pro2">
       <div class="plan-name">Pro 2</div>
       <div class="plan-desc">For power users and growing teams with high document volume.</div>
       <div class="plan-price">
@@ -518,27 +518,32 @@ async function initPricingPage() {
     if (disabled) btn.onclick = null;
   }
 
-  // Free button — hide for all paid users
+  // Hide cards below current plan
+  const planIndex = { free: 0, starter: 1, pro: 2, pro2: 3 };
+  const userIndex = planIndex[plan] ?? 0;
+  ['free','starter','pro','pro2'].forEach((p, i) => {
+    const card = document.getElementById(`card-${p}`);
+    if (card) card.style.display = (i < userIndex) ? 'none' : '';
+  });
+
+  // Free button — hide for paid users
   const freeBtn = document.getElementById('btnFreeStart');
   if (freeBtn) freeBtn.style.display = (plan === 'free') ? '' : 'none';
 
   // Starter button
   if (plan === 'starter') {
     setBtn('btnStarterMonthly', 'Current plan', true, 'outline');
-  } else if (plan === 'pro' || plan === 'pro2') {
-    setBtn('btnStarterMonthly', 'Downgrade — cancel first', true, 'outline');
   }
-  // free/guest: leave as default Get Starter
+  // pro/pro2: card is hidden — no action needed
+  // free/guest: leave as default
 
   // Pro button
   if (plan === 'starter') {
     setBtn('btnProMonthly', 'Upgrade to Pro', false, 'solid');
   } else if (plan === 'pro') {
     setBtn('btnProMonthly', 'Current plan', true, 'outline');
-  } else if (plan === 'pro2') {
-    setBtn('btnProMonthly', 'Downgrade — cancel first', true, 'outline');
   }
-  // free/guest: leave as default Get Pro
+  // pro2: card is hidden — no action needed
 
   // Pro 2 button
   if (plan === 'pro') {
@@ -546,7 +551,6 @@ async function initPricingPage() {
   } else if (plan === 'pro2') {
     setBtn('btnPro2Monthly', 'Current plan', true, 'outline');
   }
-  // starter/free/guest: leave as default Get Pro 2
 }
 
 document.addEventListener('DOMContentLoaded', initPricingPage);

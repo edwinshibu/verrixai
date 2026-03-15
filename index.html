@@ -1375,15 +1375,14 @@ function openPricingModal() {
     btn.onclick     = action || null;
   }
 
-  // ── Show/hide cards based on plan ───────────────────────────
-  // Cards below the user's current plan are hidden
-  const cardOrder = ['free', 'starter', 'pro', 'pro2'];
+  // ── All cards always visible — just control buttons ──────────
   const planIndex = { guest: -1, free: 0, starter: 1, pro: 2, pro2: 3 };
   const userIndex = planIndex[plan] ?? 0;
 
-  ['free','starter','pro','pro2'].forEach((p, i) => {
+  // Show all cards
+  ['free','starter','pro','pro2'].forEach(p => {
     const card = document.getElementById(`pm-card-${p}`);
-    if (card) card.style.display = (i < userIndex) ? 'none' : '';
+    if (card) card.style.display = '';
   });
 
   // ── Free card button ──────────────────────────────────────
@@ -1408,7 +1407,8 @@ function openPricingModal() {
   } else if (plan === 'starter') {
     setBtn('btnStarterCheckout', 'Current plan', true, null);
   } else {
-    // Below current plan — hidden (card is hidden above)
+    // Below current plan — hide button
+    document.getElementById('pm-card-starter')?.querySelector('button')?.style.setProperty('display','none');
   }
 
   // ── Pro button ───────────────────────────────────────────
@@ -1419,7 +1419,8 @@ function openPricingModal() {
   } else if (plan === 'pro') {
     setBtn('btnProCheckout', 'Current plan', true, null);
   } else {
-    // Below current plan — hidden (card is hidden above)
+    // Below current plan — hide button
+    document.getElementById('pm-card-pro')?.querySelector('button')?.style.setProperty('display','none');
   }
 
   // ── Pro 2 button ─────────────────────────────────────────

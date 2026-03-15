@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
   <h2>1. Who We Are</h2>
   <p>VerrixAI is operated by Edwin Shibu, an individual trading as VerrixAI (ABN registered), based in Australia. References to "we", "us", or "our" throughout this policy refer to Edwin Shibu trading as VerrixAI.</p>
-  <p>Contact us at: <a href="mailto:admin@verrixai.com">admin@verrixai.com</a></p>
+  <p>Contact us at: <a href="/cdn-cgi/l/email-protection#84e5e0e9edeac4f2e1f6f6edfce5edaae7ebe9"><span class="__cf_email__" data-cfemail="4726232a2e2907312235352e3f262e6924282a">[email&#160;protected]</span></a></p>
   <h2>2. Information We Collect</h2>
   <p>We collect only what is necessary to provide the service:</p>
   <ul>
@@ -142,19 +142,20 @@ document.addEventListener('DOMContentLoaded', function() {
   <h2>8. Cookies</h2>
   <p>VerrixAI uses only essential cookies required for authentication (to keep you logged in). We do not use advertising, tracking, or analytics cookies.</p>
   <h2>9. Your Rights (Australian Privacy Act 1988)</h2>
-  <p>You have the right to access, correct, or request deletion of the personal information we hold about you. To exercise any of these rights, contact us at <a href="mailto:admin@verrixai.com">admin@verrixai.com</a>. We will respond within 30 days.</p>
+  <p>You have the right to access, correct, or request deletion of the personal information we hold about you. To exercise any of these rights, contact us at <a href="/cdn-cgi/l/email-protection#5a3b3e3733341a2c3f282833223b3374393537"><span class="__cf_email__" data-cfemail="4021242d292e0036253232293821296e232f2d">[email&#160;protected]</span></a>. We will respond within 30 days.</p>
   <p>Account data (email address and scan count) is deleted within 30 days of account closure upon request.</p>
   <h2>10. Children</h2>
   <p>VerrixAI is not intended for individuals under the age of 18. We do not knowingly collect personal information from minors.</p>
   <h2>11. Changes to This Policy</h2>
   <p>We may update this policy from time to time. We will notify registered users by email of any material changes. Continued use of VerrixAI after changes constitutes acceptance of the updated policy.</p>
   <h2>12. Contact</h2>
-  <p>For privacy-related questions, contact us at <a href="mailto:admin@verrixai.com">admin@verrixai.com</a>.</p>
+  <p>For privacy-related questions, contact us at <a href="/cdn-cgi/l/email-protection#cbaaafa6a2a58bbdaeb9b9a2b3aaa2e5a8a4a6"><span class="__cf_email__" data-cfemail="5e3f3a3337301e283b2c2c37263f37703d3133">[email&#160;protected]</span></a>.</p>
 </div>
 <footer>
   <div style="max-width:1100px;margin:0 auto;width:100%;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
-    <div class="footer-logo">Verrix<span>AI</span></div>
+    <div class="footer-logo"><img src="/favicon-32.png" alt="" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-right:8px;">Verrix<span>AI</span></div>
     <div style="display:flex;gap:24px;align-items:center;">
+      <a href="/privacy.html" style="color:var(--ink-muted);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-muted)'">Privacy Policy</a>
       <a href="/terms.html" style="color:var(--ink-muted);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-muted)'">Terms of Service</a>
       <a href="/pricing.html" style="color:var(--ink-muted);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-muted)'">Pricing</a>
       <a href="/" style="color:var(--ink-muted);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-muted)'">Home</a>
@@ -162,7 +163,23 @@ document.addEventListener('DOMContentLoaded', function() {
     <div style="font-size:12px;color:var(--ink-muted);text-align:right;line-height:1.6;">
       <div>© 2026 VerrixAI. All rights reserved.</div>
     </div>
-  </div>
-</footer>
+  </div></footer>
+
+<script>
+const MOON_ICON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+const SUN_ICON  = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const icon = document.getElementById('themeIcon');
+  if (icon) icon.innerHTML = theme === 'dark' ? SUN_ICON : MOON_ICON;
+  localStorage.setItem('vrx-theme', theme);
+}
+function toggleTheme() {
+  applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+document.addEventListener('DOMContentLoaded', function() {
+  applyTheme(localStorage.getItem('vrx-theme') || (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light'));
+});
+</script>
 </body>
 </html>

@@ -3,10 +3,12 @@ export const config = { runtime: 'edge' };
 const ALLOWED_ORIGIN = 'https://verrixai.com';
 
 const PRICES = {
-  pro_monthly:  'price_1T9lADHHwf5U84kmve42m93y',
-  pro_annual:   'price_1T9lB6HHwf5U84kmXzEJv35z',
-  pro2_monthly: 'price_1T9lBTHHwf5U84kmR25IuOPk',
-  pro2_annual:  'price_1T9lBuHHwf5U84kmMjEgqQ9o',
+  starter_monthly: 'price_1TB3b7HHwf5U84kmThqcLbaj',
+  starter_annual:  'price_1TB3bUHHwf5U84kmAKlQ6mNE',
+  pro_monthly:     'price_1T9lADHHwf5U84kmve42m93y',
+  pro_annual:      'price_1T9lB6HHwf5U84kmXzEJv35z',
+  pro2_monthly:    'price_1T9lBTHHwf5U84kmR25IuOPk',
+  pro2_annual:     'price_1T9lBuHHwf5U84kmMjEgqQ9o',
 };
 
 export default async function handler(req) {

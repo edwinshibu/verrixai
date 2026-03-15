@@ -620,6 +620,20 @@
         <ul class="pm-feats"><li>Full AI analysis</li><li>Risk flagging</li><li>Key points</li><li>Plain-English summary</li></ul>
         <button class="btn-pm outline" onclick="closePricingModal()">Current plan</button>
       </div>
+      <!-- STARTER -->
+      <div class="pm-plan">
+        <div class="pm-plan-name">Starter</div>
+        <div class="pm-price">
+          <div class="pm-price-val pm-monthly-price" style="display:none"><span class="cur">A$</span>5</div>
+          <div class="pm-price-val pm-annual-price" style="display:block"><span class="cur">A$</span>48</div>
+          <div class="pm-price-sub pm-monthly-sub" style="display:none">per month</div>
+          <div class="pm-price-sub pm-annual-sub" style="display:block">per year <span style="color:var(--accent-light);font-weight:600;">(A$4/mo)</span></div>
+          <div class="price-orig pm-annual-orig" style="display:block;">was A$60/yr</div>
+        </div>
+        <div class="pm-scans">30 scans / mo</div>
+        <ul class="pm-feats"><li>Everything in Free</li><li>30 scans per month</li><li>Scans reset monthly</li><li>Email support</li></ul>
+        <button class="btn-pm outline" id="btnStarterCheckout" onclick="startCheckout('starter')">Get Starter</button>
+      </div>
       <!-- PRO -->
       <div class="pm-plan pm-featured">
         <div class="pm-featured-tag">Most Popular</div>
@@ -649,20 +663,7 @@
         <ul class="pm-feats"><li>Everything in Pro</li><li>700 scans per month</li><li>Export results as PDF</li><li>Priority support</li></ul>
         <button class="btn-pm gold-btn" id="btnPro2Checkout" onclick="startCheckout('pro2')">Get Pro 2</button>
       </div>
-      <!-- STARTER -->
-      <div class="pm-plan">
-        <div class="pm-plan-name">Starter</div>
-        <div class="pm-price">
-          <div class="pm-price-val pm-monthly-price"><span class="cur">A$</span>5</div>
-          <div class="pm-price-val pm-annual-price" style="display:none"><span class="cur">A$</span>48</div>
-          <div class="pm-price-sub pm-monthly-sub">per month</div>
-          <div class="pm-price-sub pm-annual-sub" style="display:none">per year <span style="color:var(--accent-light);font-weight:600;">(A$4/mo)</span></div>
-          <div class="price-orig pm-annual-orig" style="display:none;">was A$60/yr</div>
-        </div>
-        <div class="pm-scans">30 scans / mo</div>
-        <ul class="pm-feats"><li>Everything in Free</li><li>30 scans per month</li><li>Scans reset monthly</li><li>Email support</li></ul>
-        <button class="btn-pm outline" id="btnStarterCheckout" onclick="startCheckout('starter')">Get Starter</button>
-      </div>
+    
     </div>
     <div class="pm-footer">
       <a href="pricing.html" target="_blank">View full pricing details →</a>

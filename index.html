@@ -610,7 +610,7 @@
     </div>
     <div class="pm-plans">
       <!-- FREE -->
-      <div class="pm-plan">
+      <div class="pm-plan" id="pm-card-free">
         <div class="pm-plan-name">Free</div>
         <div class="pm-price">
           <div class="pm-price-val">A$0</div>
@@ -621,7 +621,7 @@
         <button class="btn-pm outline" onclick="closePricingModal()">Current plan</button>
       </div>
       <!-- STARTER -->
-      <div class="pm-plan">
+      <div class="pm-plan" id="pm-card-starter">
         <div class="pm-plan-name">Starter</div>
         <div class="pm-price">
           <div class="pm-price-val pm-monthly-price" style="display:none"><span class="cur">A$</span>5</div>
@@ -635,7 +635,7 @@
         <button class="btn-pm outline" id="btnStarterCheckout" onclick="startCheckout('starter')">Get Starter</button>
       </div>
       <!-- PRO -->
-      <div class="pm-plan pm-featured">
+      <div class="pm-plan pm-featured" id="pm-card-pro">
         <div class="pm-featured-tag">Most Popular</div>
         <div class="pm-plan-name">Pro</div>
         <div class="pm-price">
@@ -650,7 +650,7 @@
         <button class="btn-pm solid" id="btnProCheckout" onclick="startCheckout('pro')">Get Pro</button>
       </div>
       <!-- PRO 2 -->
-      <div class="pm-plan">
+      <div class="pm-plan" id="pm-card-pro2">
         <div class="pm-plan-name">Pro 2</div>
         <div class="pm-price">
           <div class="pm-price-val pm-monthly-price" style="display:none"><span class="cur">A$</span>15</div>
@@ -1375,18 +1375,28 @@ function openPricingModal() {
     btn.onclick     = action || null;
   }
 
-  // ── Free card button (first card) ────────────────────────
-  const freeBtn = document.querySelector('#pricingModal .pm-plan:first-child button');
+  // ── Show/hide cards based on plan ───────────────────────────
+  // Cards below the user's current plan are hidden
+  const cardOrder = ['free', 'starter', 'pro', 'pro2'];
+  const planIndex = { guest: -1, free: 0, starter: 1, pro: 2, pro2: 3 };
+  const userIndex = planIndex[plan] ?? 0;
+
+  ['free','starter','pro','pro2'].forEach((p, i) => {
+    const card = document.getElementById(`pm-card-${p}`);
+    if (card) card.style.display = (i < userIndex) ? 'none' : '';
+  });
+
+  // ── Free card button ──────────────────────────────────────
+  const freeBtn = document.getElementById('pm-card-free')?.querySelector('button');
   if (freeBtn) {
-    if (plan === 'guest' || plan === 'free') {
-      // Guest: opens signup. Free: current plan.
-      freeBtn.textContent = plan === 'guest' ? 'Get started free' : 'Current plan';
-      freeBtn.disabled    = plan === 'free';
-      freeBtn.onclick     = plan === 'guest' ? () => { closePricingModal(); openModal('signup'); } : null;
-      freeBtn.style.display = '';
+    if (plan === 'guest') {
+      freeBtn.textContent = 'Get started free';
+      freeBtn.disabled    = false;
+      freeBtn.onclick     = () => { closePricingModal(); openModal('signup'); };
     } else {
-      // Paid users — hide the free card button entirely
-      freeBtn.style.display = 'none';
+      freeBtn.textContent = 'Current plan';
+      freeBtn.disabled    = true;
+      freeBtn.onclick     = null;
     }
   }
 
@@ -1398,8 +1408,7 @@ function openPricingModal() {
   } else if (plan === 'starter') {
     setBtn('btnStarterCheckout', 'Current plan', true, null);
   } else {
-    // Below current plan — disabled
-    setBtn('btnStarterCheckout', 'Downgrade — cancel first', true, null);
+    // Below current plan — hidden (card is hidden above)
   }
 
   // ── Pro button ───────────────────────────────────────────
@@ -1410,8 +1419,7 @@ function openPricingModal() {
   } else if (plan === 'pro') {
     setBtn('btnProCheckout', 'Current plan', true, null);
   } else {
-    // Below current plan — disabled
-    setBtn('btnProCheckout', 'Downgrade — cancel first', true, null);
+    // Below current plan — hidden (card is hidden above)
   }
 
   // ── Pro 2 button ─────────────────────────────────────────

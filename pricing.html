@@ -454,7 +454,7 @@
 </div>
 
 <!-- CTA -->
-<div class="cta-section">
+<div class="cta-section" id="ctaSection">
   <h2>Start for free today</h2>
   <p>No credit card. No commitment. Just clarity.</p>
   <a href="/" class="btn-cta">Analyse your first document →</a>
@@ -516,6 +516,12 @@ async function initPricingPage() {
     btn.disabled    = disabled;
     if (cls) { btn.className = `btn-plan ${cls}`; }
     if (disabled) btn.onclick = null;
+  }
+
+  // Hide CTA for paid users
+  const ctaSection = document.getElementById('ctaSection');
+  if (ctaSection) {
+    ctaSection.style.display = (plan === 'starter' || plan === 'pro' || plan === 'pro2') ? 'none' : '';
   }
 
   // All cards visible — hide buttons on lower plans only

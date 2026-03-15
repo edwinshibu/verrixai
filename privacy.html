@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <li>We do not use your documents to train AI models.</li>
   </ul>
   <h2>4. How Your Documents Are Processed</h2>
-  <p>When you submit a document, it is sent securely over HTTPS to our server, forwarded to Anthropic's Claude API for analysis, and the result is returned to your browser. Document content is never written to a database or log — it exists in memory only for the duration of the API call.</p>
+  <p>When you upload a document, text is extracted directly in your browser (we use client-side processing for PDF and DOCX files). Only the extracted text — never the original file — is sent securely over HTTPS to our server, then forwarded to Anthropic's Claude API for analysis. The result is returned to your browser. Document content is never written to a database or log — it exists in memory only for the duration of the API call.</p>
   <p>Anthropic does not store or train on data submitted via their API. They process data in accordance with their own privacy policy, available at <a href="https://www.anthropic.com/privacy" target="_blank">anthropic.com/privacy</a>.</p>
   <h2>5. How We Use Your Information</h2>
   <ul>

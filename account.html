@@ -431,8 +431,8 @@
 
     // Plan label — must be declared before isPaid check below
     const planRaw   = profile?.plan || 'free';
-    const planLabel = planRaw === 'pro' ? 'Pro' : planRaw === 'pro2' ? 'Pro 2' : 'Free';
-    const isPaid    = planRaw === 'pro' || planRaw === 'pro2';
+    const planLabel = planRaw === 'pro' ? 'Pro' : planRaw === 'pro2' ? 'Pro 2' : planRaw === 'starter' ? 'Starter' : 'Free';
+    const isPaid    = planRaw === 'starter' || planRaw === 'pro' || planRaw === 'pro2';
 
     // Populate scan usage
     document.getElementById('scansUsed').textContent  = used;

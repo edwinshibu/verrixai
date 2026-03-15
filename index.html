@@ -646,7 +646,7 @@
           <div class="price-orig pm-annual-orig" style="display:block;">was A$108/yr</div>
         </div>
         <div class="pm-scans">300 scans / mo</div>
-        <ul class="pm-feats"><li>Everything in Free</li><li>300 scans per month</li><li>Priority processing</li><li>Email support</li></ul>
+        <ul class="pm-feats"><li>Everything in Free</li><li>300 scans per month</li><li>Export results as PDF</li><li>Email support</li></ul>
         <button class="btn-pm solid" id="btnProCheckout" onclick="startCheckout('pro')">Get Pro</button>
       </div>
       <!-- PRO 2 -->
@@ -1894,7 +1894,7 @@ function renderResults(r, opts) {
   // Show export buttons for Pro 2 users
   const exportBtn       = document.getElementById('btnExportPdf');
   const exportBtnBottom = document.getElementById('btnExportPdfBottom');
-  const showExport = userProfile?.plan === 'pro2';
+  const showExport = userProfile?.plan === 'pro' || userProfile?.plan === 'pro2';
   exportBtn.style.display       = showExport ? '' : 'none';
   exportBtnBottom.style.display = showExport ? 'inline-flex' : 'none';
   // Store last result for export
@@ -2268,7 +2268,7 @@ function switchBatchTab(idx, opts) {
   window._lastOpts     = activeOpts;
   window._lastFileName = f.name.replace(/\.[^/.]+$/, '');
 
-  const exportBtn = userProfile?.plan === 'pro2'
+  const exportBtn = (userProfile?.plan === 'pro' || userProfile?.plan === 'pro2')
     ? `<button class="new-btn" onclick="exportToPdf()" style="background:var(--gold);color:white;border-color:var(--gold);">⬇ Export PDF</button>`
     : '';
 
@@ -2313,7 +2313,7 @@ function switchBatchTab(idx, opts) {
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;gap:8px;flex-wrap:wrap;">
       <button onclick="resetBatch()" style="display:inline-flex;align-items:center;gap:8px;padding:13px 32px;background:var(--accent);color:white;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:all 0.2s;">← New Batch</button>
-      ${userProfile?.plan === 'pro2' ? `<button onclick="exportToPdf()" style="display:inline-flex;align-items:center;gap:8px;padding:13px 32px;background:var(--gold);color:white;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:all 0.2s;">⬇ Export PDF</button>` : ''}
+      ${(userProfile?.plan === 'pro' || userProfile?.plan === 'pro2') ? `<button onclick="exportToPdf()" style="display:inline-flex;align-items:center;gap:8px;padding:13px 32px;background:var(--gold);color:white;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:all 0.2s;">⬇ Export PDF</button>` : ''}
     </div>`;
 
   // Wire up section toggles

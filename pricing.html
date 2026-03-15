@@ -509,31 +509,50 @@ async function initPricingPage() {
   const { data: profile } = await sb.from('profiles').select('plan').eq('id', session.user.id).single();
   const plan = profile?.plan || 'free';
 
-  // Hide "Get started free" nav button for all logged-in users
-  const getStartedBtn = document.getElementById('navGetStarted');
-  if (getStartedBtn) getStartedBtn.style.display = 'none';
-
-  if (plan === 'pro' || plan === 'pro2') {
-    // Hide the free plan button, mark it as not their plan
-    const freeBtn = document.getElementById('btnFreeStart');
-    if (freeBtn) { freeBtn.style.display = 'none'; }
-
-    // Mark their current plan card
-    if (plan === 'pro') {
-      const proBtn = document.getElementById('btnProMonthly');
-      if (proBtn) { proBtn.textContent = 'Current plan'; proBtn.disabled = true; proBtn.classList.remove('solid'); proBtn.classList.add('outline'); proBtn.onclick = null; }
-    }
-    if (plan === 'pro2') {
-      const pro2Btn = document.getElementById('btnPro2Monthly');
-      if (pro2Btn) { pro2Btn.textContent = 'Current plan'; pro2Btn.disabled = true; pro2Btn.classList.remove('gold'); pro2Btn.classList.add('outline'); pro2Btn.onclick = null; }
-    }
+  function setBtn(id, text, disabled, cls) {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.textContent = text;
+    btn.disabled    = disabled;
+    if (cls) { btn.className = `btn-plan ${cls}`; }
+    if (disabled) btn.onclick = null;
   }
+
+  // Free button — hide for all paid users
+  const freeBtn = document.getElementById('btnFreeStart');
+  if (freeBtn) freeBtn.style.display = (plan === 'free') ? '' : 'none';
+
+  // Starter button
+  if (plan === 'starter') {
+    setBtn('btnStarterMonthly', 'Current plan', true, 'outline');
+  } else if (plan === 'pro' || plan === 'pro2') {
+    setBtn('btnStarterMonthly', 'Downgrade — cancel first', true, 'outline');
+  }
+  // free/guest: leave as default Get Starter
+
+  // Pro button
+  if (plan === 'starter') {
+    setBtn('btnProMonthly', 'Upgrade to Pro', false, 'solid');
+  } else if (plan === 'pro') {
+    setBtn('btnProMonthly', 'Current plan', true, 'outline');
+  } else if (plan === 'pro2') {
+    setBtn('btnProMonthly', 'Downgrade — cancel first', true, 'outline');
+  }
+  // free/guest: leave as default Get Pro
+
+  // Pro 2 button
+  if (plan === 'pro') {
+    setBtn('btnPro2Monthly', 'Upgrade to Pro 2', false, 'gold');
+  } else if (plan === 'pro2') {
+    setBtn('btnPro2Monthly', 'Current plan', true, 'outline');
+  }
+  // starter/free/guest: leave as default Get Pro 2
 }
 
 document.addEventListener('DOMContentLoaded', initPricingPage);
 
 async function startCheckout(plan, billing) {
-  const btnId = plan === 'pro' ? 'btnProMonthly' : 'btnPro2Monthly';
+  const btnId = plan === 'starter' ? 'btnStarterMonthly' : plan === 'pro' ? 'btnProMonthly' : 'btnPro2Monthly';
   const btn = document.getElementById(btnId);
   const origText = btn.textContent;
 

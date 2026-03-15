@@ -14,16 +14,6 @@
       "maxDuration": 60
     }
   },
-  "routes": [
-    {
-      "handle": "error"
-    },
-    {
-      "status": 404,
-      "src": "/(.*)",
-      "dest": "/404.html"
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -55,6 +45,12 @@
     {
       "path": "/api/analyse",
       "schedule": "* * * * *"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/404.html"
     }
   ]
 }

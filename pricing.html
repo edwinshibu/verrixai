@@ -529,9 +529,17 @@ async function initPricingPage() {
     if (btn && i < userIndex) btn.style.display = 'none'; // hide button only
   });
 
-  // Free button — hide for paid users
+  // Free button — current plan for free users, hidden for paid users
   const freeBtn = document.getElementById('btnFreeStart');
-  if (freeBtn) freeBtn.style.display = (plan === 'free') ? '' : 'none';
+  if (freeBtn) {
+    if (plan === 'free') {
+      freeBtn.textContent = 'Current plan';
+      freeBtn.disabled    = true;
+      freeBtn.onclick     = null;
+    } else {
+      freeBtn.style.display = 'none';
+    }
+  }
 
   // Starter button
   if (plan === 'starter') {

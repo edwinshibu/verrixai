@@ -1239,7 +1239,7 @@ function renderScanPill() {
   if (!currentUser || !userProfile) { pill.style.display = 'none'; return; }
   // Hide pill entirely for paid users — they have 300/700 scans, pips are meaningless
   const plan = userProfile?.plan || 'free';
-  if (plan === 'pro' || plan === 'pro2') { pill.style.display = 'none'; return; }
+  if (plan === 'pro' || plan === 'pro2' || plan === 'starter') { pill.style.display = 'none'; return; }
   pill.style.display = 'flex';
   const used  = userProfile?.scans_used || 0;
   const total = userProfile?.scans_limit || USER_LIMIT;

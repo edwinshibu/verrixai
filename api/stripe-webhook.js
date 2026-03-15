@@ -1,6 +1,7 @@
 const PLAN_SCANS = {
-  pro:  300,
-  pro2: 700,
+  starter: 30,
+  pro:     300,
+  pro2:    700,
 };
 
 function toHex(buffer) {
@@ -88,7 +89,7 @@ export default async function handler(req, res) {
         });
         const userData = await userRes.json();
         if (userData.email) {
-          const planLabel = plan === 'pro' ? 'Pro' : 'Pro 2';
+          const planLabel = plan === 'starter' ? 'Starter' : plan === 'pro' ? 'Pro' : 'Pro 2';
           const billingLabel = billing === 'annual' ? 'annual' : 'monthly';
           await fetch('https://api.resend.com/emails', {
             method: 'POST',

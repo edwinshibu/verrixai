@@ -1,5 +1,5 @@
 const PLAN_SCANS = {
-  starter: 30,
+  starter: 50,
   pro:     300,
   pro2:    700,
 };

@@ -676,7 +676,7 @@
   <div class="hero-eyebrow"><span>✦</span> AI-Powered Document Intelligence</div>
   <h1>Understand every agreement<br>before you <em>sign</em></h1>
   <p id="heroText">Upload or paste any legal document. VerrixAI analyses every clause, identifies risk, and delivers a structured breakdown in seconds.</p>
-  <div class="trust-strip">
+  <div class="trust-strip" id="trustStrip">
     <div class="trust-item">🔒 Encrypted in transit (HTTPS)</div>
   </div>
 </section>
@@ -2395,7 +2395,7 @@ function resetBatch() {
   document.getElementById('batchResultPanel').innerHTML = '';
   document.getElementById('batchInputState').style.display = 'block';
   updateBatchBtn();
-  document.getElementById('mainCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('trustStrip').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ─── END BATCH UPLOAD ─────────────────────────────────────

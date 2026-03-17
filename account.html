@@ -42,6 +42,7 @@
       backdrop-filter: blur(16px); border-bottom: 1px solid var(--border);
       position: sticky; top: 0; z-index: 100; gap: 16px;
     }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
     .logo { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; color: var(--ink); text-decoration: none; }
     .logo span { color: var(--gold); }
     .btn-nav { padding: 8px 18px; border-radius: 999px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--ink); text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
@@ -196,10 +197,10 @@
 <nav>
   <a class="logo" href="/">Verrix<span>AI</span></a>
   <div class="nav-right">
+    <a class="btn-nav" href="/">← Back to app</a>
     <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
       <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
     </button>
-    <a class="btn-nav" href="/">← Back to app</a>
   </div>
 </nav>
 

@@ -2395,7 +2395,10 @@ function resetBatch() {
   document.getElementById('batchResultPanel').innerHTML = '';
   document.getElementById('batchInputState').style.display = 'block';
   updateBatchBtn();
-  document.getElementById('mainCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const card = document.getElementById('mainCard');
+  const navH = document.querySelector('nav')?.offsetHeight || 70;
+  const top  = card.getBoundingClientRect().top + window.scrollY - navH - 16;
+  window.scrollTo({ top, behavior: 'smooth' });
 }
 
 // ─── END BATCH UPLOAD ─────────────────────────────────────

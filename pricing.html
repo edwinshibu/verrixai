@@ -620,7 +620,7 @@ async function startCheckout(plan, billing) {
   // Check if user is logged in
   const { data: { session } } = await sb.auth.getSession();
   if (!session) {
-    window.location.href = '/?pricing=1';
+    openAuthModal(plan);
     return;
   }
 
@@ -751,7 +751,23 @@ function showAuthMsg(msg, type) {
   el.className = `auth-msg ${type}`;
 }
 
-// Resume checkout after Google OAuth redirect
+// Listen for auth state changes — handles both email login and Google OAuth
+sb.auth.onAuthStateChange(async (event, session) => {
+  if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session) {
+    closeAuthModal();
+    // Run initPricingPage to update button states
+    await initPricingPage();
+    // Resume pending checkout if any
+    const pending = pendingPlan || sessionStorage.getItem('vrx_pending_plan');
+    if (pending) {
+      sessionStorage.removeItem('vrx_pending_plan');
+      pendingPlan = null;
+      setTimeout(() => startCheckout(pending, isAnnual ? 'annual' : 'monthly'), 400);
+    }
+  }
+});
+
+// On page load — check for pending plan from Google OAuth redirect
 (async () => {
   const { data: { session } } = await sb.auth.getSession();
   const pending = sessionStorage.getItem('vrx_pending_plan');

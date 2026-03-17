@@ -1102,6 +1102,12 @@ async function extractPdfText(file) {
     window.history.replaceState({}, '', '/');
   }
 
+  // Auto-open signup modal if redirected from marketing pages
+  if (new URLSearchParams(window.location.search).get('signup') === '1') {
+    setTimeout(() => openModal('signup'), 400);
+    window.history.replaceState({}, '', '/');
+  }
+
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session?.user) {
       await onSignIn(session.user);

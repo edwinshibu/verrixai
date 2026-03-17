@@ -52,5 +52,8 @@
       "source": "/(.*)",
       "destination": "/404.html"
     }
-  ]
+  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm install"
 }

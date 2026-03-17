@@ -196,7 +196,7 @@
     <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
   </button>
     <a href="/" class="btn-nav">← Back to app</a>
-    <a href="/" id="navGetStarted" class="btn-nav primary">Get started free</a>
+    <a href="/?signup=1" id="navGetStarted" class="btn-nav primary">Get started free</a>
   </div>
 </nav>
 
@@ -208,7 +208,7 @@
 </div>
 
 <!-- PLANS -->
-<div class="plans-section">
+<div class="plans-section" id="plans-grid">
   <div class="billing-toggle">
     <span class="toggle-label" id="label-monthly">Monthly</span>
     <div class="toggle-track on" id="billingToggle" onclick="toggleBilling()">
@@ -516,6 +516,19 @@ async function initPricingPage() {
     btn.disabled    = disabled;
     if (cls) { btn.className = `btn-plan ${cls}`; }
     if (disabled) btn.onclick = null;
+  }
+
+  // Adjust nav button based on plan
+  const getStartedBtn = document.getElementById('navGetStarted');
+  if (getStartedBtn) {
+    if (plan === 'free') {
+      getStartedBtn.textContent = 'View Plans';
+      getStartedBtn.href = '#plans-grid';
+      getStartedBtn.classList.remove('primary');
+    } else {
+      // Paid user — hide entirely
+      getStartedBtn.style.display = 'none';
+    }
   }
 
   // Hide CTA for paid users

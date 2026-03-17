@@ -2395,6 +2395,7 @@ function resetBatch() {
   document.getElementById('batchResultPanel').innerHTML = '';
   document.getElementById('batchInputState').style.display = 'block';
   updateBatchBtn();
+  document.getElementById('batchDropZone').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ─── END BATCH UPLOAD ─────────────────────────────────────

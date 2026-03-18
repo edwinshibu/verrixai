@@ -588,6 +588,9 @@
     <div class="modal-switch" id="modalSwitch">
       Already have an account? <a onclick="switchModal('login')">Sign in</a>
     </div>
+    <div id="forgotLink" style="text-align:center;margin-top:10px;display:none;">
+      <a onclick="openModal('forgot')" style="font-size:12px;color:var(--ink-muted);cursor:pointer;text-decoration:underline;text-underline-offset:2px;">Forgot your password?</a>
+    </div>
   </div>
 </div>
 
@@ -1109,6 +1112,12 @@ async function extractPdfText(file) {
     window.history.replaceState({}, '', '/');
   }
 
+  // Auto-open password reset modal after Supabase reset link redirect
+  if (new URLSearchParams(window.location.search).get('reset') === '1') {
+    setTimeout(() => openModal('reset'), 400);
+    window.history.replaceState({}, '', '/');
+  }
+
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session?.user) {
       await onSignIn(session.user);
@@ -1116,6 +1125,9 @@ async function extractPdfText(file) {
     } else if (event === 'USER_UPDATED' && session?.user) {
       await onSignIn(session.user);
       showSuccessMoment("Email confirmed — welcome to VerrixAI!");
+    } else if (event === 'PASSWORD_RECOVERY') {
+      // User clicked reset link — open the new password modal
+      openModal('reset');
     } else if (event === 'SIGNED_OUT') {
       currentUser = null; userProfile = null;
       renderNavGuest();
@@ -1524,13 +1536,47 @@ function openModal(mode) {
   document.getElementById('authEmail').value = '';
   document.getElementById('authPassword').value = '';
   document.getElementById('pwRequirements').style.display = 'none';
-  const isSignup = mode === 'signup';
-  document.getElementById('modalTitle').textContent       = isSignup ? 'Create Account' : 'Welcome back';
-  document.getElementById('modalSub').innerHTML           = isSignup ? 'Get <strong>5 free scans</strong> — no credit card needed.' : 'Sign in to access your scans.';
-  document.getElementById('authSubmitBtn').textContent    = isSignup ? 'Create Account' : 'Sign in';
-  document.getElementById('modalSwitch').innerHTML        = isSignup
-    ? "Already have an account? <a onclick=\"switchModal('login')\">Sign in</a>"
-    : "Don't have an account? <a onclick=\"switchModal('signup')\">Create one free</a>";
+
+  const isSignup  = mode === 'signup';
+  const isForgot  = mode === 'forgot';
+  const isReset   = mode === 'reset';
+  const isLogin   = mode === 'login';
+
+  // Show/hide password field
+  const pwField = document.getElementById('passwordField');
+  if (pwField) pwField.style.display = (isForgot) ? 'none' : '';
+
+  // Show/hide OAuth buttons
+  const oauthBtns = document.querySelector('.oauth-btns');
+  const oauthDiv  = document.querySelector('.oauth-divider');
+  if (oauthBtns) oauthBtns.style.display = (isForgot || isReset) ? 'none' : '';
+  if (oauthDiv)  oauthDiv.style.display  = (isForgot || isReset) ? 'none' : '';
+
+  // Forgot password link — show only on login
+  const forgotLink = document.getElementById('forgotLink');
+  if (forgotLink) forgotLink.style.display = isLogin ? 'block' : 'none';
+
+  if (isForgot) {
+    document.getElementById('modalTitle').textContent    = 'Reset your password';
+    document.getElementById('modalSub').innerHTML        = 'Enter your email and we'll send you a reset link.';
+    document.getElementById('authSubmitBtn').textContent = 'Send reset link';
+    document.getElementById('modalSwitch').innerHTML     = '<a onclick="openModal('login')" style="cursor:pointer;">← Back to sign in</a>';
+  } else if (isReset) {
+    document.getElementById('modalTitle').textContent    = 'Set new password';
+    document.getElementById('modalSub').innerHTML        = 'Enter your new password below.';
+    document.getElementById('authSubmitBtn').textContent = 'Update password';
+    document.getElementById('authEmail').style.display   = 'none';
+    document.getElementById('modalSwitch').innerHTML     = '';
+  } else {
+    document.getElementById('authEmail').style.display   = '';
+    document.getElementById('modalTitle').textContent    = isSignup ? 'Create Account' : 'Welcome back';
+    document.getElementById('modalSub').innerHTML        = isSignup ? 'Get <strong>5 free scans</strong> — no credit card needed.' : 'Sign in to access your scans.';
+    document.getElementById('authSubmitBtn').textContent = isSignup ? 'Create Account' : 'Sign in';
+    document.getElementById('modalSwitch').innerHTML     = isSignup
+      ? "Already have an account? <a onclick=\"switchModal('login')\">Sign in</a>"
+      : "Don't have an account? <a onclick=\"switchModal('signup')\">Create one free</a>";
+  }
+
   document.getElementById('authModal').classList.add('visible');
   setTimeout(() => document.getElementById('authEmail').focus(), 200);
 }
@@ -1592,19 +1638,32 @@ async function handleAuth() {
   }
 
   btn.disabled = true;
-  btn.textContent = modalMode === 'signup' ? 'Creating account…' : 'Signing in…';
+  btn.textContent = modalMode === 'signup' ? 'Creating account…' : modalMode === 'forgot' ? 'Sending…' : modalMode === 'reset' ? 'Updating…' : 'Signing in…';
   try {
     if (modalMode === 'signup') {
       const { error } = await sb.auth.signUp({ email, password });
       if (error) { errEl.textContent = error.message; errEl.classList.add('visible'); }
       else { okEl.textContent = '✓ Check your email to confirm your account, then sign in.'; okEl.classList.add('visible'); }
+    } else if (modalMode === 'forgot') {
+      const { error } = await sb.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/?reset=1'
+      });
+      if (error) { errEl.textContent = error.message; errEl.classList.add('visible'); }
+      else { okEl.textContent = '✓ Reset link sent — check your inbox.'; okEl.classList.add('visible'); }
+    } else if (modalMode === 'reset') {
+      const { error } = await sb.auth.updateUser({ password });
+      if (error) { errEl.textContent = error.message; errEl.classList.add('visible'); }
+      else {
+        okEl.textContent = '✓ Password updated successfully.'; okEl.classList.add('visible');
+        setTimeout(() => closeModal(), 1800);
+      }
     } else {
       const { error } = await sb.auth.signInWithPassword({ email, password });
       if (error) { errEl.textContent = error.message; errEl.classList.add('visible'); }
     }
   } catch(e) { errEl.textContent = 'Something went wrong. Please try again.'; errEl.classList.add('visible'); }
   btn.disabled = false;
-  btn.textContent = modalMode === 'signup' ? 'Create Account' : 'Sign in';
+  btn.textContent = modalMode === 'signup' ? 'Create Account' : modalMode === 'forgot' ? 'Send reset link' : modalMode === 'reset' ? 'Update password' : 'Sign in';
 }
 
 async function signOut(btn) {

@@ -1118,17 +1118,30 @@ async function extractPdfText(file) {
     window.history.replaceState({}, '', '/');
   }
 
+  let passwordRecoveryMode = false;
+
   sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      // User clicked reset link — set flag and open reset modal
+      passwordRecoveryMode = true;
+      openModal('reset');
+      return; // don't proceed to normal sign-in flow
+    }
     if (event === 'SIGNED_IN' && session?.user) {
+      if (passwordRecoveryMode) return; // ignore sign-in during password recovery
       await onSignIn(session.user);
       closeModal();
     } else if (event === 'USER_UPDATED' && session?.user) {
+      if (passwordRecoveryMode) {
+        // Password was successfully updated — reset flag and sign in normally
+        passwordRecoveryMode = false;
+        await onSignIn(session.user);
+        return;
+      }
       await onSignIn(session.user);
       showSuccessMoment("Email confirmed — welcome to VerrixAI!");
-    } else if (event === 'PASSWORD_RECOVERY') {
-      // User clicked reset link — open the new password modal
-      openModal('reset');
     } else if (event === 'SIGNED_OUT') {
+      passwordRecoveryMode = false;
       currentUser = null; userProfile = null;
       renderNavGuest();
     }

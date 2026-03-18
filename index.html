@@ -1650,7 +1650,7 @@ async function handleAuth() {
         redirectTo: window.location.origin + '/?reset=1'
       });
       if (error) { errEl.textContent = error.message; errEl.classList.add('visible'); }
-      else { okEl.textContent = '✓ Reset link sent — check your inbox.'; okEl.classList.add('visible'); }
+      else { okEl.textContent = 'If an account exists for this email, you will receive a reset link shortly. Check your inbox.'; okEl.classList.add('visible'); }
     } else if (modalMode === 'reset') {
       const { error } = await sb.auth.updateUser({ password });
       if (error) { errEl.textContent = error.message; errEl.classList.add('visible'); }
@@ -1660,7 +1660,22 @@ async function handleAuth() {
       }
     } else {
       const { error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) { errEl.textContent = error.message; errEl.classList.add('visible'); }
+      if (error) {
+        // Check if this email is registered via Google OAuth
+        const { data: profile } = await sb.from('profiles').select('id').eq('email', email).maybeSingle();
+        if (!profile) {
+          // No account found at all
+          errEl.textContent = 'No account found with this email. Would you like to create one?';
+          // Add a clickable create account prompt
+          errEl.innerHTML = 'No account found with this email. <a onclick="switchModal(\'signup\')" style="color:var(--accent);cursor:pointer;font-weight:500;">Create a free account →</a>';
+        } else if (error.message.toLowerCase().includes('invalid') || error.message.toLowerCase().includes('credentials')) {
+          // Account exists but wrong password — could be Google user
+          errEl.innerHTML = 'Incorrect password. If you signed up with Google, <a onclick="document.getElementById(\'btnGoogle\').click()" style="color:var(--accent);cursor:pointer;font-weight:500;">sign in with Google instead</a>.';
+        } else {
+          errEl.textContent = error.message;
+        }
+        errEl.classList.add('visible');
+      }
     }
   } catch(e) { errEl.textContent = 'Something went wrong. Please try again.'; errEl.classList.add('visible'); }
   btn.disabled = false;

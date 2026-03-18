@@ -333,7 +333,7 @@
   .knowmore-card p { font-size: 15px; color: var(--ink-muted); margin-bottom: 32px; line-height: 1.7; font-weight: 300; }
   .knowmore-form { display: flex; flex-direction: column; gap: 12px; max-width: 400px; margin: 0 auto; }
   .knowmore-input { width: 100%; padding: 13px 18px; border: 1px solid var(--border); border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink); background: var(--bg); outline: none; transition: border-color 0.2s; }
-  .knowmore-input:focus { border-color: var(--gold); background: white; }
+  .knowmore-input:focus { border-color: var(--gold); background: var(--surface); }
   .knowmore-input::placeholder { color: #B8B8AA; }
   .btn-knowmore { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; letter-spacing: 0.02em; }
   .btn-knowmore:hover { background: var(--accent-light); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(26,58,42,0.25); }
@@ -482,6 +482,7 @@
   [data-theme="dark"] .form-field input:focus { background: var(--surface); }
   [data-theme="dark"] .doc-textarea::placeholder { color: #5A5A52; }
   [data-theme="dark"] .knowmore-input::placeholder { color: #5A5A52; }
+  [data-theme="dark"] .knowmore-input { color: var(--ink); background: var(--surface); }
   [data-theme="dark"] .pw-req { color: var(--ink-muted); }
   [data-theme="dark"] .pw-req.met { color: var(--accent-light); }
   [data-theme="dark"] .pw-req.met .pw-dot { color: var(--accent-light); }

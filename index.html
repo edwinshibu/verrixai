@@ -493,9 +493,6 @@
 <nav>
   <div class="logo" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="cursor:pointer;">Verrix<span>AI</span></div>
   <div class="nav-right">
-    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
-    <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-  </button>
     <!-- Scan counter -->
     <div class="scan-pill" id="scanPill" style="display:none">
       <div class="scan-pips" id="scanPips"></div>
@@ -529,6 +526,9 @@
         </div>
       </div>
     </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
+      <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+    </button>
   </div>
 </nav>
 
@@ -617,7 +617,7 @@
           <div class="pm-price-sub">No credit card</div>
         </div>
         <div class="pm-scans">5 scans / account</div>
-        <ul class="pm-feats"><li>Full AI analysis</li><li>Risk flagging</li><li>Key points</li><li>Plain-English summary</li></ul>
+        <ul class="pm-feats"><li>AI Document Analysis</li><li>Risk Flags (High / Medium / Low)</li><li>Key Points</li><li>In Simple Terms</li><li>PDF, DOCX & TXT upload</li><li>Zero data retention</li></ul>
         <button class="btn-pm outline" onclick="closePricingModal()">Current plan</button>
       </div>
       <!-- STARTER -->
@@ -631,7 +631,7 @@
           <div class="price-orig pm-annual-orig" style="display:block;">was A$60/yr</div>
         </div>
         <div class="pm-scans">50 scans / mo</div>
-        <ul class="pm-feats"><li>Everything in Free</li><li>50 scans per month</li><li>Scans reset monthly</li><li>Email support</li></ul>
+        <ul class="pm-feats"><li>Everything in Free</li><li>50 scans per month</li><li>Monthly reset</li><li>Email support</li><li>Cancel anytime</li></ul>
         <button class="btn-pm outline" id="btnStarterCheckout" onclick="startCheckout('starter')">Get Starter</button>
       </div>
       <!-- PRO -->
@@ -646,7 +646,7 @@
           <div class="price-orig pm-annual-orig" style="display:block;">was A$108/yr</div>
         </div>
         <div class="pm-scans">300 scans / mo</div>
-        <ul class="pm-feats"><li>Everything in Free</li><li>300 scans per month</li><li>Export results as PDF</li><li>Email support</li></ul>
+        <ul class="pm-feats"><li>Everything in Starter</li><li>300 scans per month</li><li>Export results as PDF</li><li>Email support</li><li>Cancel anytime</li></ul>
         <button class="btn-pm solid" id="btnProCheckout" onclick="startCheckout('pro')">Get Pro</button>
       </div>
       <!-- PRO 2 -->
@@ -660,7 +660,7 @@
           <div class="price-orig pm-annual-orig" style="display:block;">was A$180/yr</div>
         </div>
         <div class="pm-scans">700 scans / mo</div>
-        <ul class="pm-feats"><li>Everything in Pro</li><li>700 scans per month</li><li>Export results as PDF</li><li>Priority support</li></ul>
+        <ul class="pm-feats"><li>Everything in Pro</li><li>700 scans per month</li><li>Batch upload (up to 10 files)</li><li>Priority email support</li><li>Cancel anytime</li></ul>
         <button class="btn-pm gold-btn" id="btnPro2Checkout" onclick="startCheckout('pro2')">Get Pro 2</button>
       </div>
     
@@ -1099,6 +1099,12 @@ async function extractPdfText(file) {
   // Auto-open pricing modal if redirected from account page
   if (new URLSearchParams(window.location.search).get('pricing') === '1') {
     setTimeout(() => openPricingModal(), 400);
+    window.history.replaceState({}, '', '/');
+  }
+
+  // Auto-open signup modal if redirected from marketing pages
+  if (new URLSearchParams(window.location.search).get('signup') === '1') {
+    setTimeout(() => openModal('signup'), 400);
     window.history.replaceState({}, '', '/');
   }
 

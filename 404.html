@@ -66,12 +66,8 @@
       border: none; text-decoration: none; transition: background 0.2s;
     }
     .btn-nav:hover { background: var(--accent-light); }
-    .theme-toggle {
-      background: none; border: none; cursor: pointer;
-      color: var(--ink-muted); padding: 6px; border-radius: 8px;
-      display: flex; align-items: center; transition: color 0.2s;
-    }
-    .theme-toggle:hover { color: var(--ink); }
+    .theme-toggle { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; color: var(--ink-muted); flex-shrink: 0; padding: 0; }
+    .theme-toggle:hover { border-color: var(--gold); color: var(--gold); }
 
     /* MAIN */
     main {
@@ -187,12 +183,10 @@
 <nav>
   <a class="logo" href="/">Verrix<span>AI</span></a>
   <div class="nav-right">
-    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode" id="themeToggle">
-      <svg id="themeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-      </svg>
-    </button>
     <a class="btn-nav" href="/">Go Home</a>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
+      <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+    </button>
   </div>
 </nav>
 
@@ -236,7 +230,6 @@ function toggleTheme() {
   applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
 }
 document.addEventListener('DOMContentLoaded', function() {
-  document.addEventListener('DOMContentLoaded', function() {
   applyTheme(localStorage.getItem('vrx-theme') || (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light'));
 });
 </script>

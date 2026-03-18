@@ -184,6 +184,33 @@
   .price-orig { font-size: 11px; color: #BBBBAA; text-decoration: line-through; margin-top: 1px; }
   [data-theme="dark"] .save-badge { background: #1E2E22; color: var(--accent-light); }
   [data-theme="dark"] .price-orig { color: #6A6A62; }
+
+  /* AUTH MODAL */
+  .auth-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1000; align-items:center; justify-content:center; padding:20px; }
+  .auth-overlay.visible { display:flex; }
+  .auth-box { background:var(--surface); border-radius:20px; padding:36px 32px; max-width:400px; width:100%; box-shadow:0 24px 64px rgba(0,0,0,0.18); position:relative; }
+  .auth-close { position:absolute; top:16px; right:16px; background:none; border:none; cursor:pointer; color:var(--ink-muted); font-size:20px; line-height:1; padding:4px 8px; border-radius:6px; }
+  .auth-close:hover { color:var(--ink); }
+  .auth-box h2 { font-family:'Playfair Display',serif; font-size:22px; font-weight:500; color:var(--ink); margin-bottom:6px; }
+  .auth-box p { font-size:13px; color:var(--ink-muted); margin-bottom:24px; line-height:1.5; }
+  .auth-box p strong { color:var(--gold); }
+  .btn-google { width:100%; display:flex; align-items:center; justify-content:center; gap:10px; padding:12px; border:1px solid var(--border); border-radius:10px; background:var(--surface); color:var(--ink); font-family:'DM Sans',sans-serif; font-size:14px; font-weight:500; cursor:pointer; transition:all 0.2s; margin-bottom:16px; }
+  .btn-google:hover { border-color:var(--ink); }
+  .auth-divider { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+  .auth-divider span { font-size:12px; color:var(--ink-muted); white-space:nowrap; }
+  .auth-divider::before, .auth-divider::after { content:''; flex:1; height:1px; background:var(--border); }
+  .auth-input { width:100%; padding:11px 14px; border:1px solid var(--border); border-radius:10px; font-family:'DM Sans',sans-serif; font-size:14px; color:var(--ink); background:var(--surface); margin-bottom:10px; outline:none; transition:border 0.2s; box-sizing:border-box; }
+  .auth-input:focus { border-color:var(--accent); }
+  .auth-tabs { display:flex; gap:0; margin-bottom:20px; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+  .auth-tab { flex:1; padding:9px; border:none; background:none; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; cursor:pointer; color:var(--ink-muted); transition:all 0.2s; }
+  .auth-tab.active { background:var(--accent); color:white; }
+  .btn-auth-submit { width:100%; padding:12px; background:var(--accent); color:white; border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:500; cursor:pointer; transition:background 0.2s; margin-top:4px; }
+  .btn-auth-submit:hover { background:var(--accent-light); }
+  .auth-msg { font-size:12px; margin-top:10px; padding:8px 12px; border-radius:8px; display:none; }
+  .auth-msg.error { display:block; background:#FEF2F2; color:#C0392B; border:1px solid #FECACA; }
+  .auth-msg.success { display:block; background:#F0FDF4; color:#166534; border:1px solid #BBF7D0; }
+  [data-theme="dark"] .auth-msg.error { background:#2D1B1B; color:#F87171; border-color:#7F1D1D; }
+  [data-theme="dark"] .auth-msg.success { background:#1B2D1B; color:#86EFAC; border-color:#14532D; }
   </style>
 </head>
 <body>
@@ -192,11 +219,11 @@
 <nav>
   <a href="/" class="logo">Verrix<span>AI</span></a>
   <div class="nav-right">
-    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
-    <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-  </button>
     <a href="/" class="btn-nav">← Back to app</a>
     <a href="/?signup=1" id="navGetStarted" class="btn-nav primary">Get started free</a>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
+      <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+    </button>
   </div>
 </nav>
 
@@ -232,11 +259,11 @@
         <span>scans per account</span>
       </div>
       <ul class="plan-features">
-        <li><span class="feat-check">✓</span> Document Summary</li>
+        <li><span class="feat-check">✓</span> AI Document Analysis</li>
         <li><span class="feat-check">✓</span> Risk Flags (High / Medium / Low)</li>
-        <li><span class="feat-check">✓</span> Key Points extraction</li>
+        <li><span class="feat-check">✓</span> Key Points</li>
         <li><span class="feat-check">✓</span> In Simple Terms</li>
-        <li><span class="feat-check">✓</span> PDF, DOCX & TXT support</li>
+        <li><span class="feat-check">✓</span> PDF, DOCX & TXT upload</li>
         <li><span class="feat-check">✓</span> Zero data retention</li>
       </ul>
       <button class="btn-plan outline" id="btnFreeStart" onclick="window.location.href='/'">Get started free</button>
@@ -284,9 +311,8 @@
         <span>scans per month</span>
       </div>
       <ul class="plan-features">
-        <li><span class="feat-check">✓</span> Everything in Free</li>
+        <li><span class="feat-check">✓</span> Everything in Starter</li>
         <li><span class="feat-check">✓</span> 300 scans per month</li>
-        <li><span class="feat-check">✓</span> Scans reset monthly</li>
         <li><span class="feat-check">✓</span> Export results as PDF</li>
         <li><span class="feat-check">✓</span> Email support</li>
         <li><span class="feat-check">✓</span> Cancel anytime</li>
@@ -312,7 +338,7 @@
       <ul class="plan-features">
         <li><span class="feat-check">✓</span> Everything in Pro</li>
         <li><span class="feat-check">✓</span> 700 scans per month</li>
-        <li><span class="feat-check">✓</span> Export results as PDF</li>
+        <li><span class="feat-check">✓</span> Batch upload (up to 10 files)</li>
         <li><span class="feat-check">✓</span> Priority email support</li>
         <li><span class="feat-check">✓</span> Cancel anytime</li>
       </ul>
@@ -593,7 +619,7 @@ async function startCheckout(plan, billing) {
   // Check if user is logged in
   const { data: { session } } = await sb.auth.getSession();
   if (!session) {
-    window.location.href = '/?pricing=1';
+    openAuthModal(plan);
     return;
   }
 
@@ -636,6 +662,140 @@ function toggleTheme() {
 document.addEventListener('DOMContentLoaded', function() {
   applyTheme(localStorage.getItem('vrx-theme') || (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light'));
 });
+
+
+// ─── AUTH MODAL ───────────────────────────────────────────────
+let pendingPlan = null;
+let authTab = 'signup';
+
+function openAuthModal(plan) {
+  pendingPlan = plan;
+  const labels = { starter: 'Starter', pro: 'Pro', pro2: 'Pro 2' };
+  document.getElementById('authPlanLabel').textContent = labels[plan] || 'your plan';
+  document.getElementById('authEmail').value = '';
+  document.getElementById('authPassword').value = '';
+  document.getElementById('authMsg').className = 'auth-msg';
+  document.getElementById('authMsg').textContent = '';
+  switchAuthTab('signup');
+  document.getElementById('authOverlay').classList.add('visible');
+  setTimeout(() => document.getElementById('authEmail').focus(), 200);
+}
+
+function closeAuthModal() {
+  document.getElementById('authOverlay').classList.remove('visible');
+}
+
+document.getElementById('authOverlay').addEventListener('click', e => {
+  if (e.target.id === 'authOverlay') closeAuthModal();
+});
+
+function switchAuthTab(tab) {
+  authTab = tab;
+  document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
+  document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+  document.getElementById('authSubmit').textContent = tab === 'signup' ? 'Create account' : 'Sign in';
+  document.getElementById('authMsg').className = 'auth-msg';
+}
+
+async function authWithGoogle() {
+  const btn = document.getElementById('btnAuthGoogle');
+  btn.disabled = true; btn.textContent = 'Redirecting…';
+  if (pendingPlan) sessionStorage.setItem('vrx_pending_plan', pendingPlan);
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin + '/pricing' }
+  });
+  if (error) {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/><path d="M3.964 10.707A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.961L3.964 6.293C4.672 4.166 6.656 3.58 9 3.58z" fill="#EA4335"/></svg> Continue with Google';
+    showAuthMsg(error.message, 'error');
+  }
+}
+
+async function handleAuthSubmit() {
+  const email    = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const btn      = document.getElementById('authSubmit');
+  if (!email || !password) { showAuthMsg('Please fill in all fields.', 'error'); return; }
+
+  btn.disabled = true;
+  btn.textContent = authTab === 'signup' ? 'Creating account…' : 'Signing in…';
+
+  try {
+    if (authTab === 'signup') {
+      const { error } = await sb.auth.signUp({ email, password });
+      if (error) { showAuthMsg(error.message, 'error'); }
+      else { showAuthMsg('✓ Check your email to confirm, then sign in below.', 'success'); switchAuthTab('login'); }
+    } else {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) { showAuthMsg(error.message, 'error'); }
+      else {
+        closeAuthModal();
+        if (pendingPlan) {
+          setTimeout(() => startCheckout(pendingPlan, isAnnual ? 'annual' : 'monthly'), 300);
+        }
+      }
+    }
+  } catch(e) {
+    showAuthMsg('Something went wrong. Please try again.', 'error');
+  }
+
+  btn.disabled = false;
+  btn.textContent = authTab === 'signup' ? 'Create account' : 'Sign in';
+}
+
+function showAuthMsg(msg, type) {
+  const el = document.getElementById('authMsg');
+  el.textContent = msg;
+  el.className = `auth-msg ${type}`;
+}
+
+// Listen for auth state changes — handles both email login and Google OAuth
+sb.auth.onAuthStateChange(async (event, session) => {
+  if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session) {
+    closeAuthModal();
+    // Run initPricingPage to update button states
+    await initPricingPage();
+    // Resume pending checkout if any
+    const pending = pendingPlan || sessionStorage.getItem('vrx_pending_plan');
+    if (pending) {
+      sessionStorage.removeItem('vrx_pending_plan');
+      pendingPlan = null;
+      setTimeout(() => startCheckout(pending, isAnnual ? 'annual' : 'monthly'), 400);
+    }
+  }
+});
+
+// On page load — check for pending plan from Google OAuth redirect
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  const pending = sessionStorage.getItem('vrx_pending_plan');
+  if (session && pending) {
+    sessionStorage.removeItem('vrx_pending_plan');
+    setTimeout(() => startCheckout(pending, isAnnual ? 'annual' : 'monthly'), 500);
+  }
+})();
 </script>
+<!-- AUTH MODAL -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-box">
+    <button class="auth-close" onclick="closeAuthModal()">✕</button>
+    <h2>Sign in to continue</h2>
+    <p id="authModalSub">Create an account or sign in to purchase <strong id="authPlanLabel">your plan</strong>.</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabSignup" onclick="switchAuthTab('signup')">Create account</button>
+      <button class="auth-tab" id="tabLogin" onclick="switchAuthTab('login')">Sign in</button>
+    </div>
+    <button class="btn-google" id="btnAuthGoogle" onclick="authWithGoogle()">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/><path d="M3.964 10.707A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.961L3.964 6.293C4.672 4.166 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+      Continue with Google
+    </button>
+    <div class="auth-divider"><span>or</span></div>
+    <input class="auth-input" id="authEmail" type="email" placeholder="Email address" />
+    <input class="auth-input" id="authPassword" type="password" placeholder="Password" />
+    <button class="btn-auth-submit" id="authSubmit" onclick="handleAuthSubmit()">Create account</button>
+    <div class="auth-msg" id="authMsg"></div>
+  </div>
+</div>
 </body>
 </html>

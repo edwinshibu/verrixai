@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; font-size: 15px; line-height: 1.7; -webkit-font-smoothing: antialiased; }
     nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 48px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
     .logo { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; color: var(--ink); cursor: pointer; }
     .logo span { color: var(--gold); }
     .btn-nav { padding: 8px 18px; border-radius: 999px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; background: var(--accent); color: white; border: none; text-decoration: none; }
@@ -87,10 +88,10 @@ document.addEventListener('DOMContentLoaded', function() {
 <nav>
   <div class="logo" onclick="window.location.href='/'">Verrix<span>AI</span></div>
   <div class="nav-right">
+    <a class="btn-nav" href="/">Back to app</a>
     <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
       <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
     </button>
-    <a class="btn-nav" href="/">Back to app</a>
   </div>
 </nav>
 <div class="container">

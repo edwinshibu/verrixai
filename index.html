@@ -1087,9 +1087,20 @@ async function extractPdfText(file) {
 
 // ─── BOOT ────────────────────────────────────────────────────
 (async () => {
+  // Check if this is a password recovery redirect from Supabase
+  // Supabase appends #access_token=...&type=recovery to the URL
+  const hashParams = new URLSearchParams(window.location.hash.replace('#', ''));
+  const isRecovery = hashParams.get('type') === 'recovery';
+
   const { data: { session } } = await sb.auth.getSession();
-  if (session?.user) await onSignIn(session.user);
-  else renderNavGuest();
+  if (isRecovery) {
+    // Don't sign in normally — wait for PASSWORD_RECOVERY event from onAuthStateChange
+    renderNavGuest();
+  } else if (session?.user) {
+    await onSignIn(session.user);
+  } else {
+    renderNavGuest();
+  }
 
   // Handle redirect back from Stripe checkout
   const checkoutStatus = new URLSearchParams(window.location.search).get('checkout');
@@ -1112,8 +1123,11 @@ async function extractPdfText(file) {
     window.history.replaceState({}, '', '/');
   }
 
-  // Auto-open password reset modal after Supabase reset link redirect
-  if (new URLSearchParams(window.location.search).get('reset') === '1') {
+  // Auto-open password reset modal — triggered by hash detection above
+  if (isRecovery) {
+    setTimeout(() => openModal('reset'), 400);
+    window.history.replaceState({}, '', '/');
+  } else if (new URLSearchParams(window.location.search).get('reset') === '1') {
     setTimeout(() => openModal('reset'), 400);
     window.history.replaceState({}, '', '/');
   }

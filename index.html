@@ -1558,9 +1558,9 @@ function openModal(mode) {
 
   if (isForgot) {
     document.getElementById('modalTitle').textContent    = 'Reset your password';
-    document.getElementById('modalSub').innerHTML        = 'Enter your email and we'll send you a reset link.';
+    document.getElementById('modalSub').innerHTML        = 'Enter your email and we will send you a reset link.';
     document.getElementById('authSubmitBtn').textContent = 'Send reset link';
-    document.getElementById('modalSwitch').innerHTML     = '<a onclick="openModal('login')" style="cursor:pointer;">← Back to sign in</a>';
+    document.getElementById('modalSwitch').innerHTML     = '<a onclick="openModal(\'login\')" style="cursor:pointer;">← Back to sign in</a>';
   } else if (isReset) {
     document.getElementById('modalTitle').textContent    = 'Set new password';
     document.getElementById('modalSub').innerHTML        = 'Enter your new password below.';
@@ -1616,7 +1616,8 @@ async function handleAuth() {
   const errEl    = document.getElementById('modalError');
   const okEl     = document.getElementById('modalSuccess');
   errEl.classList.remove('visible'); okEl.classList.remove('visible');
-  if (!email || !password) { errEl.textContent = 'Please fill in all fields.'; errEl.classList.add('visible'); return; }
+  if (!email) { errEl.textContent = 'Please enter your email.'; errEl.classList.add('visible'); return; }
+  if (!password && modalMode !== 'forgot') { errEl.textContent = 'Please fill in all fields.'; errEl.classList.add('visible'); return; }
 
   // Password validation on signup only
   if (modalMode === 'signup') {

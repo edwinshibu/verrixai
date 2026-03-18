@@ -333,7 +333,7 @@
   .knowmore-card p { font-size: 15px; color: var(--ink-muted); margin-bottom: 32px; line-height: 1.7; font-weight: 300; }
   .knowmore-form { display: flex; flex-direction: column; gap: 12px; max-width: 400px; margin: 0 auto; }
   .knowmore-input { width: 100%; padding: 13px 18px; border: 1px solid var(--border); border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink); background: var(--bg); outline: none; transition: border-color 0.2s; }
-  .knowmore-input:focus { border-color: var(--gold); background: white; }
+  .knowmore-input:focus { border-color: var(--gold); background: var(--surface); }
   .knowmore-input::placeholder { color: #B8B8AA; }
   .btn-knowmore { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; letter-spacing: 0.02em; }
   .btn-knowmore:hover { background: var(--accent-light); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(26,58,42,0.25); }
@@ -482,6 +482,7 @@
   [data-theme="dark"] .form-field input:focus { background: var(--surface); }
   [data-theme="dark"] .doc-textarea::placeholder { color: #5A5A52; }
   [data-theme="dark"] .knowmore-input::placeholder { color: #5A5A52; }
+  [data-theme="dark"] .knowmore-input { color: var(--ink); background: var(--surface); }
   [data-theme="dark"] .pw-req { color: var(--ink-muted); }
   [data-theme="dark"] .pw-req.met { color: var(--accent-light); }
   [data-theme="dark"] .pw-req.met .pw-dot { color: var(--accent-light); }
@@ -586,6 +587,9 @@
     <button class="btn-submit" id="authSubmitBtn" onclick="handleAuth()">Create Account</button>
     <div class="modal-switch" id="modalSwitch">
       Already have an account? <a onclick="switchModal('login')">Sign in</a>
+    </div>
+    <div id="forgotLink" style="text-align:center;margin-top:10px;display:none;">
+      <a onclick="openModal('forgot')" style="font-size:12px;color:var(--ink-muted);cursor:pointer;text-decoration:underline;text-underline-offset:2px;">Forgot your password?</a>
     </div>
   </div>
 </div>
@@ -1083,9 +1087,20 @@ async function extractPdfText(file) {
 
 // ─── BOOT ────────────────────────────────────────────────────
 (async () => {
+  // Check if this is a password recovery redirect from Supabase
+  // Supabase appends #access_token=...&type=recovery to the URL
+  const hashParams = new URLSearchParams(window.location.hash.replace('#', ''));
+  const isRecovery = hashParams.get('type') === 'recovery';
+
   const { data: { session } } = await sb.auth.getSession();
-  if (session?.user) await onSignIn(session.user);
-  else renderNavGuest();
+  if (isRecovery) {
+    // Don't sign in normally — wait for PASSWORD_RECOVERY event from onAuthStateChange
+    renderNavGuest();
+  } else if (session?.user) {
+    await onSignIn(session.user);
+  } else {
+    renderNavGuest();
+  }
 
   // Handle redirect back from Stripe checkout
   const checkoutStatus = new URLSearchParams(window.location.search).get('checkout');
@@ -1108,14 +1123,39 @@ async function extractPdfText(file) {
     window.history.replaceState({}, '', '/');
   }
 
+  // Auto-open password reset modal — triggered by hash detection above
+  if (isRecovery) {
+    setTimeout(() => openModal('reset'), 400);
+    window.history.replaceState({}, '', '/');
+  } else if (new URLSearchParams(window.location.search).get('reset') === '1') {
+    setTimeout(() => openModal('reset'), 400);
+    window.history.replaceState({}, '', '/');
+  }
+
+  let passwordRecoveryMode = false;
+
   sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      // User clicked reset link — set flag and open reset modal
+      passwordRecoveryMode = true;
+      openModal('reset');
+      return; // don't proceed to normal sign-in flow
+    }
     if (event === 'SIGNED_IN' && session?.user) {
+      if (passwordRecoveryMode) return; // ignore sign-in during password recovery
       await onSignIn(session.user);
       closeModal();
     } else if (event === 'USER_UPDATED' && session?.user) {
+      if (passwordRecoveryMode) {
+        // Password was successfully updated — reset flag and sign in normally
+        passwordRecoveryMode = false;
+        await onSignIn(session.user);
+        return;
+      }
       await onSignIn(session.user);
       showSuccessMoment("Email confirmed — welcome to VerrixAI!");
     } else if (event === 'SIGNED_OUT') {
+      passwordRecoveryMode = false;
       currentUser = null; userProfile = null;
       renderNavGuest();
     }
@@ -1523,13 +1563,47 @@ function openModal(mode) {
   document.getElementById('authEmail').value = '';
   document.getElementById('authPassword').value = '';
   document.getElementById('pwRequirements').style.display = 'none';
-  const isSignup = mode === 'signup';
-  document.getElementById('modalTitle').textContent       = isSignup ? 'Create Account' : 'Welcome back';
-  document.getElementById('modalSub').innerHTML           = isSignup ? 'Get <strong>5 free scans</strong> — no credit card needed.' : 'Sign in to access your scans.';
-  document.getElementById('authSubmitBtn').textContent    = isSignup ? 'Create Account' : 'Sign in';
-  document.getElementById('modalSwitch').innerHTML        = isSignup
-    ? "Already have an account? <a onclick=\"switchModal('login')\">Sign in</a>"
-    : "Don't have an account? <a onclick=\"switchModal('signup')\">Create one free</a>";
+
+  const isSignup  = mode === 'signup';
+  const isForgot  = mode === 'forgot';
+  const isReset   = mode === 'reset';
+  const isLogin   = mode === 'login';
+
+  // Show/hide password field
+  const pwField = document.getElementById('passwordField');
+  if (pwField) pwField.style.display = (isForgot) ? 'none' : '';
+
+  // Show/hide OAuth buttons
+  const oauthBtns = document.querySelector('.oauth-btns');
+  const oauthDiv  = document.querySelector('.oauth-divider');
+  if (oauthBtns) oauthBtns.style.display = (isForgot || isReset) ? 'none' : '';
+  if (oauthDiv)  oauthDiv.style.display  = (isForgot || isReset) ? 'none' : '';
+
+  // Forgot password link — show only on login
+  const forgotLink = document.getElementById('forgotLink');
+  if (forgotLink) forgotLink.style.display = isLogin ? 'block' : 'none';
+
+  if (isForgot) {
+    document.getElementById('modalTitle').textContent    = 'Reset your password';
+    document.getElementById('modalSub').innerHTML        = 'Enter your email and we will send you a reset link.';
+    document.getElementById('authSubmitBtn').textContent = 'Send reset link';
+    document.getElementById('modalSwitch').innerHTML     = '<a onclick="openModal(\'login\')" style="cursor:pointer;">← Back to sign in</a>';
+  } else if (isReset) {
+    document.getElementById('modalTitle').textContent    = 'Set new password';
+    document.getElementById('modalSub').innerHTML        = 'Enter your new password below.';
+    document.getElementById('authSubmitBtn').textContent = 'Update password';
+    document.getElementById('authEmail').style.display   = 'none';
+    document.getElementById('modalSwitch').innerHTML     = '';
+  } else {
+    document.getElementById('authEmail').style.display   = '';
+    document.getElementById('modalTitle').textContent    = isSignup ? 'Create Account' : 'Welcome back';
+    document.getElementById('modalSub').innerHTML        = isSignup ? 'Get <strong>5 free scans</strong> — no credit card needed.' : 'Sign in to access your scans.';
+    document.getElementById('authSubmitBtn').textContent = isSignup ? 'Create Account' : 'Sign in';
+    document.getElementById('modalSwitch').innerHTML     = isSignup
+      ? "Already have an account? <a onclick=\"switchModal('login')\">Sign in</a>"
+      : "Don't have an account? <a onclick=\"switchModal('signup')\">Create one free</a>";
+  }
+
   document.getElementById('authModal').classList.add('visible');
   setTimeout(() => document.getElementById('authEmail').focus(), 200);
 }
@@ -1569,7 +1643,8 @@ async function handleAuth() {
   const errEl    = document.getElementById('modalError');
   const okEl     = document.getElementById('modalSuccess');
   errEl.classList.remove('visible'); okEl.classList.remove('visible');
-  if (!email || !password) { errEl.textContent = 'Please fill in all fields.'; errEl.classList.add('visible'); return; }
+  if (!email) { errEl.textContent = 'Please enter your email.'; errEl.classList.add('visible'); return; }
+  if (!password && modalMode !== 'forgot') { errEl.textContent = 'Please fill in all fields.'; errEl.classList.add('visible'); return; }
 
   // Password validation on signup only
   if (modalMode === 'signup') {
@@ -1591,19 +1666,46 @@ async function handleAuth() {
   }
 
   btn.disabled = true;
-  btn.textContent = modalMode === 'signup' ? 'Creating account…' : 'Signing in…';
+  btn.textContent = modalMode === 'signup' ? 'Creating account…' : modalMode === 'forgot' ? 'Sending…' : modalMode === 'reset' ? 'Updating…' : 'Signing in…';
   try {
     if (modalMode === 'signup') {
       const { error } = await sb.auth.signUp({ email, password });
       if (error) { errEl.textContent = error.message; errEl.classList.add('visible'); }
       else { okEl.textContent = '✓ Check your email to confirm your account, then sign in.'; okEl.classList.add('visible'); }
+    } else if (modalMode === 'forgot') {
+      const { error } = await sb.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/?reset=1'
+      });
+      if (error) { errEl.textContent = error.message; errEl.classList.add('visible'); }
+      else { okEl.textContent = 'If an account exists for this email, you will receive a reset link shortly. Check your inbox.'; okEl.classList.add('visible'); }
+    } else if (modalMode === 'reset') {
+      const { error } = await sb.auth.updateUser({ password });
+      if (error) { errEl.textContent = error.message; errEl.classList.add('visible'); }
+      else {
+        okEl.textContent = '✓ Password updated successfully.'; okEl.classList.add('visible');
+        setTimeout(() => closeModal(), 1800);
+      }
     } else {
       const { error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) { errEl.textContent = error.message; errEl.classList.add('visible'); }
+      if (error) {
+        try {
+          // Check if email exists in profiles
+          const { data: profile } = await sb.from('profiles').select('id').eq('email', email).maybeSingle();
+          if (!profile) {
+            errEl.innerHTML = 'No account found for this email. <a onclick="switchModal(\'signup\')" style="color:var(--accent-light);cursor:pointer;font-weight:500;text-decoration:underline;">Create a free account →</a>';
+          } else {
+            errEl.innerHTML = 'Incorrect password. If you signed up with Google, <a onclick="document.getElementById(\'btnGoogle\').click()" style="color:var(--accent-light);cursor:pointer;font-weight:500;text-decoration:underline;">sign in with Google instead</a>.';
+          }
+        } catch(profileErr) {
+          // If profile check fails, show generic helpful message
+          errEl.textContent = 'Incorrect email or password. Please try again.';
+        }
+        errEl.classList.add('visible');
+      }
     }
   } catch(e) { errEl.textContent = 'Something went wrong. Please try again.'; errEl.classList.add('visible'); }
   btn.disabled = false;
-  btn.textContent = modalMode === 'signup' ? 'Create Account' : 'Sign in';
+  btn.textContent = modalMode === 'signup' ? 'Create Account' : modalMode === 'forgot' ? 'Send reset link' : modalMode === 'reset' ? 'Update password' : 'Sign in';
 }
 
 async function signOut(btn) {

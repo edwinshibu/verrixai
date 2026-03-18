@@ -198,20 +198,20 @@ export default async function handler(req, res) {
           <p style="font-family:Georgia,serif;font-size:20px;font-weight:500;color:#1A1A18;margin:0 0 16px;">Simple, transparent pricing</p>
           <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;border-radius:12px;overflow:hidden;border:1px solid #E2E0D8;">
             <tr style="background:#EAF2EC;">
-              <td style="padding:12px 16px;border-bottom:1px solid #E2E0D8;"><p style="font-size:13px;font-weight:700;color:#1A3A2A;margin:0;">Free</p><p style="font-size:12px;color:#2E5C42;margin:2px 0 0;">10 scans — no credit card required</p></td>
-              <td style="padding:12px 16px;border-bottom:1px solid #E2E0D8;text-align:right;"><p style="font-family:Georgia,serif;font-size:18px;font-weight:600;color:#1A3A2A;margin:0;">$0</p></td>
+              <td style="padding:12px 16px;border-bottom:1px solid #E2E0D8;"><p style="font-size:13px;font-weight:700;color:#1A3A2A;margin:0;">Free</p><p style="font-size:12px;color:#2E5C42;margin:2px 0 0;">5 scans — no credit card required</p></td>
+              <td style="padding:12px 16px;border-bottom:1px solid #E2E0D8;text-align:right;"><p style="font-family:Georgia,serif;font-size:18px;font-weight:600;color:#1A3A2A;margin:0;">A$0</p></td>
             </tr>
             <tr>
-              <td style="padding:12px 16px;border-bottom:1px solid #E2E0D8;"><p style="font-size:13px;font-weight:700;color:#1A1A18;margin:0;">Pro</p><p style="font-size:12px;color:#6B6B62;margin:2px 0 0;">300 scans/month · save 20% annually</p></td>
-              <td style="padding:12px 16px;border-bottom:1px solid #E2E0D8;text-align:right;"><p style="font-family:Georgia,serif;font-size:18px;font-weight:600;color:#1A1A18;margin:0;">$9<span style="font-size:12px;font-weight:400;color:#6B6B62;">/mo</span></p></td>
+              <td style="padding:12px 16px;border-bottom:1px solid #E2E0D8;"><p style="font-size:13px;font-weight:700;color:#1A1A18;margin:0;">Starter</p><p style="font-size:12px;color:#6B6B62;margin:2px 0 0;">50 scans/month · A$48/yr saves 20%</p></td>
+              <td style="padding:12px 16px;border-bottom:1px solid #E2E0D8;text-align:right;"><p style="font-family:Georgia,serif;font-size:18px;font-weight:600;color:#1A1A18;margin:0;">A$5<span style="font-size:12px;font-weight:400;color:#6B6B62;">/mo</span></p></td>
             </tr>
             <tr>
-              <td style="padding:12px 16px;border-bottom:1px solid #E2E0D8;"><p style="font-size:13px;font-weight:700;color:#1A1A18;margin:0;">Pro 2</p><p style="font-size:12px;color:#6B6B62;margin:2px 0 0;">700 scans/month · save 20% annually</p></td>
-              <td style="padding:12px 16px;border-bottom:1px solid #E2E0D8;text-align:right;"><p style="font-family:Georgia,serif;font-size:18px;font-weight:600;color:#1A1A18;margin:0;">$15<span style="font-size:12px;font-weight:400;color:#6B6B62;">/mo</span></p></td>
+              <td style="padding:12px 16px;border-bottom:1px solid #E2E0D8;"><p style="font-size:13px;font-weight:700;color:#1A1A18;margin:0;">Pro</p><p style="font-size:12px;color:#6B6B62;margin:2px 0 0;">300 scans/month · A$86/yr saves 20%</p></td>
+              <td style="padding:12px 16px;border-bottom:1px solid #E2E0D8;text-align:right;"><p style="font-family:Georgia,serif;font-size:18px;font-weight:600;color:#1A1A18;margin:0;">A$9<span style="font-size:12px;font-weight:400;color:#6B6B62;">/mo</span></p></td>
             </tr>
             <tr>
-              <td style="padding:12px 16px;"><p style="font-size:13px;font-weight:700;color:#1A1A18;margin:0;">Enterprise</p><p style="font-size:12px;color:#6B6B62;margin:2px 0 0;">Unlimited scans · custom integrations</p></td>
-              <td style="padding:12px 16px;text-align:right;"><p style="font-family:Georgia,serif;font-size:14px;font-weight:600;color:#B8963E;margin:0;">Contact us</p></td>
+              <td style="padding:12px 16px;"><p style="font-size:13px;font-weight:700;color:#1A1A18;margin:0;">Pro 2</p><p style="font-size:12px;color:#6B6B62;margin:2px 0 0;">700 scans/month · A$144/yr saves 20%</p></td>
+              <td style="padding:12px 16px;text-align:right;"><p style="font-family:Georgia,serif;font-size:18px;font-weight:600;color:#1A1A18;margin:0;">A$15<span style="font-size:12px;font-weight:400;color:#6B6B62;">/mo</span></p></td>
             </tr>
           </table>
 
@@ -260,7 +260,7 @@ export default async function handler(req, res) {
       'Authorization': `Bearer ${RESEND_KEY}`
     },
     body: JSON.stringify({
-      from:    'VerrixAI <onboarding@resend.dev>',
+      from:    'VerrixAI <info@verrixai.com>',
       to:      safeEmail,
       subject: `Here is everything about VerrixAI, ${safeName}`,
       html:    emailHtml

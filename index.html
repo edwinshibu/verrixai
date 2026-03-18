@@ -1661,18 +1661,17 @@ async function handleAuth() {
     } else {
       const { error } = await sb.auth.signInWithPassword({ email, password });
       if (error) {
-        // Check if this email is registered via Google OAuth
-        const { data: profile } = await sb.from('profiles').select('id').eq('email', email).maybeSingle();
-        if (!profile) {
-          // No account found at all
-          errEl.textContent = 'No account found with this email. Would you like to create one?';
-          // Add a clickable create account prompt
-          errEl.innerHTML = 'No account found with this email. <a onclick="switchModal(\'signup\')" style="color:var(--accent);cursor:pointer;font-weight:500;">Create a free account →</a>';
-        } else if (error.message.toLowerCase().includes('invalid') || error.message.toLowerCase().includes('credentials')) {
-          // Account exists but wrong password — could be Google user
-          errEl.innerHTML = 'Incorrect password. If you signed up with Google, <a onclick="document.getElementById(\'btnGoogle\').click()" style="color:var(--accent);cursor:pointer;font-weight:500;">sign in with Google instead</a>.';
-        } else {
-          errEl.textContent = error.message;
+        try {
+          // Check if email exists in profiles
+          const { data: profile } = await sb.from('profiles').select('id').eq('email', email).maybeSingle();
+          if (!profile) {
+            errEl.innerHTML = 'No account found for this email. <a onclick="switchModal(\'signup\')" style="color:var(--accent-light);cursor:pointer;font-weight:500;text-decoration:underline;">Create a free account →</a>';
+          } else {
+            errEl.innerHTML = 'Incorrect password. If you signed up with Google, <a onclick="document.getElementById(\'btnGoogle\').click()" style="color:var(--accent-light);cursor:pointer;font-weight:500;text-decoration:underline;">sign in with Google instead</a>.';
+          }
+        } catch(profileErr) {
+          // If profile check fails, show generic helpful message
+          errEl.textContent = 'Incorrect email or password. Please try again.';
         }
         errEl.classList.add('visible');
       }

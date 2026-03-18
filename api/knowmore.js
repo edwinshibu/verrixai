@@ -260,7 +260,7 @@ export default async function handler(req, res) {
       'Authorization': `Bearer ${RESEND_KEY}`
     },
     body: JSON.stringify({
-      from:    'VerrixAI <admin@verrixai.com>',
+      from:    'VerrixAI <info@verrixai.com>',
       to:      safeEmail,
       subject: `Here is everything about VerrixAI, ${safeName}`,
       html:    emailHtml

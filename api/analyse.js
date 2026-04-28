@@ -9,7 +9,6 @@ const MAX_TOKENS      = 4000;
 // ── Rate limiting ──────────────────────────────────────────
 // In-memory per serverless instance. Not shared across instances,
 // but provides meaningful protection against single-source abuse.
-const RATE_LIMIT_UNAUTH = 10;  // requests per window
 const RATE_LIMIT_AUTH   = 30;
 const RATE_WINDOW_MS    = 60 * 1000; // 1 minute
 
@@ -135,13 +134,13 @@ export default async function handler(req, res) {
     }
   }
 
-  // ── Rate limiting ──────────────────────────────────────
-  const rateLimitKey = profile
-    ? `auth:${profile.userId}`
-    : `ip:${ip}`;
-  const rateLimit    = profile ? RATE_LIMIT_AUTH : RATE_LIMIT_UNAUTH;
+  // ── Require authentication ─────────────────────────────
+  if (!token) {
+    return res.status(401).json({ error: 'Sign in to use VerrixAI.' });
+  }
 
-  if (!checkRateLimit(rateLimitKey, rateLimit)) {
+  // ── Rate limiting (authenticated users only) ───────────
+  if (!checkRateLimit(`auth:${profile.userId}`, RATE_LIMIT_AUTH)) {
     return res.status(429).json({ error: 'Too many requests. Please wait a moment and try again.' });
   }
 

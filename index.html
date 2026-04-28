@@ -2004,9 +2004,12 @@ async function startAnalysis() {
   // ── 6. Single fetch ───────────────────────────────────────
   let result = null;
   try {
+    const { data: { session: activeSession } } = await sb.auth.getSession();
+    const analyseHeaders = { 'Content-Type': 'application/json' };
+    if (activeSession?.access_token) analyseHeaders['Authorization'] = `Bearer ${activeSession.access_token}`;
     const res = await fetch('/api/analyse', {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: analyseHeaders,
       body:    JSON.stringify({ options: opts, content: userContent }),
       signal:  activeController.signal
     });
@@ -2300,9 +2303,12 @@ async function analyseOneFile(userContent, opts) {
   const controller = new AbortController();
   const timeoutId  = setTimeout(() => controller.abort(), 55000);
   try {
+    const { data: { session: activeSession } } = await sb.auth.getSession();
+    const analyseHeaders = { 'Content-Type': 'application/json' };
+    if (activeSession?.access_token) analyseHeaders['Authorization'] = `Bearer ${activeSession.access_token}`;
     const res = await fetch('/api/analyse', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: analyseHeaders,
       body: JSON.stringify({ options: opts || [], content: userContent }),
       signal: controller.signal
     });

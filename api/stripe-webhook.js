@@ -98,7 +98,7 @@ export default async function handler(req, res) {
               from: 'VerrixAI <admin@verrixai.com>',
               to: userData.email,
               subject: `Welcome to VerrixAI ${planLabel}!`,
-              html: `<div style="font-family:'Georgia',serif;max-width:540px;margin:0 auto;padding:40px 24px;color:#1A1A18;background:#F7F6F2;"><div style="font-size:22px;font-weight:600;margin-bottom:24px;">Verrix<span style="color:#B8963E;">AI</span></div><h2 style="font-size:22px;font-weight:500;margin-bottom:12px;">You're on ${planLabel}!</h2><p style="color:#6B6B62;font-size:15px;line-height:1.7;margin-bottom:16px;">Your ${planLabel} ${billingLabel} subscription is now active. You have <strong>${scansLimit} scans</strong> available this month.</p><p style="margin-bottom:24px;"><a href="https://verrixai.com" style="background:#1A3A2A;color:white;padding:12px 24px;border-radius:999px;text-decoration:none;font-size:14px;font-weight:500;">Start analysing →</a></p><p style="color:#6B6B62;font-size:13px;line-height:1.7;">To manage your subscription, visit your account page at <a href="https://verrixai.com/account.html" style="color:#2E5C42;">verrixai.com/account.html</a>.</p></div>`,
+              html: `<div style="font-family:'Georgia',serif;max-width:540px;margin:0 auto;padding:40px 24px;color:#1A1A18;background:#F7F6F2;"><div style="font-size:22px;font-weight:600;margin-bottom:24px;">Verrix<span style="color:#B8963E;">AI</span></div><h2 style="font-size:22px;font-weight:500;margin-bottom:12px;">You're on ${planLabel}!</h2><p style="color:#6B6B62;font-size:15px;line-height:1.7;margin-bottom:16px;">Your ${planLabel} ${billingLabel} subscription is now active. You have <strong>${scansLimit} scans</strong> available this month.</p><p style="margin-bottom:24px;"><a href="https://verrixai.com" style="background:#1A3A2A;color:white;padding:12px 24px;border-radius:999px;text-decoration:none;font-size:14px;font-weight:500;">Start analysing →</a></p><p style="color:#6B6B62;font-size:13px;line-height:1.7;">To manage your subscription, visit your account page at <a href="https://verrixai.com/account" style="color:#2E5C42;">verrixai.com/account</a>.</p></div>`,
               text: `You're now on VerrixAI ${planLabel}! Your ${billingLabel} subscription is active with ${scansLimit} scans available. Visit verrixai.com to get started.`
             })
           });
@@ -112,6 +112,9 @@ export default async function handler(req, res) {
         const userId = sub.metadata?.user_id;
         const plan   = sub.metadata?.plan;
         if (!userId || !plan) break;
+
+        // If cancel_at_period_end was just set, user is mid-period — don't reset scans
+        if (sub.cancel_at_period_end) break;
 
         const scansLimit = PLAN_SCANS[plan] || 5;
         const status = sub.status;

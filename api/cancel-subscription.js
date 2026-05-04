@@ -64,7 +64,34 @@ export default async function handler(req) {
     const stripeData = await stripeRes.json();
     if (!stripeRes.ok) throw new Error(stripeData.error?.message || 'Stripe error');
 
-    return json({ success: true, cancel_at: stripeData.cancel_at });
+    // Mirror cancellation state to profiles immediately (webhook is the safety net)
+    const periodEndRaw =
+      stripeData.items?.data?.[0]?.current_period_end  // Stripe API 2025-03-31+
+      ?? stripeData.current_period_end;                // Legacy fallback
+    const periodEnd = periodEndRaw
+      ? new Date(periodEndRaw * 1000).toISOString()
+      : null;
+
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userData.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+          'apikey':        SUPABASE_SERVICE_KEY,
+          'Content-Type':  'application/json',
+          'Prefer':        'return=minimal'
+        },
+        body: JSON.stringify({
+          cancel_at_period_end: true,
+          current_period_end:   periodEnd
+        })
+      });
+    } catch (dbErr) {
+      // Non-fatal — webhook will reconcile
+      console.error('Profile update failed (webhook will retry):', dbErr);
+    }
+
+    return json({ success: true, cancel_at: stripeData.cancel_at, current_period_end: periodEnd });
 
   } catch(err) {
     console.error('Cancel subscription error:', err);

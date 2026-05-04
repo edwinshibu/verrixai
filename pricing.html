@@ -623,27 +623,71 @@ async function startCheckout(plan, billing) {
     return;
   }
 
+  // Determine flow: existing paid user → in-place upgrade; otherwise → new Stripe checkout
+  const { data: profile } = await sb.from('profiles').select('plan,billing').eq('id', session.user.id).single();
+  const currentPlan = profile?.plan || 'free';
+  const isUpgrade   = currentPlan === 'starter' || currentPlan === 'pro';
+
+  // For upgrades, force the billing cycle to match what the user is already on
+  // (cycle changes aren't supported via this flow — Step 3 will lock the toggle)
+  const effectiveBilling = isUpgrade ? (profile?.billing || billing) : billing;
+
+  if (isUpgrade) {
+    const planLabel = plan === 'pro' ? 'Pro' : 'Pro 2';
+    const ok = confirm(`Upgrade to ${planLabel}?\n\nYou'll be charged the prorated difference today and switched immediately. Your billing date stays the same.`);
+    if (!ok) return;
+  }
+
   btn.disabled = true;
-  btn.textContent = 'Loading…';
+  btn.textContent = isUpgrade ? 'Upgrading…' : 'Loading…';
 
   try {
-    const res = await fetch('/api/create-checkout', {
+    const endpoint = isUpgrade ? '/api/change-plan' : '/api/create-checkout';
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${session.access_token}`
       },
-      body: JSON.stringify({ plan, billing })
+      body: JSON.stringify({ plan, billing: effectiveBilling })
     });
     const data = await res.json();
-    if (!res.ok || !data.url) throw new Error(data.error || 'Failed');
-    window.location.href = data.url;
+    if (!res.ok) throw new Error(data.error || 'Failed');
+
+    if (isUpgrade) {
+      // In-place upgrade — refresh page state and confirm
+      const planLabel = plan === 'pro' ? 'Pro' : 'Pro 2';
+      showUpgradeToast(`You're on ${planLabel}!`);
+      // Re-init buttons with new plan after a brief delay so user sees the toast
+      setTimeout(() => initPricingPage(), 1200);
+    } else {
+      // New checkout — redirect to Stripe
+      if (!data.url) throw new Error('No checkout URL returned');
+      window.location.href = data.url;
+    }
   } catch(err) {
     console.error('Checkout error:', err);
     btn.disabled = false;
     btn.textContent = origText;
-    alert('Something went wrong. Please try again or contact admin@verrixai.com.');
+    alert(err.message || 'Something went wrong. Please try again or contact admin@verrixai.com.');
   }
+}
+
+// Lightweight toast for upgrade confirmation
+function showUpgradeToast(message) {
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:#1A1A18;color:#FFFFFF;padding:14px 24px;border-radius:999px;font-size:14px;font-weight:500;z-index:99999;box-shadow:0 4px 14px rgba(0,0,0,0.18);opacity:0;transition:all 0.3s;';
+  el.textContent = '✓  ' + message;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => {
+    el.style.opacity   = '1';
+    el.style.transform = 'translateX(-50%) translateY(0)';
+  });
+  setTimeout(() => {
+    el.style.opacity   = '0';
+    el.style.transform = 'translateX(-50%) translateY(20px)';
+    setTimeout(() => el.remove(), 350);
+  }, 2800);
 }
 
 // ─── DARK MODE ────────────────────────────────────────────────

@@ -45,7 +45,7 @@ const HTML_FILES = [
 // API JS files to minify
 const API_FILES = [
   'api/analyse.js', 'api/knowmore.js',
-  'api/delete-account.js', 'api/extract-docx.js',
+  'api/delete-account.js',
 ];
 
 // Root JS files to minify

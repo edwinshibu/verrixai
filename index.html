@@ -1352,7 +1352,18 @@ async function startCheckout(plan) {
   const billing = pmAnnual ? 'annual' : 'monthly';
   const btn = document.getElementById(plan === 'starter' ? 'btnStarterCheckout' : plan === 'pro' ? 'btnProCheckout' : 'btnPro2Checkout');
   const origText = btn.textContent;
-  btn.disabled = true; btn.textContent = 'Loading…';
+
+  // Determine flow: existing paid user → in-place upgrade; otherwise → new Stripe checkout
+  const currentPlan = userProfile?.plan || 'free';
+  const isUpgrade   = currentPlan === 'starter' || currentPlan === 'pro';
+
+  if (isUpgrade) {
+    const planLabel = plan === 'pro' ? 'Pro' : 'Pro 2';
+    const ok = confirm(`Upgrade to ${planLabel}?\n\nYou'll be charged the prorated difference today and switched immediately. Your billing date stays the same.`);
+    if (!ok) return;
+  }
+
+  btn.disabled = true; btn.textContent = isUpgrade ? 'Upgrading…' : 'Loading…';
 
   function resetBtn(msg) {
     btn.disabled = false; btn.textContent = origText;
@@ -1378,9 +1389,11 @@ async function startCheckout(plan) {
     const controller = new AbortController();
     const timeoutId  = setTimeout(() => controller.abort(), 12000);
 
+    const endpoint = isUpgrade ? '/api/change-plan' : '/api/create-checkout';
+
     let res;
     try {
-      res = await fetch('/api/create-checkout', {
+      res = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type':  'application/json',
@@ -1400,13 +1413,50 @@ async function startCheckout(plan) {
     }
 
     const data = await res.json();
-    if (!res.ok || !data.url) throw new Error(data.error || 'Failed to create checkout');
-    window.location.href = data.url;
+    if (!res.ok) {
+      resetBtn(data.error || 'Something went wrong. Please try again.');
+      return;
+    }
+
+    if (isUpgrade) {
+      // In-place upgrade — refresh profile, update nav, close modal, confirm
+      const { data: profile } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+      if (profile) {
+        userProfile = profile;
+        renderNavUser(currentUser);
+      }
+      closePricingModal();
+      const planLabel = plan === 'pro' ? 'Pro' : 'Pro 2';
+      showUpgradeToast(`You're on ${planLabel}!`);
+    } else {
+      // New checkout — redirect to Stripe
+      if (!data.url) throw new Error('No checkout URL returned');
+      window.location.href = data.url;
+    }
 
   } catch(err) {
     console.error('Checkout error:', err);
     resetBtn('Something went wrong. Please try again.');
   }
+}
+
+// Lightweight toast for upgrade confirmation — does not touch app state
+function showUpgradeToast(message) {
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:#1A1A18;color:#FFFFFF;padding:14px 24px;border-radius:999px;font-size:14px;font-weight:500;z-index:99999;box-shadow:0 4px 14px rgba(0,0,0,0.18);opacity:0;transition:all 0.3s;';
+  el.textContent = '✓  ' + message;
+  document.body.appendChild(el);
+  // Animate in
+  requestAnimationFrame(() => {
+    el.style.opacity   = '1';
+    el.style.transform = 'translateX(-50%) translateY(0)';
+  });
+  // Animate out + remove
+  setTimeout(() => {
+    el.style.opacity   = '0';
+    el.style.transform = 'translateX(-50%) translateY(20px)';
+    setTimeout(() => el.remove(), 350);
+  }, 2800);
 }
 
 function openPricingModal() {

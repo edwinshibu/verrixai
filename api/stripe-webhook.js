@@ -79,6 +79,8 @@ export default async function handler(req, res) {
             scans_used: 0,
             stripe_customer_id: customerId,
             stripe_subscription_id: subscriptionId,
+            cancel_at_period_end: false,
+            current_period_end: null,
           })
         });
 
@@ -106,16 +108,31 @@ export default async function handler(req, res) {
         break;
       }
 
-      // ── Subscription renewed → reset scans ───────────────────
+      // ── Subscription updated → cancellation pending OR renewal ──
       case 'customer.subscription.updated': {
         const sub    = event.data.object;
         const userId = sub.metadata?.user_id;
         const plan   = sub.metadata?.plan;
         if (!userId || !plan) break;
 
-        // If cancel_at_period_end was just set, user is mid-period — don't reset scans
-        if (sub.cancel_at_period_end) break;
+        const periodEnd = sub.current_period_end
+          ? new Date(sub.current_period_end * 1000).toISOString()
+          : null;
 
+        // If cancel_at_period_end was just set, store cancellation state — don't reset scans
+        if (sub.cancel_at_period_end) {
+          await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
+            method: 'PATCH',
+            headers: adminHeaders,
+            body: JSON.stringify({
+              cancel_at_period_end: true,
+              current_period_end:   periodEnd
+            })
+          });
+          break;
+        }
+
+        // Otherwise: active renewal — reset scans, clear any stale cancel flag
         const scansLimit = PLAN_SCANS[plan] || 5;
         const status = sub.status;
 
@@ -123,7 +140,13 @@ export default async function handler(req, res) {
           await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
             method: 'PATCH',
             headers: adminHeaders,
-            body: JSON.stringify({ scans_limit: scansLimit, scans_used: 0, plan })
+            body: JSON.stringify({
+              scans_limit:          scansLimit,
+              scans_used:           0,
+              plan,
+              cancel_at_period_end: false,
+              current_period_end:   periodEnd
+            })
           });
         }
         break;
@@ -138,7 +161,14 @@ export default async function handler(req, res) {
         await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
           method: 'PATCH',
           headers: adminHeaders,
-          body: JSON.stringify({ plan: 'free', scans_limit: 5, scans_used: 0, stripe_subscription_id: null })
+          body: JSON.stringify({
+            plan: 'free',
+            scans_limit: 5,
+            scans_used: 0,
+            stripe_subscription_id: null,
+            cancel_at_period_end: false,
+            current_period_end: null,
+          })
         });
 
         // Notify admin

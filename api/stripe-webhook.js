@@ -69,6 +69,29 @@ export default async function handler(req, res) {
 
         const scansLimit = PLAN_SCANS[plan] || 5;
 
+        // Fetch the subscription so we can store current_period_end immediately
+        // (Stripe doesn't reliably fire customer.subscription.updated right after checkout)
+        let periodEnd = null;
+        if (subscriptionId) {
+          try {
+            const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+            const subRes = await fetch(`https://api.stripe.com/v1/subscriptions/${subscriptionId}`, {
+              headers: { 'Authorization': `Bearer ${STRIPE_SECRET_KEY}` }
+            });
+            const sub = await subRes.json();
+            if (subRes.ok) {
+              const periodEndRaw =
+                sub.items?.data?.[0]?.current_period_end  // Stripe API 2025-03-31+
+                ?? sub.current_period_end;                // Legacy fallback
+              periodEnd = periodEndRaw
+                ? new Date(periodEndRaw * 1000).toISOString()
+                : null;
+            }
+          } catch (e) {
+            console.error('Could not fetch subscription period end (non-fatal):', e);
+          }
+        }
+
         await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
           method: 'PATCH',
           headers: adminHeaders,
@@ -80,7 +103,7 @@ export default async function handler(req, res) {
             stripe_customer_id: customerId,
             stripe_subscription_id: subscriptionId,
             cancel_at_period_end: false,
-            current_period_end: null,
+            current_period_end: periodEnd,
           })
         });
 

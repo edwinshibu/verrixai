@@ -480,6 +480,7 @@
       document.getElementById('billingPlan').textContent   = planLabel;
       const cycleRaw = profile?.billing;
       document.getElementById('billingCycle').textContent  = cycleRaw === 'annual' ? 'Annual' : cycleRaw === 'monthly' ? 'Monthly' : '—';
+      renderBillingStatus(profile?.cancel_at_period_end, profile?.current_period_end);
     }
 
     // Show account state
@@ -491,6 +492,23 @@
   // ─── CANCEL SUBSCRIPTION ─────────────────────────────────────
   function openCancelDialog()  { document.getElementById('cancelDialog').classList.add('visible'); }
   function closeCancelDialog() { document.getElementById('cancelDialog').classList.remove('visible'); }
+
+  function renderBillingStatus(cancelAtPeriodEnd, currentPeriodEnd) {
+    const statusEl = document.getElementById('billingStatus');
+    const btnEl    = document.getElementById('btnCancelSub');
+    if (cancelAtPeriodEnd) {
+      const dateStr = currentPeriodEnd
+        ? new Date(currentPeriodEnd).toLocaleDateString('en-AU', { day:'numeric', month:'long', year:'numeric' })
+        : 'period end';
+      statusEl.textContent = `Cancelled — active until ${dateStr}`;
+      statusEl.style.color = '#E67E22';
+      btnEl.style.display  = 'none';
+    } else {
+      statusEl.textContent = 'Active';
+      statusEl.style.color = 'var(--risk-low)';
+      btnEl.style.display  = '';
+    }
+  }
 
   async function confirmCancel() {
     const btn = document.getElementById('confirmCancelBtn');
@@ -508,11 +526,11 @@
       if (!res.ok) throw new Error(data.error || 'Failed');
 
       closeCancelDialog();
-      // Update UI — hide billing card, show cancelled state
-      document.getElementById('billingStatus').textContent  = 'Cancelled — active until period end';
-      document.getElementById('billingStatus').style.color  = '#E67E22';
-      document.getElementById('btnCancelSub').style.display = 'none';
-      showToast('Subscription cancelled. You keep access until your billing period ends.');
+      renderBillingStatus(true, data.current_period_end);
+      const dateStr = data.current_period_end
+        ? new Date(data.current_period_end).toLocaleDateString('en-AU', { day:'numeric', month:'long', year:'numeric' })
+        : 'your billing period ends';
+      showToast(`Subscription cancelled. Access until ${dateStr}.`);
     } catch(err) {
       console.error('Cancel error:', err);
       btn.disabled = false; btn.textContent = 'Yes, cancel';

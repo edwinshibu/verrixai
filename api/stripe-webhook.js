@@ -115,8 +115,11 @@ export default async function handler(req, res) {
         const plan   = sub.metadata?.plan;
         if (!userId || !plan) break;
 
-        const periodEnd = sub.current_period_end
-          ? new Date(sub.current_period_end * 1000).toISOString()
+        const periodEndRaw =
+          sub.items?.data?.[0]?.current_period_end  // Stripe API 2025-03-31+
+          ?? sub.current_period_end;                // Legacy fallback
+        const periodEnd = periodEndRaw
+          ? new Date(periodEndRaw * 1000).toISOString()
           : null;
 
         // If cancel_at_period_end was just set, store cancellation state — don't reset scans

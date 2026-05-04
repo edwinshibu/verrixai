@@ -262,14 +262,14 @@
         <span>Need more scans?</span>
         <a class="btn-nav primary" href="/?pricing=1" style="font-size:12px;padding:7px 16px;">View plans</a>
       </div>
-      <!-- Pro → Pro 2 upgrade nudge (shown for Pro users only) -->
-      <div id="pro2Nudge" style="display:none;margin-top:18px;padding:14px 16px;background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:10px;">
+      <!-- Upgrade nudge (shown for Starter and Pro users) -->
+      <div id="planUpgradeNudge" style="display:none;margin-top:18px;padding:14px 16px;background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:10px;">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
           <div>
-            <div style="font-size:13px;font-weight:500;color:var(--ink);margin-bottom:2px;">Upgrade to Pro 2</div>
-            <div style="font-size:12px;color:var(--ink-muted);">700 scans/mo + Batch Upload — from A$15/mo</div>
+            <div id="nudgeTitle" style="font-size:13px;font-weight:500;color:var(--ink);margin-bottom:2px;">Upgrade your plan</div>
+            <div id="nudgeSubtitle" style="font-size:12px;color:var(--ink-muted);">More scans, more features.</div>
           </div>
-          <a href="/pricing.html" style="flex-shrink:0;background:var(--gold);color:white;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:8px 16px;border-radius:999px;text-decoration:none;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background='var(--accent-light)'" onmouseout="this.style.background='var(--gold)'">Upgrade to Pro 2 →</a>
+          <a id="nudgeCta" href="/pricing" style="flex-shrink:0;background:var(--gold);color:white;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:8px 16px;border-radius:999px;text-decoration:none;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background='var(--accent-light)'" onmouseout="this.style.background='var(--gold)'">View plans →</a>
         </div>
       </div>
     </div>
@@ -453,8 +453,26 @@
     if (isPaid) {
       statusEl.textContent = `${rem} scan${rem !== 1 ? 's' : ''} remaining this month.`;
       document.getElementById('upgradePrompt').style.display = 'none';
-      // Show Pro 2 nudge only for Pro users, not Pro 2
-      document.getElementById('pro2Nudge').style.display = planRaw === 'pro' ? 'block' : 'none';
+
+      // Plan-specific upgrade nudge
+      const nudge       = document.getElementById('planUpgradeNudge');
+      const nudgeTitle  = document.getElementById('nudgeTitle');
+      const nudgeSub    = document.getElementById('nudgeSubtitle');
+      const nudgeCta    = document.getElementById('nudgeCta');
+
+      if (planRaw === 'starter') {
+        nudgeTitle.textContent = 'Need more scans?';
+        nudgeSub.textContent   = 'Upgrade to Pro for 300 scans/mo or Pro 2 for 700 + Batch Upload.';
+        nudgeCta.textContent   = 'View plans →';
+        nudge.style.display    = 'block';
+      } else if (planRaw === 'pro') {
+        nudgeTitle.textContent = 'Upgrade to Pro 2';
+        nudgeSub.textContent   = '700 scans/mo + Batch Upload — from A$15/mo';
+        nudgeCta.textContent   = 'Upgrade to Pro 2 →';
+        nudge.style.display    = 'block';
+      } else {
+        nudge.style.display    = 'none';
+      }
     } else if (rem === 0) {
       statusEl.textContent = 'You have no scans remaining. Upgrade to keep going.';
       statusEl.style.color = 'var(--risk-high)';

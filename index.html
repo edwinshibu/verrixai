@@ -1462,6 +1462,25 @@ function showUpgradeToast(message) {
 function openPricingModal() {
   const plan = userProfile?.plan || (!currentUser ? 'guest' : 'free');
 
+  // ── Lock billing toggle for paid users ────────────────────
+  // Cycle changes (monthly↔annual) aren't supported via the upgrade flow,
+  // so force the toggle to match the user's current cycle and disable interaction.
+  const pmToggle = document.getElementById('pmToggle');
+  if (pmToggle) {
+    if (plan === 'starter' || plan === 'pro' || plan === 'pro2') {
+      const userBilling   = userProfile?.billing || 'monthly';
+      const shouldBeAnnual = userBilling === 'annual';
+      if (pmAnnual !== shouldBeAnnual) togglePmBilling();
+      pmToggle.onclick       = null;
+      pmToggle.style.cursor  = 'not-allowed';
+      pmToggle.style.opacity = '0.5';
+    } else {
+      pmToggle.onclick       = togglePmBilling;
+      pmToggle.style.cursor  = '';
+      pmToggle.style.opacity = '';
+    }
+  }
+
   // ── Helper: set button state ──────────────────────────────
   function setBtn(id, text, disabled, action) {
     const btn = document.getElementById(id);

@@ -532,8 +532,21 @@ async function initPricingPage() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return; // guest — show page as normal
 
-  const { data: profile } = await sb.from('profiles').select('plan').eq('id', session.user.id).single();
+  const { data: profile } = await sb.from('profiles').select('plan,billing').eq('id', session.user.id).single();
   const plan = profile?.plan || 'free';
+
+  // ── Lock billing toggle for paid users ────────────────────
+  // Cycle changes (monthly↔annual) aren't supported via the upgrade flow,
+  // so force the toggle to match the user's current cycle and disable interaction.
+  const billingTrack = document.getElementById('billingToggle');
+  if (billingTrack && (plan === 'starter' || plan === 'pro' || plan === 'pro2')) {
+    const userBilling = profile?.billing || 'monthly';
+    const shouldBeAnnual = userBilling === 'annual';
+    if (isAnnual !== shouldBeAnnual) toggleBilling();
+    billingTrack.onclick       = null;
+    billingTrack.style.cursor  = 'not-allowed';
+    billingTrack.style.opacity = '0.5';
+  }
 
   function setBtn(id, text, disabled, cls) {
     const btn = document.getElementById(id);

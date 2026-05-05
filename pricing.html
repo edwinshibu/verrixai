@@ -626,9 +626,26 @@ document.addEventListener('DOMContentLoaded', initPricingPage);
 
 // When the page is restored from the browser's back-forward cache (e.g. user
 // hits back from Stripe Checkout), JS state including disabled buttons is
-// preserved. Re-init to reset buttons stuck on "Loading…".
+// preserved. Force-reset all pricing buttons by clearing their disabled state
+// and re-running initPricingPage() to rebuild labels for paid users.
 window.addEventListener('pageshow', (event) => {
-  if (event.persisted) initPricingPage();
+  if (!event.persisted) return; // only on bfcache restore
+  // Step 1: brute-force reset disabled state on all pricing buttons
+  ['btnStarterMonthly', 'btnProMonthly', 'btnPro2Monthly'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) {
+      btn.disabled = false;
+      // Restore default text in case label was changed to "Loading…"
+      const defaults = {
+        btnStarterMonthly: 'Get Starter',
+        btnProMonthly:     'Get Pro',
+        btnPro2Monthly:    'Get Pro 2'
+      };
+      btn.textContent = defaults[id];
+    }
+  });
+  // Step 2: re-run init so paid users get correct "Current plan" / "Upgrade to" labels
+  initPricingPage();
 });
 
 async function startCheckout(plan, billing) {

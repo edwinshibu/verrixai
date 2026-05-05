@@ -1577,6 +1577,15 @@ document.getElementById('pricingModal').addEventListener('click', e => {
   if (e.target.id === 'pricingModal') closePricingModal();
 });
 
+// When the page is restored from the browser's back-forward cache (e.g. user
+// hits back from Stripe Checkout), JS state including disabled buttons is
+// preserved. Reset the pricing modal so buttons aren't stuck on "Loading…".
+window.addEventListener('pageshow', (event) => {
+  if (!event.persisted) return; // only on bfcache restore, not normal load
+  const modalOpen = document.getElementById('pricingModal').classList.contains('visible');
+  if (modalOpen) openPricingModal(); // re-renders all buttons to current plan state
+});
+
 let pmAnnual = true;
 function togglePmBilling() {
   pmAnnual = !pmAnnual;

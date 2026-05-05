@@ -2,14 +2,18 @@ export const config = { runtime: 'edge' };
 
 const ALLOWED_ORIGIN = 'https://verrixai.com';
 
-const PRICES = {
-  starter_monthly: 'price_1TB3b7HHwf5U84kmThqcLbaj',
-  starter_annual:  'price_1TB3bUHHwf5U84kmAKlQ6mNE',
-  pro_monthly:     'price_1T9lADHHwf5U84kmve42m93y',
-  pro_annual:      'price_1T9lB6HHwf5U84kmXzEJv35z',
-  pro2_monthly:    'price_1T9lBTHHwf5U84kmR25IuOPk',
-  pro2_annual:     'price_1T9lBuHHwf5U84kmMjEgqQ9o',
-};
+// Price IDs are loaded from env vars at request time so production and preview
+// can use different Stripe environments (live vs sandbox) without code changes.
+function getPrices() {
+  return {
+    starter_monthly: process.env.PRICE_STARTER_MONTHLY,
+    starter_annual:  process.env.PRICE_STARTER_ANNUAL,
+    pro_monthly:     process.env.PRICE_PRO_MONTHLY,
+    pro_annual:      process.env.PRICE_PRO_ANNUAL,
+    pro2_monthly:    process.env.PRICE_PRO2_MONTHLY,
+    pro2_annual:     process.env.PRICE_PRO2_ANNUAL,
+  };
+}
 
 export default async function handler(req) {
 
@@ -35,7 +39,7 @@ export default async function handler(req) {
 
   const { plan, billing } = body || {};
   const priceKey = `${plan}_${billing}`;
-  const priceId  = PRICES[priceKey];
+  const priceId  = getPrices()[priceKey];
   if (!priceId) return json({ error: 'Invalid plan or billing cycle' }, 400);
 
   const SUPABASE_URL      = process.env.SUPABASE_URL;

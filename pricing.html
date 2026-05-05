@@ -624,6 +624,13 @@ async function initPricingPage() {
 
 document.addEventListener('DOMContentLoaded', initPricingPage);
 
+// When the page is restored from the browser's back-forward cache (e.g. user
+// hits back from Stripe Checkout), JS state including disabled buttons is
+// preserved. Re-init to reset buttons stuck on "Loading…".
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) initPricingPage();
+});
+
 async function startCheckout(plan, billing) {
   const btnId = plan === 'starter' ? 'btnStarterMonthly' : plan === 'pro' ? 'btnProMonthly' : 'btnPro2Monthly';
   const btn = document.getElementById(btnId);

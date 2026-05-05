@@ -2,6 +2,16 @@ export const config = { runtime: 'edge' };
 
 const ALLOWED_ORIGIN = 'https://verrixai.com';
 
+// Permitted origins for CORS — production plus any *.vercel.app preview deploys
+function corsOrigin(req) {
+  const origin = req.headers.get('origin');
+  if (!origin) return ALLOWED_ORIGIN;
+  if (origin === ALLOWED_ORIGIN) return origin;
+  if (origin === 'https://www.verrixai.com') return origin;
+  if (/^https:\/\/verrixai-[a-z0-9-]+\.vercel\.app$/.test(origin)) return origin;
+  return ALLOWED_ORIGIN;
+}
+
 // Price IDs are loaded from env vars at request time so production and preview
 // can use different Stripe environments (live vs sandbox) without code changes.
 function getPrices() {
@@ -38,24 +48,24 @@ export default async function handler(req) {
     return new Response(null, {
       status: 204,
       headers: {
-        'Access-Control-Allow-Origin':  ALLOWED_ORIGIN,
+        'Access-Control-Allow-Origin':  corsOrigin(req),
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       }
     });
   }
 
-  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405, req);
 
   const authHeader = req.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return json({ error: 'Unauthorised' }, 401);
+  if (!authHeader?.startsWith('Bearer ')) return json({ error: 'Unauthorised' }, 401, req);
   const token = authHeader.split(' ')[1];
 
   let body;
-  try { body = await req.json(); } catch(e) { return json({ error: 'Invalid JSON' }, 400); }
+  try { body = await req.json(); } catch(e) { return json({ error: 'Invalid JSON' }, 400, req); }
 
   const { plan: newPlan, billing: requestedBilling } = body || {};
-  if (!newPlan || !requestedBilling) return json({ error: 'Missing plan or billing' }, 400);
+  if (!newPlan || !requestedBilling) return json({ error: 'Missing plan or billing' }, 400, req);
 
   const SUPABASE_URL         = process.env.SUPABASE_URL;
   const SUPABASE_ANON_KEY    = process.env.SUPABASE_ANON_KEY;
@@ -68,7 +78,7 @@ export default async function handler(req) {
       headers: { 'Authorization': `Bearer ${token}`, 'apikey': SUPABASE_ANON_KEY }
     });
     const userData = await userRes.json();
-    if (!userRes.ok || !userData.id) return json({ error: 'Unauthorised' }, 401);
+    if (!userRes.ok || !userData.id) return json({ error: 'Unauthorised' }, 401, req);
 
     // Fetch profile to get current plan + subscription
     const profileRes = await fetch(
@@ -79,7 +89,7 @@ export default async function handler(req) {
     const profile  = profiles?.[0];
 
     if (!profile?.stripe_subscription_id) {
-      return json({ error: 'No active subscription found. Please subscribe via the pricing page.' }, 400);
+      return json({ error: 'No active subscription found. Please subscribe via the pricing page.' }, 400, req);
     }
 
     const currentPlan    = profile.plan;
@@ -87,18 +97,18 @@ export default async function handler(req) {
 
     // Validate: must be a real upgrade path
     if (!isValidUpgrade(currentPlan, newPlan)) {
-      return json({ error: 'Invalid plan change. Only upgrades from your current plan are supported.' }, 400);
+      return json({ error: 'Invalid plan change. Only upgrades from your current plan are supported.' }, 400, req);
     }
 
     // Validate: billing cycle must match current (no monthly→annual switching here)
     if (requestedBilling !== currentBilling) {
-      return json({ error: 'Billing cycle change not supported. Please contact support.' }, 400);
+      return json({ error: 'Billing cycle change not supported. Please contact support.' }, 400, req);
     }
 
     // Look up the new price ID
     const priceKey = `${newPlan}_${requestedBilling}`;
     const newPriceId = getPrices()[priceKey];
-    if (!newPriceId) return json({ error: 'Invalid plan or billing cycle' }, 400);
+    if (!newPriceId) return json({ error: 'Invalid plan or billing cycle' }, 400, req);
 
     // Fetch existing subscription to get the item ID we need to swap
     const subFetchRes = await fetch(
@@ -143,7 +153,7 @@ export default async function handler(req) {
         error: isCardError
           ? `Payment failed: ${stripeMsg}. Please update your payment method and try again.`
           : 'Failed to upgrade plan. Please try again or contact admin@verrixai.com.'
-      }, isCardError ? 402 : 500);
+      }, isCardError ? 402 : 500, req);
     }
 
     // Mirror the change to profiles immediately (webhook is the safety net)
@@ -183,20 +193,20 @@ export default async function handler(req) {
       plan:               newPlan,
       scans_limit:        newScansLimit,
       current_period_end: periodEnd
-    });
+    }, 200, req);
 
   } catch(err) {
     console.error('Change plan error:', err);
-    return json({ error: 'Failed to change plan. Please try again or contact admin@verrixai.com.' }, 500);
+    return json({ error: 'Failed to change plan. Please try again or contact admin@verrixai.com.' }, 500, req);
   }
 }
 
-function json(data, status = 200) {
+function json(data, status = 200, req = null) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
       'Content-Type':                'application/json',
-      'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+      'Access-Control-Allow-Origin': req ? corsOrigin(req) : ALLOWED_ORIGIN,
     }
   });
 }

@@ -2,23 +2,33 @@ export const config = { runtime: 'edge' };
 
 const ALLOWED_ORIGIN = 'https://verrixai.com';
 
+// Permitted origins for CORS — production plus any *.vercel.app preview deploys
+function corsOrigin(req) {
+  const origin = req.headers.get('origin');
+  if (!origin) return ALLOWED_ORIGIN;
+  if (origin === ALLOWED_ORIGIN) return origin;
+  if (origin === 'https://www.verrixai.com') return origin;
+  if (/^https:\/\/verrixai-[a-z0-9-]+\.vercel\.app$/.test(origin)) return origin;
+  return ALLOWED_ORIGIN;
+}
+
 export default async function handler(req) {
 
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
       headers: {
-        'Access-Control-Allow-Origin':  ALLOWED_ORIGIN,
+        'Access-Control-Allow-Origin':  corsOrigin(req),
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       }
     });
   }
 
-  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405, req);
 
   const authHeader = req.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return json({ error: 'Unauthorised' }, 401);
+  if (!authHeader?.startsWith('Bearer ')) return json({ error: 'Unauthorised' }, 401, req);
   const token = authHeader.split(' ')[1];
 
   const SUPABASE_URL         = process.env.SUPABASE_URL;
@@ -32,7 +42,7 @@ export default async function handler(req) {
       headers: { 'Authorization': `Bearer ${token}`, 'apikey': SUPABASE_ANON_KEY }
     });
     const userData = await userRes.json();
-    if (!userRes.ok || !userData.id) return json({ error: 'Unauthorised' }, 401);
+    if (!userRes.ok || !userData.id) return json({ error: 'Unauthorised' }, 401, req);
 
     // Fetch their profile to get the subscription ID
     const profileRes = await fetch(
@@ -43,10 +53,10 @@ export default async function handler(req) {
     const profile  = profiles?.[0];
 
     if (!profile?.stripe_subscription_id) {
-      return json({ error: 'No active subscription found.' }, 400);
+      return json({ error: 'No active subscription found.' }, 400, req);
     }
     if (profile.plan === 'free') {
-      return json({ error: 'No paid subscription to cancel.' }, 400);
+      return json({ error: 'No paid subscription to cancel.' }, 400, req);
     }
 
     // Cancel at period end — user keeps access until billing period expires
@@ -91,20 +101,20 @@ export default async function handler(req) {
       console.error('Profile update failed (webhook will retry):', dbErr);
     }
 
-    return json({ success: true, cancel_at: stripeData.cancel_at, current_period_end: periodEnd });
+    return json({ success: true, cancel_at: stripeData.cancel_at, current_period_end: periodEnd }, 200, req);
 
   } catch(err) {
     console.error('Cancel subscription error:', err);
-    return json({ error: 'Failed to cancel subscription. Please contact admin@verrixai.com.' }, 500);
+    return json({ error: 'Failed to cancel subscription. Please contact admin@verrixai.com.' }, 500, req);
   }
 }
 
-function json(data, status = 200) {
+function json(data, status = 200, req = null) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
       'Content-Type':                'application/json',
-      'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+      'Access-Control-Allow-Origin': req ? corsOrigin(req) : ALLOWED_ORIGIN,
     }
   });
 }

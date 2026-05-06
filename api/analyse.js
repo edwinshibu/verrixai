@@ -3,7 +3,7 @@
 
 const ALLOWED_ORIGIN  = 'https://verrixai.com';
 const MAX_TEXT_LENGTH = 60000;
-const ALLOWED_MODEL   = 'claude-sonnet-4-20250514';
+const ALLOWED_MODEL   = 'claude-sonnet-4-6';
 const MAX_TOKENS      = 4000;
 
 // ── Rate limiting ──────────────────────────────────────────

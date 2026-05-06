@@ -2090,7 +2090,18 @@ async function startAnalysis() {
   // ── 6. Single fetch ───────────────────────────────────────
   let result = null;
   try {
-    const { data: { session: activeSession } } = await sb.auth.getSession();
+    // getSession() can deadlock indefinitely (navigator.locks issue), which
+    // would block the fetch and leave the user staring at the loading state
+    // until the 40s worker timeout fires. Race it against a 3s fallback —
+    // if getSession hasn't resolved by then, proceed without an auth header.
+    // Server still has rate limiting as a backstop, and the user gets a
+    // result instead of a fake "timeout".
+    const sessionPromise = sb.auth.getSession();
+    const fallbackPromise = new Promise(resolve =>
+      setTimeout(() => resolve({ data: { session: null } }), 3000)
+    );
+    const { data: { session: activeSession } } = await Promise.race([sessionPromise, fallbackPromise]);
+
     const analyseHeaders = { 'Content-Type': 'application/json' };
     if (activeSession?.access_token) analyseHeaders['Authorization'] = `Bearer ${activeSession.access_token}`;
     const res = await fetch('/api/analyse', {

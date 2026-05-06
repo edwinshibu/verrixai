@@ -73,7 +73,7 @@ async function verifyTokenAndGetProfile(token) {
   return {
     userId:      user.id,
     scans_used:  profiles[0].scans_used  ?? 0,
-    scans_limit: profiles[0].scans_limit ?? 5
+    scans_limit: profiles[0].scans_limit ?? 3
   };
 }
 

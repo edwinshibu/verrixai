@@ -27,8 +27,8 @@ function getPrices() {
 
 const PLAN_SCANS = {
   starter: 50,
-  pro:     300,
-  pro2:    700,
+  pro:     100,
+  pro2:    250,
 };
 
 // Permitted upgrade paths (no downgrades, no same-plan moves)
@@ -164,7 +164,7 @@ export default async function handler(req) {
       ? new Date(periodEndRaw * 1000).toISOString()
       : null;
 
-    const newScansLimit = PLAN_SCANS[newPlan] || 5;
+    const newScansLimit = PLAN_SCANS[newPlan] || 3;
 
     try {
       await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userData.id}`, {

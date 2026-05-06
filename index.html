@@ -538,7 +538,7 @@
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">×</button>
     <h2 id="modalTitle">Create Account</h2>
-    <p class="modal-sub" id="modalSub">Get <strong>5 free scans</strong> — no credit card needed.</p>
+    <p class="modal-sub" id="modalSub">Get <strong>3 free scans</strong> — no credit card needed.</p>
     <div class="modal-error" id="modalError"></div>
     <div class="modal-success" id="modalSuccess"></div>
 
@@ -620,7 +620,7 @@
           <div class="pm-price-val">A$0</div>
           <div class="pm-price-sub">No credit card</div>
         </div>
-        <div class="pm-scans">5 scans / account</div>
+        <div class="pm-scans">3 scans / account</div>
         <ul class="pm-feats"><li>AI Document Analysis</li><li>Risk Flags (High / Medium / Low)</li><li>Key Points</li><li>In Simple Terms</li><li>PDF, DOCX & TXT upload</li><li>Zero data retention</li></ul>
         <button class="btn-pm outline" onclick="closePricingModal()">Current plan</button>
       </div>
@@ -649,8 +649,8 @@
           <div class="pm-price-sub pm-annual-sub" style="display:block">per year <span style="color:var(--accent-light);font-weight:600;">(A$7/mo)</span></div>
           <div class="price-orig pm-annual-orig" style="display:block;">was A$108/yr</div>
         </div>
-        <div class="pm-scans">300 scans / mo</div>
-        <ul class="pm-feats"><li>Everything in Starter</li><li>300 scans per month</li><li>Export results as PDF</li><li>Email support</li><li>Cancel anytime</li></ul>
+        <div class="pm-scans">100 scans / mo</div>
+        <ul class="pm-feats"><li>Everything in Starter</li><li>100 scans per month</li><li>Export results as PDF</li><li>Email support</li><li>Cancel anytime</li></ul>
         <button class="btn-pm solid" id="btnProCheckout" onclick="startCheckout('pro')">Get Pro</button>
       </div>
       <!-- PRO 2 -->
@@ -663,8 +663,8 @@
           <div class="pm-price-sub pm-annual-sub" style="display:block">per year <span style="color:var(--accent-light);font-weight:600;">(A$12/mo)</span></div>
           <div class="price-orig pm-annual-orig" style="display:block;">was A$180/yr</div>
         </div>
-        <div class="pm-scans">700 scans / mo</div>
-        <ul class="pm-feats"><li>Everything in Pro</li><li>700 scans per month</li><li>Batch upload (up to 10 files)</li><li>Priority email support</li><li>Cancel anytime</li></ul>
+        <div class="pm-scans">250 scans / mo</div>
+        <ul class="pm-feats"><li>Everything in Pro</li><li>250 scans per month</li><li>Batch upload (up to 10 files)</li><li>Priority email support</li><li>Cancel anytime</li></ul>
         <button class="btn-pm gold-btn" id="btnPro2Checkout" onclick="startCheckout('pro2')">Get Pro 2</button>
       </div>
     
@@ -751,7 +751,7 @@
         </div>
         <div class="upgrade-icon">🔒</div>
         <h3 id="upgradeTitle">You've used your free scan</h3>
-        <p id="upgradeMsg">Create a free account to get 5 scans instantly — no credit card needed.</p>
+        <p id="upgradeMsg">Create a free account to get 3 scans instantly — no credit card needed.</p>
         <div class="upgrade-actions" id="upgradeActions"></div>
       </div>
     </div>
@@ -959,7 +959,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // ─── STATE ───────────────────────────────────────────────────
 
 
-const USER_LIMIT  = 5;
+const USER_LIMIT  = 3;
 let currentUser   = null;
 let userProfile   = null;
 let loadedFile       = null;
@@ -1283,7 +1283,7 @@ function renderScanPill() {
   const pips  = document.getElementById('scanPips');
   const label = document.getElementById('scanLabel');
   if (!currentUser || !userProfile) { pill.style.display = 'none'; return; }
-  // Hide pill entirely for paid users — they have 300/700 scans, pips are meaningless
+  // Hide pill entirely for paid users — they have 100/250 scans, pips are meaningless
   const plan = userProfile?.plan || 'free';
   if (plan === 'pro' || plan === 'pro2' || plan === 'starter') { pill.style.display = 'none'; return; }
   pill.style.display = 'flex';
@@ -1305,26 +1305,57 @@ function canScan() {
   return userProfile.scans_used < (userProfile.scans_limit || USER_LIMIT);
 }
 async function recordScan() {
-  if (currentUser && userProfile) {
-    try {
-      // Atomic server-side increment — DB does scans_used + 1 itself.
-      // Eliminates race conditions in batch loops entirely.
-      const { data, error } = await Promise.race([
-        sb.rpc('increment_scans_used', { user_id: currentUser.id }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
-      ]);
-      if (!error && data != null) {
-        userProfile.scans_used = data; // real DB value returned
-      } else {
-        userProfile.scans_used = (userProfile.scans_used || 0) + 1; // fallback
-        if (error) console.warn('recordScan error:', error.message);
-      }
-    } catch(e) {
-      userProfile.scans_used = (userProfile.scans_used || 0) + 1; // timeout fallback
-      console.warn('recordScan timed out:', e.message);
+  if (!currentUser || !userProfile) return;
+
+  // Try the atomic RPC first — preferred path
+  try {
+    const { data, error } = await Promise.race([
+      sb.rpc('increment_scans_used', { user_id: currentUser.id }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
+    ]);
+    if (!error && data != null) {
+      userProfile.scans_used = data; // real DB value returned
+      renderScanPill();
+      return;
     }
+    if (error) console.warn('recordScan RPC error:', error.message);
+  } catch(e) {
+    console.warn('recordScan RPC timed out:', e.message);
   }
+
+  // RPC failed or timed out — direct REST fallback that bypasses the JS client.
+  // Supabase JS client can hang on navigator.locks; raw fetch sidesteps that.
+  const newCount = (userProfile.scans_used || 0) + 1;
+  userProfile.scans_used = newCount; // optimistic local update
   renderScanPill();
+
+  try {
+    // Read auth token from localStorage so we don't depend on getSession (which may also be hung)
+    let accessToken = SUPABASE_KEY; // anon key as last resort
+    try {
+      const stored = localStorage.getItem(`sb-${SUPABASE_URL.replace('https://','').split('.')[0]}-auth-token`);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed?.access_token) accessToken = parsed.access_token;
+      }
+    } catch(e) { /* fall back to anon key */ }
+
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${currentUser.id}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey':        SUPABASE_KEY,
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type':  'application/json',
+        'Prefer':        'return=minimal'
+      },
+      body: JSON.stringify({ scans_used: newCount })
+    });
+    if (!res.ok) {
+      console.error('recordScan REST fallback failed:', res.status, await res.text());
+    }
+  } catch(e) {
+    console.error('recordScan REST fallback exception:', e);
+  }
 }
 function showUpgradeWall() {
   document.getElementById('inputState').style.display  = 'none';
@@ -1335,7 +1366,7 @@ function showUpgradeWall() {
   wall.style.display = 'block';
   if (!currentUser) {
     document.getElementById('upgradeTitle').textContent = "Create a free account to get started";
-    document.getElementById('upgradeMsg').textContent   = "Sign up for free and get 5 scans instantly — no credit card needed.";
+    document.getElementById('upgradeMsg').textContent   = "Sign up for free and get 3 scans instantly — no credit card needed.";
     acts.innerHTML = `<button class="btn-upgrade primary" onclick="openModal('signup')">Create free account</button>
                       <button class="btn-upgrade secondary" onclick="openModal('login')">Sign in</button>
                       <button class="btn-upgrade secondary" onclick="openPricingModal()">View pricing</button>`;
@@ -1377,8 +1408,23 @@ async function startCheckout(plan) {
   }
 
   try {
-    // Check session is still valid
-    const { data: { session } } = await sb.auth.getSession();
+    // Check session is still valid. getSession() can deadlock (navigator.locks)
+    // so race against a 3s fallback that reads token from localStorage directly.
+    const sessionPromise = sb.auth.getSession();
+    const fallbackPromise = new Promise(resolve => setTimeout(() => {
+      try {
+        const stored = localStorage.getItem(`sb-${SUPABASE_URL.replace('https://','').split('.')[0]}-auth-token`);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed?.access_token) {
+            resolve({ data: { session: { access_token: parsed.access_token } } });
+            return;
+          }
+        }
+      } catch(e) { /* fall through */ }
+      resolve({ data: { session: null } });
+    }, 3000));
+    const { data: { session } } = await Promise.race([sessionPromise, fallbackPromise]);
     if (!session) {
       resetBtn(null);
       openModal('signin');
@@ -1683,7 +1729,7 @@ function openModal(mode) {
   } else {
     document.getElementById('authEmail').style.display   = '';
     document.getElementById('modalTitle').textContent    = isSignup ? 'Create Account' : 'Welcome back';
-    document.getElementById('modalSub').innerHTML        = isSignup ? 'Get <strong>5 free scans</strong> — no credit card needed.' : 'Sign in to access your scans.';
+    document.getElementById('modalSub').innerHTML        = isSignup ? 'Get <strong>3 free scans</strong> — no credit card needed.' : 'Sign in to access your scans.';
     document.getElementById('authSubmitBtn').textContent = isSignup ? 'Create Account' : 'Sign in';
     document.getElementById('modalSwitch').innerHTML     = isSignup
       ? "Already have an account? <a onclick=\"switchModal('login')\">Sign in</a>"

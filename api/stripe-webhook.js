@@ -1,7 +1,7 @@
 const PLAN_SCANS = {
   starter: 50,
-  pro:     300,
-  pro2:    700,
+  pro:     100,
+  pro2:    250,
 };
 
 function toHex(buffer) {
@@ -67,7 +67,7 @@ export default async function handler(req, res) {
         const subscriptionId = session.subscription;
         if (!userId || !plan) break;
 
-        const scansLimit = PLAN_SCANS[plan] || 5;
+        const scansLimit = PLAN_SCANS[plan] || 3;
 
         // Fetch the subscription so we can store current_period_end immediately
         // (Stripe doesn't reliably fire customer.subscription.updated right after checkout)
@@ -159,7 +159,7 @@ export default async function handler(req, res) {
         }
 
         // Otherwise: active renewal — reset scans, clear any stale cancel flag
-        const scansLimit = PLAN_SCANS[plan] || 5;
+        const scansLimit = PLAN_SCANS[plan] || 3;
         const status = sub.status;
 
         if (status === 'active') {
@@ -189,7 +189,7 @@ export default async function handler(req, res) {
           headers: adminHeaders,
           body: JSON.stringify({
             plan: 'free',
-            scans_limit: 5,
+            scans_limit: 3,
             scans_used: 0,
             stripe_subscription_id: null,
             cancel_at_period_end: false,

@@ -538,7 +538,7 @@
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">×</button>
     <h2 id="modalTitle">Create Account</h2>
-    <p class="modal-sub" id="modalSub">Get <strong>5 free scans</strong> — no credit card needed.</p>
+    <p class="modal-sub" id="modalSub">Get <strong>3 free scans</strong> — no credit card needed.</p>
     <div class="modal-error" id="modalError"></div>
     <div class="modal-success" id="modalSuccess"></div>
 
@@ -620,7 +620,7 @@
           <div class="pm-price-val">A$0</div>
           <div class="pm-price-sub">No credit card</div>
         </div>
-        <div class="pm-scans">5 scans / account</div>
+        <div class="pm-scans">3 scans / account</div>
         <ul class="pm-feats"><li>AI Document Analysis</li><li>Risk Flags (High / Medium / Low)</li><li>Key Points</li><li>In Simple Terms</li><li>PDF, DOCX & TXT upload</li><li>Zero data retention</li></ul>
         <button class="btn-pm outline" onclick="closePricingModal()">Current plan</button>
       </div>
@@ -649,8 +649,8 @@
           <div class="pm-price-sub pm-annual-sub" style="display:block">per year <span style="color:var(--accent-light);font-weight:600;">(A$7/mo)</span></div>
           <div class="price-orig pm-annual-orig" style="display:block;">was A$108/yr</div>
         </div>
-        <div class="pm-scans">300 scans / mo</div>
-        <ul class="pm-feats"><li>Everything in Starter</li><li>300 scans per month</li><li>Export results as PDF</li><li>Email support</li><li>Cancel anytime</li></ul>
+        <div class="pm-scans">100 scans / mo</div>
+        <ul class="pm-feats"><li>Everything in Starter</li><li>100 scans per month</li><li>Export results as PDF</li><li>Email support</li><li>Cancel anytime</li></ul>
         <button class="btn-pm solid" id="btnProCheckout" onclick="startCheckout('pro')">Get Pro</button>
       </div>
       <!-- PRO 2 -->
@@ -663,8 +663,8 @@
           <div class="pm-price-sub pm-annual-sub" style="display:block">per year <span style="color:var(--accent-light);font-weight:600;">(A$12/mo)</span></div>
           <div class="price-orig pm-annual-orig" style="display:block;">was A$180/yr</div>
         </div>
-        <div class="pm-scans">700 scans / mo</div>
-        <ul class="pm-feats"><li>Everything in Pro</li><li>700 scans per month</li><li>Batch upload (up to 10 files)</li><li>Priority email support</li><li>Cancel anytime</li></ul>
+        <div class="pm-scans">250 scans / mo</div>
+        <ul class="pm-feats"><li>Everything in Pro</li><li>250 scans per month</li><li>Batch upload (up to 10 files)</li><li>Priority email support</li><li>Cancel anytime</li></ul>
         <button class="btn-pm gold-btn" id="btnPro2Checkout" onclick="startCheckout('pro2')">Get Pro 2</button>
       </div>
     
@@ -751,7 +751,7 @@
         </div>
         <div class="upgrade-icon">🔒</div>
         <h3 id="upgradeTitle">You've used your free scan</h3>
-        <p id="upgradeMsg">Create a free account to get 5 scans instantly — no credit card needed.</p>
+        <p id="upgradeMsg">Create a free account to get 3 scans instantly — no credit card needed.</p>
         <div class="upgrade-actions" id="upgradeActions"></div>
       </div>
     </div>
@@ -1283,7 +1283,7 @@ function renderScanPill() {
   const pips  = document.getElementById('scanPips');
   const label = document.getElementById('scanLabel');
   if (!currentUser || !userProfile) { pill.style.display = 'none'; return; }
-  // Hide pill entirely for paid users — they have 300/700 scans, pips are meaningless
+  // Hide pill entirely for paid users — they have 100/250 scans, pips are meaningless
   const plan = userProfile?.plan || 'free';
   if (plan === 'pro' || plan === 'pro2' || plan === 'starter') { pill.style.display = 'none'; return; }
   pill.style.display = 'flex';
@@ -1335,7 +1335,7 @@ function showUpgradeWall() {
   wall.style.display = 'block';
   if (!currentUser) {
     document.getElementById('upgradeTitle').textContent = "Create a free account to get started";
-    document.getElementById('upgradeMsg').textContent   = "Sign up for free and get 5 scans instantly — no credit card needed.";
+    document.getElementById('upgradeMsg').textContent   = "Sign up for free and get 3 scans instantly — no credit card needed.";
     acts.innerHTML = `<button class="btn-upgrade primary" onclick="openModal('signup')">Create free account</button>
                       <button class="btn-upgrade secondary" onclick="openModal('login')">Sign in</button>
                       <button class="btn-upgrade secondary" onclick="openPricingModal()">View pricing</button>`;
@@ -1683,7 +1683,7 @@ function openModal(mode) {
   } else {
     document.getElementById('authEmail').style.display   = '';
     document.getElementById('modalTitle').textContent    = isSignup ? 'Create Account' : 'Welcome back';
-    document.getElementById('modalSub').innerHTML        = isSignup ? 'Get <strong>5 free scans</strong> — no credit card needed.' : 'Sign in to access your scans.';
+    document.getElementById('modalSub').innerHTML        = isSignup ? 'Get <strong>3 free scans</strong> — no credit card needed.' : 'Sign in to access your scans.';
     document.getElementById('authSubmitBtn').textContent = isSignup ? 'Create Account' : 'Sign in';
     document.getElementById('modalSwitch').innerHTML     = isSignup
       ? "Already have an account? <a onclick=\"switchModal('login')\">Sign in</a>"

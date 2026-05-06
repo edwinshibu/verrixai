@@ -1577,6 +1577,23 @@ document.getElementById('pricingModal').addEventListener('click', e => {
   if (e.target.id === 'pricingModal') closePricingModal();
 });
 
+// When the page is restored from the browser's back-forward cache (e.g. user
+// hits back from Stripe Checkout), JS state including disabled buttons is
+// preserved. Force-reset all pricing buttons by clearing their disabled state
+// and re-running openPricingModal() to rebuild the labels from current state.
+window.addEventListener('pageshow', (event) => {
+  if (!event.persisted) return; // only on bfcache restore
+  // Step 1: brute-force reset disabled state on all pricing buttons
+  ['btnStarterCheckout', 'btnProCheckout', 'btnPro2Checkout'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.disabled = false;
+  });
+  // Step 2: re-render the modal so button labels match the user's current plan
+  if (document.getElementById('pricingModal').classList.contains('visible')) {
+    openPricingModal();
+  }
+});
+
 let pmAnnual = true;
 function togglePmBilling() {
   pmAnnual = !pmAnnual;

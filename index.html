@@ -2090,7 +2090,27 @@ async function startAnalysis() {
   // ── 6. Single fetch ───────────────────────────────────────
   let result = null;
   try {
-    const { data: { session: activeSession } } = await sb.auth.getSession();
+    // getSession() can deadlock indefinitely (navigator.locks issue), which
+    // would block the fetch and leave the user staring at the loading state
+    // until the 40s worker timeout fires. Race it against a 3s fallback that
+    // reads the session directly from localStorage — Supabase persists it
+    // there, so we have the access token even when getSession hangs.
+    const sessionPromise = sb.auth.getSession();
+    const fallbackPromise = new Promise(resolve => setTimeout(() => {
+      try {
+        const stored = localStorage.getItem(`sb-${SUPABASE_URL.replace('https://','').split('.')[0]}-auth-token`);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed?.access_token) {
+            resolve({ data: { session: { access_token: parsed.access_token } } });
+            return;
+          }
+        }
+      } catch(e) { /* fall through */ }
+      resolve({ data: { session: null } });
+    }, 3000));
+    const { data: { session: activeSession } } = await Promise.race([sessionPromise, fallbackPromise]);
+
     const analyseHeaders = { 'Content-Type': 'application/json' };
     if (activeSession?.access_token) analyseHeaders['Authorization'] = `Bearer ${activeSession.access_token}`;
     const res = await fetch('/api/analyse', {

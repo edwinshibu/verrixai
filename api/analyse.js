@@ -81,11 +81,20 @@ async function verifyTokenAndGetProfile(token) {
 const SYSTEM_PROMPT = `You are a document analyst. You MUST respond ONLY with a single valid JSON object — no markdown, no preamble, no text outside the JSON.
 
 Analyse the document and return this JSON:
-{"IS_LEGAL":true/false,"SUMMARY":"...","RISKS":[{"level":"HIGH","title":"...","desc":"..."}],"KEY_POINTS":["..."],"SIMPLIFIED":"..."}
+{"IS_LEGAL":true/false,"SUMMARY":"...","RISKS":[{"level":"HIGH","title":"...","desc":"..."}],"RISKS_TRUNCATED":0,"KEY_POINTS":["..."],"SIMPLIFIED":"..."}
 
 IS_LEGAL: true if this is a legal/contractual/business document. false for anything else (CV, academic, personal docs etc).
 
-RISKS must be a JSON array of objects with keys: level (HIGH/MEDIUM/LOW), title (string), desc (string). Include 3–6 items.
+RISKS must be a JSON array of objects with keys: level (HIGH/MEDIUM/LOW), title (string), desc (string).
+
+Severity guidance:
+- HIGH: material concerns — significant financial exposure, unusual or onerous obligations, missing critical protections, ambiguous terms with real consequence. Use sparingly; typical contracts have 0–4 HIGH risks.
+- MEDIUM: notable but standard concerns worth flagging.
+- LOW: minor points or boilerplate worth knowing about.
+
+Cap: include up to 8 items total. EXCEPTION: ALL HIGH-severity risks must be included even if this exceeds 8 (hard ceiling 15 HIGH for very complex documents). After listing all HIGH risks, fill remaining slots up to 8 with the most material MEDIUM and LOW. Minimum 3 items if the document has any concerns.
+
+RISKS_TRUNCATED: integer count of additional MEDIUM/LOW-severity considerations identified in the document but not included in the RISKS array (0 if RISKS contains everything material). Do not count HIGH risks here — those are always fully included in RISKS.
 KEY_POINTS must be a JSON array of strings. Include 4–7 items.
 SUMMARY must be a plain string, 3–5 sentences.
 SIMPLIFIED must be a plain string, plain-English rewrite, 3–5 sentences, no jargon.
@@ -181,6 +190,8 @@ export default async function handler(req, res) {
   const requestedKeys = options.length
     ? ['IS_LEGAL', ...options.map(o => KEY_MAP[o]).filter(Boolean)]
     : ['IS_LEGAL', 'SUMMARY', 'RISKS', 'KEY_POINTS', 'SIMPLIFIED'];
+  // If RISKS is requested, also request RISKS_TRUNCATED
+  if (requestedKeys.includes('RISKS')) requestedKeys.push('RISKS_TRUNCATED');
   const dynamicInstruction = `Only include these keys in your JSON response: ${requestedKeys.join(', ')}.`;
 
   // Prompt injection boundary — treats all user content as data, never instructions

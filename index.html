@@ -248,6 +248,7 @@
   .risk-text { font-size: 13px; line-height: 1.6; }
   .risk-text strong { display: block; margin-bottom: 3px; font-weight: 500; }
   .risk-text span { color: var(--ink-muted); }
+  .risks-truncated { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 12px; font-style: italic; color: var(--ink-muted); line-height: 1.5; }
   .key-point { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
   .key-point:last-child { border-bottom: none; }
   .kp-bullet { width: 20px; height: 20px; border-radius: 50%; background: #EAF2EC; color: var(--accent-light); font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
@@ -2199,11 +2200,16 @@ function renderResults(r, opts) {
   if (opts.includes('risks') && r.RISKS) {
     let risks = r.RISKS;
     if (typeof risks === 'string') { try { risks = JSON.parse(risks); } catch(e){ risks=[]; } }
-    document.getElementById('body-risks').innerHTML = risks.map(r => `
+    let html = risks.map(r => `
       <div class="risk-item">
         <div class="risk-badge ${r.level?.toLowerCase()}">${r.level}</div>
         <div class="risk-text"><strong>${esc(r.title)}</strong><span>${esc(r.desc)}</span></div>
       </div>`).join('') || '<p>No significant risks identified.</p>';
+    const truncated = parseInt(r.RISKS_TRUNCATED, 10);
+    if (truncated > 0) {
+      html += `<p class="risks-truncated">+${truncated} additional MEDIUM/LOW consideration${truncated === 1 ? '' : 's'} not shown. For thorough review of important documents, consult a lawyer.</p>`;
+    }
+    document.getElementById('body-risks').innerHTML = html;
   }
   if (opts.includes('keypoints') && r.KEY_POINTS) {
     let pts = r.KEY_POINTS;
@@ -2574,11 +2580,15 @@ function switchBatchTab(idx, opts) {
   if (activeOpts.includes('risks') && result.RISKS) {
     let risks = result.RISKS;
     if (typeof risks === 'string') { try { risks = JSON.parse(risks); } catch(e){ risks=[]; } }
-    const body = risks.map(r => `
+    let body = risks.map(r => `
       <div class="risk-item">
         <div class="risk-badge ${r.level?.toLowerCase()}">${r.level}</div>
         <div class="risk-text"><strong>${esc(r.title)}</strong><span>${esc(r.desc)}</span></div>
       </div>`).join('') || '<p>No significant risks identified.</p>';
+    const truncated = parseInt(result.RISKS_TRUNCATED, 10);
+    if (truncated > 0) {
+      body += `<p class="risks-truncated">+${truncated} additional MEDIUM/LOW consideration${truncated === 1 ? '' : 's'} not shown. For thorough review of important documents, consult a lawyer.</p>`;
+    }
     sectionsHTML += buildSection('sec-b-risks', '⚠️', 'Risk Flags', body);
   }
   if (activeOpts.includes('keypoints') && result.KEY_POINTS) {
@@ -2761,6 +2771,18 @@ function exportToPdf() {
       descLines.forEach(line => { checkPage(5); doc.text(line, marginL + 22, y); y += 5; });
       y += 4;
     });
+    // Truncation note
+    const truncated = parseInt(r.RISKS_TRUNCATED, 10);
+    if (truncated > 0) {
+      checkPage(12);
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(9);
+      doc.setTextColor(...inkMuted);
+      const noteText = `+${truncated} additional MEDIUM/LOW consideration${truncated === 1 ? '' : 's'} not shown. For thorough review of important documents, consult a lawyer.`;
+      const noteLines = wrapText(noteText, marginL, contentW, 9);
+      noteLines.forEach(line => { checkPage(5); doc.text(line, marginL, y); y += 5; });
+      y += 2;
+    }
     y += 2;
   }
 

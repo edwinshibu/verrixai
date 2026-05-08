@@ -1857,22 +1857,46 @@ async function handleAuth() {
         setTimeout(() => closeModal(), 1800);
       }
     } else {
-      const { error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) {
-        try {
-          // Check if email exists in profiles
-          const { data: profile } = await sb.from('profiles').select('id').eq('email', email).maybeSingle();
-          if (!profile) {
-            errEl.innerHTML = 'No account found for this email. <a onclick="switchModal(\'signup\')" style="color:var(--accent-light);cursor:pointer;font-weight:500;text-decoration:underline;">Create a free account →</a>';
-          } else {
-            errEl.innerHTML = 'Incorrect password. If you signed up with Google, <a onclick="document.getElementById(\'btnGoogle\').click()" style="color:var(--accent-light);cursor:pointer;font-weight:500;text-decoration:underline;">sign in with Google instead</a>.';
-          }
-        } catch(profileErr) {
-          // If profile check fails, show generic helpful message
-          errEl.textContent = 'Incorrect email or password. Please try again.';
+      // Supabase JS can deadlock on navigator.locks during sign-in (same pattern
+      // as updateUser, recordScan, etc). Race against 5s timeout.
+      // Strategy: on clean success OR on timeout, reload the page — Supabase JS
+      // re-initialises from localStorage and picks up the new session cleanly.
+      // On returned error (wrong password, etc), stay in modal and show helper.
+      let signInError = null;
+      let timedOut = false;
+      try {
+        const result = await Promise.race([
+          sb.auth.signInWithPassword({ email, password }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
+        ]);
+        signInError = result?.error || null;
+      } catch (e) {
+        if (e.message === 'timeout') {
+          timedOut = true;
+          console.warn('signInWithPassword timed out — reloading to let Supabase re-init from localStorage');
+        } else {
+          throw e;
         }
-        errEl.classList.add('visible');
       }
+      if (timedOut || !signInError) {
+        // Success path (clean OR timeout) — reload to re-init session state
+        window.location.reload();
+        return; // prevent the button reset below from flashing before reload
+      }
+      // Error path — surface helpful message, stay in modal
+      try {
+        // Check if email exists in profiles
+        const { data: profile } = await sb.from('profiles').select('id').eq('email', email).maybeSingle();
+        if (!profile) {
+          errEl.innerHTML = 'No account found for this email. <a onclick="switchModal(\'signup\')" style="color:var(--accent-light);cursor:pointer;font-weight:500;text-decoration:underline;">Create a free account →</a>';
+        } else {
+          errEl.innerHTML = 'Incorrect password. If you signed up with Google, <a onclick="document.getElementById(\'btnGoogle\').click()" style="color:var(--accent-light);cursor:pointer;font-weight:500;text-decoration:underline;">sign in with Google instead</a>.';
+        }
+      } catch(profileErr) {
+        // If profile check fails, show generic helpful message
+        errEl.textContent = 'Incorrect email or password. Please try again.';
+      }
+      errEl.classList.add('visible');
     }
   } catch(e) { errEl.textContent = 'Something went wrong. Please try again.'; errEl.classList.add('visible'); }
   btn.disabled = false;
@@ -1880,27 +1904,13 @@ async function handleAuth() {
 }
 
 async function signOut(btn) {
-  const signOutBtn = document.getElementById('btnSignOut');
-  if (signOutBtn) { signOutBtn.disabled = true; signOutBtn.innerHTML = '<span class="dropdown-icon">→</span> Signing out…'; }
-
-  // Always reset UI after 4s regardless — prevents stuck state if Supabase hangs
-  const forceReset = setTimeout(() => {
-    currentUser = null; userProfile = null;
-    renderNavGuest();
-  }, 4000);
-
-  try {
-    await Promise.race([
-      sb.auth.signOut(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 4000))
-    ]);
-  } catch(e) {
-    console.warn('Sign out:', e.message);
-  } finally {
-    clearTimeout(forceReset);
-    currentUser = null; userProfile = null;
-    renderNavGuest();
-  }
+  // Fire-and-forget the API call, then reload immediately.
+  // Reload re-initialises Supabase JS from localStorage; if signOut() has
+  // cleared the session by then (or hasn't), the next init either finds
+  // no session or is told to clear one. Either way, user lands as guest.
+  // This sidesteps the navigator.locks deadlock entirely — no await, no race.
+  try { sb.auth.signOut(); } catch(e) { /* swallow — we're reloading regardless */ }
+  window.location.reload();
 }
 
 // ─── FILE HANDLING ───────────────────────────────────────────

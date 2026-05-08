@@ -101,6 +101,60 @@ export default async function handler(req) {
       console.error('Profile update failed (webhook will retry):', dbErr);
     }
 
+    // Send cancellation-scheduled email to user (best-effort — failure here doesn't block the cancellation)
+    try {
+      const RESEND_API_KEY = process.env.RESEND_API_KEY;
+      if (RESEND_API_KEY && userData.email && periodEnd) {
+        const planLabel = profile.plan === 'starter' ? 'Starter' : profile.plan === 'pro' ? 'Pro' : profile.plan === 'pro2' ? 'Pro 2' : profile.plan;
+        // Format the period-end date for display (e.g. "Friday, 5 June 2026")
+        const endDate = new Date(periodEnd);
+        const formattedDate = new Intl.DateTimeFormat('en-AU', {
+          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        }).format(endDate);
+        const subject = `Your VerrixAI subscription will end on ${formattedDate}`;
+        const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;background:#F7F6F2;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F7F6F2;padding:40px 20px;">
+<tr><td align="center">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+<tr><td align="center" style="padding-bottom:32px;"><span style="font-family:Georgia,serif;font-size:26px;font-weight:600;color:#1A1A18;letter-spacing:-0.3px;">Verrix<span style="color:#B8963E;">AI</span></span></td></tr>
+<tr><td style="background:#FFFFFF;border-radius:18px;border:1px solid #E2E0D8;padding:40px 44px;box-shadow:0 4px 24px rgba(26,26,24,0.07);">
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:24px;"><div style="width:56px;height:56px;background:#F0EEE8;border-radius:50%;display:inline-block;text-align:center;line-height:56px;font-size:24px;">⌛</div></td></tr></table>
+<p style="font-family:Georgia,serif;font-size:24px;font-weight:500;color:#1A1A18;text-align:center;margin:0 0 10px;line-height:1.3;">Cancellation scheduled</p>
+<p style="font-size:15px;color:#6B6B62;text-align:center;margin:0 0 28px;line-height:1.65;font-weight:300;">Your VerrixAI ${planLabel} subscription will end on <strong style="color:#1A1A18;">${formattedDate}</strong>. You won't be charged again.</p>
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;"><tr><td style="background:#FAF8F2;border:1px solid #E8E2D2;border-radius:10px;padding:18px 20px;">
+<p style="font-size:12px;font-weight:600;color:#1A1A18;margin:0 0 10px;letter-spacing:0.04em;text-transform:uppercase;">Until then</p>
+<p style="font-size:13px;color:#6B6B62;margin:0 0 6px;line-height:1.6;">→ You keep full ${planLabel} access</p>
+<p style="font-size:13px;color:#6B6B62;margin:0 0 6px;line-height:1.6;">→ Any remaining scans this period are yours to use</p>
+<p style="font-size:13px;color:#6B6B62;margin:0;line-height:1.6;">→ After ${formattedDate}, your account moves to the Free plan automatically</p>
+</td></tr></table>
+<p style="font-size:14px;color:#6B6B62;margin:0 0 28px;line-height:1.7;">Changed your mind? Email us at <a href="mailto:admin@verrixai.com" style="color:#2E5C42;font-weight:500;">admin@verrixai.com</a> before <strong>${formattedDate}</strong> and we'll reverse the cancellation.</p>
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:8px;"><a href="https://verrixai.com/account" style="display:inline-block;background:#1A3A2A;color:#FFFFFF;font-size:14px;font-weight:500;text-decoration:none;padding:13px 32px;border-radius:12px;letter-spacing:0.02em;">View account</a></td></tr></table>
+</td></tr>
+<tr><td align="center" style="padding-top:24px;"><p style="font-size:11px;color:#B8B8AA;margin:0;line-height:1.6;">You're receiving this because a cancellation was scheduled on your subscription at <a href="https://verrixai.com" style="color:#B8963E;text-decoration:none;">verrixai.com</a>.<br/>Questions? Reply to this email or contact <a href="mailto:admin@verrixai.com" style="color:#B8963E;text-decoration:none;">admin@verrixai.com</a>.</p></td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+        const text = `Your VerrixAI ${planLabel} subscription will end on ${formattedDate}. You won't be charged again.\n\nUntil then:\n  - You keep full ${planLabel} access\n  - Any remaining scans this period are yours to use\n  - After ${formattedDate}, your account moves to the Free plan automatically\n\nChanged your mind? Email admin@verrixai.com before ${formattedDate} and we'll reverse the cancellation.\n\n— VerrixAI`;
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: 'VerrixAI <admin@verrixai.com>',
+            to: userData.email,
+            subject,
+            html,
+            text
+          })
+        });
+      }
+    } catch (emailErr) {
+      // Non-fatal — cancellation already succeeded in Stripe + DB
+      console.error('Cancel-scheduled email failed (cancellation still applied):', emailErr);
+    }
+
     return json({ success: true, cancel_at: stripeData.cancel_at, current_period_end: periodEnd }, 200, req);
 
   } catch(err) {

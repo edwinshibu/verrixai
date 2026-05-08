@@ -1904,12 +1904,23 @@ async function handleAuth() {
 }
 
 async function signOut(btn) {
-  // Fire-and-forget the API call, then reload immediately.
-  // Reload re-initialises Supabase JS from localStorage; if signOut() has
-  // cleared the session by then (or hasn't), the next init either finds
-  // no session or is told to clear one. Either way, user lands as guest.
-  // This sidesteps the navigator.locks deadlock entirely — no await, no race.
-  try { sb.auth.signOut(); } catch(e) { /* swallow — we're reloading regardless */ }
+  // Clear local session state immediately, then reload.
+  // Order matters: localStorage MUST be cleared before reload, otherwise
+  // Supabase JS re-reads the still-valid session token on next page init
+  // and the user lands signed in again.
+  // We also fire the API call (best-effort, no await) so server-side session
+  // is revoked — but we don't depend on it completing before reload.
+  try { sb.auth.signOut(); } catch(e) { /* swallow — we're clearing locally regardless */ }
+  // Remove all Supabase auth keys from localStorage (covers main token + any
+  // OAuth code verifier / refresh state that uses the sb- prefix)
+  try {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('sb-')) keysToRemove.push(key);
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+  } catch(e) { console.warn('signOut localStorage clear failed:', e); }
   window.location.reload();
 }
 

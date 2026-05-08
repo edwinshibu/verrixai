@@ -359,7 +359,7 @@
 <div class="dialog-overlay" id="cancelDialog">
   <div class="dialog">
     <h3>Cancel your subscription?</h3>
-    <p>You'll keep full access until the end of your current billing period. After that your account will revert to the free plan with 5 scans.</p>
+    <p>You'll keep full access until the end of your current billing period. After that your account will revert to the free plan with 3 scans.</p>
     <div class="dialog-actions">
       <button class="btn-nav" onclick="closeCancelDialog()">Keep my plan</button>
       <button class="btn-danger" id="confirmCancelBtn" onclick="confirmCancel()" style="padding:10px 20px;">Yes, cancel</button>
@@ -462,12 +462,12 @@
 
       if (planRaw === 'starter') {
         nudgeTitle.textContent = 'Need more scans?';
-        nudgeSub.textContent   = 'Upgrade to Pro for 300 scans/mo or Pro 2 for 700 + Batch Upload.';
+        nudgeSub.textContent   = 'Upgrade to Pro for 100 scans/mo or Pro 2 for 250 + Batch Upload.';
         nudgeCta.textContent   = 'View plans →';
         nudge.style.display    = 'block';
       } else if (planRaw === 'pro') {
         nudgeTitle.textContent = 'Upgrade to Pro 2';
-        nudgeSub.textContent   = '700 scans/mo + Batch Upload — from A$15/mo';
+        nudgeSub.textContent   = '250 scans/mo + Batch Upload — from A$15/mo';
         nudgeCta.textContent   = 'Upgrade to Pro 2 →';
         nudge.style.display    = 'block';
       } else {
@@ -574,7 +574,20 @@
         body: JSON.stringify({ user_id: currentUser.id, email: currentUser.email })
       });
       if (!response.ok) throw new Error('Request failed');
-      await sb.auth.signOut();
+      // Fire-and-forget the API sign-out; clear sb-* localStorage keys ourselves
+      // to avoid the navigator.locks deadlock that hangs await sb.auth.signOut().
+      // Same pattern as the sign-out fix in index.html — localStorage MUST be
+      // cleared before navigation, otherwise Supabase JS re-reads the still-valid
+      // token on the destination page and silently re-signs the user in.
+      try { sb.auth.signOut(); } catch(e) { /* swallow — clearing locally regardless */ }
+      try {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('sb-')) keysToRemove.push(key);
+        }
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+      } catch(e) { console.warn('signOut localStorage clear failed:', e); }
       showToast('Account deleted. Redirecting…');
       setTimeout(() => { window.location.href = '/'; }, 3000);
     } catch(e) {

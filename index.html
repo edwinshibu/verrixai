@@ -558,13 +558,13 @@
 
     <div class="oauth-divider">or</div>
 
-    <div class="form-field">
+    <div class="form-field" id="emailField">
       <label>Email address</label>
       <input type="email" id="authEmail" placeholder="you@example.com" />
     </div>
     <div class="form-field" id="passwordField">
-      <label>Password</label>
-      <input type="password" id="authPassword" placeholder="Create a password" onkeydown="if(event.key==='Enter')handleAuth()" oninput="checkPasswordStrength(this.value)" />
+      <label id="passwordLabel">Password</label>
+      <input type="password" id="authPassword" placeholder="Enter password" onkeydown="if(event.key==='Enter')handleAuth()" oninput="checkPasswordStrength(this.value)" />
       <div id="pwRequirements" style="display:none;margin-top:10px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;animation:fadeUp 0.2s ease;">
         <p style="font-size:11px;font-weight:600;color:var(--ink);margin:0 0 8px;letter-spacing:0.04em;text-transform:uppercase;">Password requirements</p>
         <div style="display:flex;flex-direction:column;gap:5px;">
@@ -575,6 +575,10 @@
           <div id="req-symbol"  class="pw-req"><span class="pw-dot">○</span> One symbol (e.g. !@#$%)</div>
         </div>
       </div>
+    </div>
+    <div class="form-field" id="confirmPasswordField" style="display:none;">
+      <label id="confirmPasswordLabel">Confirm password</label>
+      <input type="password" id="authConfirm" placeholder="Re-enter password" onkeydown="if(event.key==='Enter')handleAuth()" />
     </div>
     <button class="btn-submit" id="authSubmitBtn" onclick="handleAuth()">Create Account</button>
     <div class="modal-switch" id="modalSwitch">
@@ -1668,6 +1672,7 @@ function openModal(mode) {
   ['modalError','modalSuccess'].forEach(id => document.getElementById(id).classList.remove('visible'));
   document.getElementById('authEmail').value = '';
   document.getElementById('authPassword').value = '';
+  document.getElementById('authConfirm').value = '';
   document.getElementById('pwRequirements').style.display = 'none';
 
   const isSignup  = mode === 'signup';
@@ -1675,9 +1680,34 @@ function openModal(mode) {
   const isReset   = mode === 'reset';
   const isLogin   = mode === 'login';
 
-  // Show/hide password field
+  // Show/hide email field (hide entirely for password reset — token authenticates the user)
+  const emailField = document.getElementById('emailField');
+  if (emailField) emailField.style.display = isReset ? 'none' : '';
+
+  // Show/hide password field (hidden only for the "send me a link" forgot step)
   const pwField = document.getElementById('passwordField');
-  if (pwField) pwField.style.display = (isForgot) ? 'none' : '';
+  if (pwField) pwField.style.display = isForgot ? 'none' : '';
+
+  // Show/hide confirm-password field — for signup and reset
+  const confirmField = document.getElementById('confirmPasswordField');
+  if (confirmField) confirmField.style.display = (isSignup || isReset) ? '' : 'none';
+
+  // Adjust password label/placeholder for reset mode
+  const pwLabel = document.getElementById('passwordLabel');
+  const pwInput = document.getElementById('authPassword');
+  const confirmLabel = document.getElementById('confirmPasswordLabel');
+  const confirmInput = document.getElementById('authConfirm');
+  if (isReset) {
+    if (pwLabel) pwLabel.textContent = 'New password';
+    if (pwInput) pwInput.placeholder = 'Enter new password';
+    if (confirmLabel) confirmLabel.textContent = 'Confirm new password';
+    if (confirmInput) confirmInput.placeholder = 'Re-enter new password';
+  } else {
+    if (pwLabel) pwLabel.textContent = 'Password';
+    if (pwInput) pwInput.placeholder = isSignup ? 'Create a password' : 'Enter password';
+    if (confirmLabel) confirmLabel.textContent = 'Confirm password';
+    if (confirmInput) confirmInput.placeholder = 'Re-enter password';
+  }
 
   // Show/hide OAuth buttons
   const oauthBtns = document.querySelector('.oauth-btns');
@@ -1698,10 +1728,8 @@ function openModal(mode) {
     document.getElementById('modalTitle').textContent    = 'Set new password';
     document.getElementById('modalSub').innerHTML        = 'Enter your new password below.';
     document.getElementById('authSubmitBtn').textContent = 'Update password';
-    document.getElementById('authEmail').style.display   = 'none';
     document.getElementById('modalSwitch').innerHTML     = '';
   } else {
-    document.getElementById('authEmail').style.display   = '';
     document.getElementById('modalTitle').textContent    = isSignup ? 'Create Account' : 'Welcome back';
     document.getElementById('modalSub').innerHTML        = isSignup ? 'Get <strong>3 free scans</strong> — no credit card needed.' : 'Sign in to access your scans.';
     document.getElementById('authSubmitBtn').textContent = isSignup ? 'Create Account' : 'Sign in';
@@ -1711,14 +1739,18 @@ function openModal(mode) {
   }
 
   document.getElementById('authModal').classList.add('visible');
-  setTimeout(() => document.getElementById('authEmail').focus(), 200);
+  // Focus the password field for reset mode (no email visible), email field otherwise
+  setTimeout(() => {
+    const focusTarget = isReset ? document.getElementById('authPassword') : document.getElementById('authEmail');
+    if (focusTarget) focusTarget.focus();
+  }, 200);
 }
 function closeModal() { document.getElementById('authModal').classList.remove('visible'); }
 function switchModal(m) { openModal(m); }
 document.getElementById('authModal').addEventListener('click', e => { if (e.target.id === 'authModal') closeModal(); });
 
 function checkPasswordStrength(val) {
-  if (modalMode !== 'signup') return;
+  if (modalMode !== 'signup' && modalMode !== 'reset') return;
   const box = document.getElementById('pwRequirements');
   if (!val) { box.style.display = 'none'; return; }
   box.style.display = 'block';
@@ -1745,15 +1777,22 @@ function checkPasswordStrength(val) {
 async function handleAuth() {
   const email    = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
+  const confirm  = document.getElementById('authConfirm').value;
   const btn      = document.getElementById('authSubmitBtn');
   const errEl    = document.getElementById('modalError');
   const okEl     = document.getElementById('modalSuccess');
   errEl.classList.remove('visible'); okEl.classList.remove('visible');
-  if (!email) { errEl.textContent = 'Please enter your email.'; errEl.classList.add('visible'); return; }
-  if (!password && modalMode !== 'forgot') { errEl.textContent = 'Please fill in all fields.'; errEl.classList.add('visible'); return; }
 
-  // Password validation on signup only
-  if (modalMode === 'signup') {
+  // Email is required for every mode EXCEPT reset (the recovery token authenticates the user)
+  if (modalMode !== 'reset' && !email) {
+    errEl.textContent = 'Please enter your email.'; errEl.classList.add('visible'); return;
+  }
+  if (!password && modalMode !== 'forgot') {
+    errEl.textContent = 'Please fill in all fields.'; errEl.classList.add('visible'); return;
+  }
+
+  // Password complexity validation — applies to signup AND reset (new password creation)
+  if (modalMode === 'signup' || modalMode === 'reset') {
     if (password.length < 8) {
       errEl.textContent = 'Password must be at least 8 characters.'; errEl.classList.add('visible'); return;
     }
@@ -1768,6 +1807,10 @@ async function handleAuth() {
     }
     if (!/[^A-Za-z0-9]/.test(password)) {
       errEl.textContent = 'Password must include at least one symbol (e.g. !@#$%).'; errEl.classList.add('visible'); return;
+    }
+    // Confirm-password match check
+    if (password !== confirm) {
+      errEl.textContent = 'Passwords do not match.'; errEl.classList.add('visible'); return;
     }
   }
 

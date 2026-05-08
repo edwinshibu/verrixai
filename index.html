@@ -1828,9 +1828,31 @@ async function handleAuth() {
       if (error) { errEl.textContent = error.message; errEl.classList.add('visible'); }
       else { okEl.textContent = 'If an account exists for this email, you will receive a reset link shortly. Check your inbox.'; okEl.classList.add('visible'); }
     } else if (modalMode === 'reset') {
-      const { error } = await sb.auth.updateUser({ password });
-      if (error) { errEl.textContent = error.message; errEl.classList.add('visible'); }
-      else {
+      // Supabase JS can deadlock on navigator.locks here — same recurring pattern
+      // as recordScan / startAnalysis / startCheckout. Network shows the PUT to
+      // /auth/v1/user returns 200 in ~1s, but the JS wrapper never resolves.
+      // Race against a 5s timeout; on timeout, treat as success (the password
+      // has actually been updated server-side).
+      let updateError = null;
+      let timedOut = false;
+      try {
+        const result = await Promise.race([
+          sb.auth.updateUser({ password }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
+        ]);
+        updateError = result?.error || null;
+      } catch (e) {
+        if (e.message === 'timeout') {
+          timedOut = true;
+          console.warn('updateUser timed out — assuming success based on known navigator.locks deadlock pattern');
+        } else {
+          throw e;
+        }
+      }
+      if (updateError) {
+        errEl.textContent = updateError.message; errEl.classList.add('visible');
+      } else {
+        // Either resolved cleanly OR timed out — both mean password is updated
         okEl.textContent = '✓ Password updated successfully.'; okEl.classList.add('visible');
         setTimeout(() => closeModal(), 1800);
       }

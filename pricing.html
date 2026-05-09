@@ -167,17 +167,15 @@
   [data-theme="dark"] .savings-note        { background: #1E2E22; color: var(--accent-light); }
   [data-theme="dark"] .eyebrow              { background: #1E2E22; color: var(--accent-light); }
   [data-theme="dark"] .feat-check           { background: #1E2E22; color: var(--accent-light); }
-  [data-theme="dark"] .toggle-track         { background: #1E2E22; }
   [data-theme="dark"] .col-featured         { background: #1A2A1E; }
   [data-theme="dark"] .compare-table tr:hover td { background: #1C2A1E; }
   [data-theme="dark"] .plan-card.featured .plan-scans { background: #1E2E22; color: var(--gold); }
   [data-theme="dark"] .plan-scans .scan-count { color: var(--gold); }
   /* BILLING TOGGLE */
   .billing-toggle { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 40px 0 40px; }
-  .toggle-track { width: 44px; height: 24px; background: #EAF2EC; border-radius: 999px; position: relative; cursor: pointer; transition: background 0.25s; flex-shrink: 0; }
-  .toggle-track.on { background: var(--accent); }
-  .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; background: white; border-radius: 50%; transition: transform 0.25s; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
-  .toggle-track.on .toggle-thumb { transform: translateX(20px); }
+  .toggle-track { width: 44px; height: 24px; background: var(--accent); border-radius: 999px; position: relative; cursor: pointer; flex-shrink: 0; }
+  .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; background: white; border-radius: 50%; opacity: 0.6; transition: transform 0.25s, opacity 0.25s; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+  .toggle-track.on .toggle-thumb { transform: translateX(20px); opacity: 1; }
   .toggle-label { font-size: 13px; font-weight: 500; color: var(--ink-muted); transition: color 0.2s; }
   .toggle-label.active { color: var(--ink); }
   .save-badge { background: #EAF2EC; color: var(--accent-light); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; }

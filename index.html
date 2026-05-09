@@ -161,10 +161,9 @@
 
   /* BILLING TOGGLE */
   .billing-toggle { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 20px 0 4px; }
-  .toggle-track { width: 44px; height: 24px; background: #EAF2EC; border-radius: 999px; position: relative; cursor: pointer; transition: background 0.25s; flex-shrink: 0; }
-  .toggle-track.on { background: var(--accent); }
-  .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; background: white; border-radius: 50%; transition: transform 0.25s; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
-  .toggle-track.on .toggle-thumb { transform: translateX(20px); }
+  .toggle-track { width: 44px; height: 24px; background: var(--accent); border-radius: 999px; position: relative; cursor: pointer; flex-shrink: 0; }
+  .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; background: white; border-radius: 50%; opacity: 0.6; transition: transform 0.25s, opacity 0.25s; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+  .toggle-track.on .toggle-thumb { transform: translateX(20px); opacity: 1; }
   .toggle-label { font-size: 13px; font-weight: 500; color: var(--ink-muted); transition: color 0.2s; }
   .toggle-label.active { color: var(--ink); }
   .save-badge { background: #EAF2EC; color: var(--accent-light); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; }
@@ -463,7 +462,6 @@
   [data-theme="dark"] .dropdown-plan,
   [data-theme="dark"] .pm-scans,
   [data-theme="dark"] .kp-bullet { background: #1E2E22; color: var(--accent-light); }
-  [data-theme="dark"] .toggle-track { background: #1E2E22; }
   [data-theme="dark"] .security-badge { background: #1E2E22; border-color: #2A3E2A; color: var(--accent-light); }
   [data-theme="dark"] .pm-plan.pm-featured { background: #1C2820; }
   [data-theme="dark"] .risk-badge.high  { background: #2A1818; color: var(--risk-high); }

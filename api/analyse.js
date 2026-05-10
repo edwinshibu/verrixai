@@ -205,19 +205,12 @@ export default async function handler(req, res) {
         'Content-Type':      'application/json',
         'x-api-key':         apiKey,
         'anthropic-version': '2023-06-01',
-        'anthropic-beta':    'prompt-caching-2024-07-31',
       },
       body: JSON.stringify({
         model:      ALLOWED_MODEL,
         max_tokens: MAX_TOKENS,
         stream:     false,
-        system: [
-          {
-            type:          'text',
-            text:          SYSTEM_PROMPT,
-            cache_control: { type: 'ephemeral' }
-          }
-        ],
+        system:     SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userContent }]
       })
     });

@@ -31,6 +31,7 @@ export default async function handler(req, res) {
   const SUPABASE_ANON_KEY    = process.env.SUPABASE_ANON_KEY;
   const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
   const RESEND_API_KEY       = process.env.RESEND_API_KEY;
+  const STRIPE_SECRET_KEY    = process.env.STRIPE_SECRET_KEY;
 
   try {
     // 1. Verify token belongs to the user
@@ -51,19 +52,77 @@ export default async function handler(req, res) {
       'apikey': SUPABASE_SERVICE_KEY
     };
 
-    // 2. Delete profile row
+    // 2. Fetch profile to retrieve stripe_subscription_id before we delete the row
+    let stripeSubscriptionId = null;
+    try {
+      const profileRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/profiles?id=eq.${user_id}&select=stripe_subscription_id`,
+        { headers: adminHeaders }
+      );
+      if (profileRes.ok) {
+        const profileData = await profileRes.json();
+        stripeSubscriptionId = profileData?.[0]?.stripe_subscription_id || null;
+      }
+    } catch (profileErr) {
+      // Non-fatal — profile fetch failure means we can't cancel Stripe, but we still proceed
+      // with deletion. Admin notify at the end will surface the orphaned subscription.
+      console.error('Profile fetch for Stripe cancel failed (proceeding with deletion):', profileErr);
+    }
+
+    // 3. Cancel Stripe subscription if present (best-effort — failure does NOT block deletion,
+    // but DOES surface in the admin notify so an orphaned active sub can be cancelled manually)
+    let stripeCancelStatus = 'not_applicable'; // 'cancelled' | 'failed' | 'not_applicable'
+    let stripeCancelError = null;
+    if (stripeSubscriptionId && STRIPE_SECRET_KEY) {
+      try {
+        // Stripe expects application/x-www-form-urlencoded
+        const params = new URLSearchParams();
+        params.append('cancellation_details[feedback]', 'other');
+        params.append('cancellation_details[comment]', 'User deleted VerrixAI account');
+        const cancelRes = await fetch(
+          `https://api.stripe.com/v1/subscriptions/${stripeSubscriptionId}`,
+          {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${STRIPE_SECRET_KEY}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: params.toString()
+          }
+        );
+        if (cancelRes.ok) {
+          stripeCancelStatus = 'cancelled';
+        } else {
+          const errBody = await cancelRes.json().catch(() => ({}));
+          // If the subscription is already cancelled or doesn't exist, treat as success
+          if (errBody?.error?.code === 'resource_missing') {
+            stripeCancelStatus = 'cancelled'; // already gone — same effective end state
+          } else {
+            stripeCancelStatus = 'failed';
+            stripeCancelError = errBody?.error?.message || `HTTP ${cancelRes.status}`;
+            console.error('Stripe cancel failed (continuing with deletion):', stripeCancelError);
+          }
+        }
+      } catch (stripeErr) {
+        stripeCancelStatus = 'failed';
+        stripeCancelError = stripeErr.message;
+        console.error('Stripe cancel threw (continuing with deletion):', stripeErr);
+      }
+    }
+
+    // 4. Delete profile row
     await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${user_id}`, {
       method: 'DELETE',
       headers: adminHeaders
     });
 
-    // 3. Delete invites row
+    // 5. Delete invites row
     await fetch(`${SUPABASE_URL}/rest/v1/invites?user_id=eq.${user_id}`, {
       method: 'DELETE',
       headers: adminHeaders
     });
 
-    // 4. Delete auth user
+    // 6. Delete auth user
     const deleteUserRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${user_id}`, {
       method: 'DELETE',
       headers: adminHeaders
@@ -73,7 +132,7 @@ export default async function handler(req, res) {
       throw new Error(err.message || 'Failed to delete auth user');
     }
 
-    // 5. Send confirmation email to user (best-effort — failure here doesn't block the deletion response)
+    // 7. Send confirmation email to user (best-effort — failure here doesn't block the deletion response)
     try {
     const html = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
@@ -127,16 +186,22 @@ export default async function handler(req, res) {
       console.error('Account-deleted user email failed (deletion still applied):', emailErr);
     }
 
-    // 6. Notify admin (best-effort — failure here doesn't block the deletion response)
+    // 8. Notify admin (best-effort — failure here doesn't block the deletion response)
     try {
+    const stripeStatusLine =
+      stripeCancelStatus === 'cancelled'      ? `Stripe subscription cancelled (${stripeSubscriptionId}).`
+    : stripeCancelStatus === 'failed'         ? `STRIPE CANCEL FAILED for subscription ${stripeSubscriptionId}: ${stripeCancelError}. Manual cancellation required in Stripe Dashboard.`
+    : /* not_applicable */                      'No active Stripe subscription on this account.';
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         from: 'VerrixAI <admin@verrixai.com>',
         to: 'admin@verrixai.com',
-        subject: `Account deleted: ${email}`,
-        text: `User ${email} (${user_id}) has deleted their VerrixAI account.`
+        subject: stripeCancelStatus === 'failed'
+          ? `[ACTION REQUIRED] Account deleted: ${email} — Stripe cancel failed`
+          : `Account deleted: ${email}`,
+        text: `User ${email} (${user_id}) has deleted their VerrixAI account.\n\n${stripeStatusLine}`
       })
     });
     } catch (adminErr) {

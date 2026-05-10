@@ -1,7 +1,6 @@
 import { minify as minifyHtml } from 'html-minifier-terser';
-import { minify as minifyJs } from 'terser';
-import { readFileSync, writeFileSync, mkdirSync, copyFileSync, readdirSync, statSync } from 'fs';
-import { join, extname, dirname } from 'path';
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync } from 'fs';
+import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -23,17 +22,10 @@ const HTML_OPTS = {
   useShortDoctype: true,
 };
 
-// JS minification options
-const JS_OPTS = {
-  compress: { drop_console: false },
-  mangle: true,
-};
-
 // Files/dirs to copy as-is (no minification)
 const COPY_AS_IS = [
   'favicon.svg', 'favicon.ico',
   'favicon-32.png', 'favicon-16.png', 'favicon-180.png',
-  'logo_transparent.png',
   'sitemap.xml',
   'robots.txt',
 ];
@@ -44,21 +36,9 @@ const HTML_FILES = [
   'terms.html', 'privacy.html', '404.html',
 ];
 
-// API JS files to minify
-const API_FILES = [
-  'api/analyse.js', 'api/knowmore.js',
-  'api/delete-account.js',
-];
-
-// Root JS files to minify
-const JS_FILES = [
-  'create-checkout.js', 'stripe-webhook.js', 'cancel-subscription.js',
-];
-
 async function build() {
-  // Create dist dirs
+  // Create dist dir
   mkdirSync(DIST, { recursive: true });
-  mkdirSync(join(DIST, 'api'), { recursive: true });
 
   // Copy static assets
   for (const f of COPY_AS_IS) {
@@ -68,7 +48,7 @@ async function build() {
     } catch(e) { /* file may not exist */ }
   }
 
-  // Copy vercel.json (update output dir)
+  // Copy vercel.json (harmless — Vercel reads it from project root regardless)
   copyFileSync(join(SRC, 'vercel.json'), join(DIST, 'vercel.json'));
 
   // Minify HTML files
@@ -82,27 +62,11 @@ async function build() {
     } catch(e) { console.error(`✗ ${f}:`, e.message); }
   }
 
-  // Minify API JS files
-  for (const f of API_FILES) {
-    try {
-      const src = readFileSync(join(SRC, f), 'utf8');
-      const result = await minifyJs(src, JS_OPTS);
-      writeFileSync(join(DIST, f), result.code);
-      const savings = (((src.length - result.code.length) / src.length) * 100).toFixed(0);
-      console.log(`✓ minified ${f} — ${savings}% smaller`);
-    } catch(e) { console.error(`✗ ${f}:`, e.message); }
-  }
-
-  // Minify root JS files
-  for (const f of JS_FILES) {
-    try {
-      const src = readFileSync(join(SRC, f), 'utf8');
-      const result = await minifyJs(src, JS_OPTS);
-      writeFileSync(join(DIST, f), result.code);
-      const savings = (((src.length - result.code.length) / src.length) * 100).toFixed(0);
-      console.log(`✓ minified ${f} — ${savings}% smaller`);
-    } catch(e) { console.error(`✗ ${f}:`, e.message); }
-  }
+  // Note: API endpoints (api/*.js) are intentionally NOT processed here.
+  // Vercel auto-detects serverless functions from the source /api/ directory
+  // at the project root, regardless of buildCommand/outputDirectory. Anything
+  // we wrote to dist/api/ would be ignored by the deploy. Shipping the source
+  // unminified also keeps stack traces readable in Vercel logs.
 
   console.log('\n✅ Build complete → dist/');
 }

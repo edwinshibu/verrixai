@@ -1,0 +1,92 @@
+# robots.txt for verrixai.com
+# Policy: allow search engines and real-time AI retrieval crawlers;
+#         block AI training crawlers.
+# Last updated: 10 May 2026
+
+# ─────────────────────────────────────────────────────────────
+# Default — applies to all crawlers not named in a specific block below.
+# Covers search engines (Googlebot, Bingbot, DuckDuckBot, Applebot, etc.)
+# and real-time AI retrieval bots (ChatGPT-User, OAI-SearchBot, Claude-User,
+# Claude-SearchBot, PerplexityBot, Perplexity-User, MistralAI-User, Amazonbot,
+# YouBot, etc.) which we intentionally allow.
+# ─────────────────────────────────────────────────────────────
+User-agent: *
+Disallow: /account
+Disallow: /api/
+
+# ─────────────────────────────────────────────────────────────
+# AI training crawlers — BLOCK
+# These collect content for model-training datasets rather than user-driven
+# retrieval. Each bot listed here gets its own block and so does NOT inherit
+# the default rule above; the explicit Disallow: / blocks the whole site.
+# ─────────────────────────────────────────────────────────────
+
+# OpenAI training
+User-agent: GPTBot
+Disallow: /
+
+# Anthropic training
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+# Google (Gemini training — separate token from regular Googlebot)
+User-agent: Google-Extended
+Disallow: /
+
+# Apple (separate token from regular Applebot)
+User-agent: Applebot-Extended
+Disallow: /
+
+# Meta AI training
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+# Common Crawl (used as an input by many training datasets)
+User-agent: CCBot
+Disallow: /
+
+# ByteDance / TikTok
+User-agent: Bytespider
+Disallow: /
+
+# Cohere
+User-agent: cohere-ai
+Disallow: /
+
+# Diffbot
+User-agent: Diffbot
+Disallow: /
+
+# Omgili / webzio (rebranded as AI training crawler)
+User-agent: Omgilibot
+Disallow: /
+
+User-agent: Omgili
+Disallow: /
+
+User-agent: webzio-extended
+Disallow: /
+
+# Yandex AI training (separate from regular YandexBot)
+User-agent: YandexAdditional
+Disallow: /
+
+User-agent: YandexAdditionalBot
+Disallow: /
+
+# Allen AI / AI2
+User-agent: AI2Bot
+Disallow: /
+
+# DeepSeek
+User-agent: DeepSeekBot
+Disallow: /
+
+# Image dataset crawlers
+User-agent: img2dataset
+Disallow: /
+
+Sitemap: https://verrixai.com/sitemap.xml

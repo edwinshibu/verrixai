@@ -62,6 +62,35 @@ export default async function handler(req, res) {
     'Prefer': 'return=minimal'
   };
 
+  // ── Idempotency check ──────────────────────────────────────────
+  // Stripe retries webhook events on non-2xx responses. If we've seen this
+  // event_id before, return 200 without re-processing — re-running handlers
+  // would reset scans_used to 0 (free scans bug), duplicate emails, etc.
+  // Insert the event_id BEFORE processing: a mid-flow crash leaves the event
+  // marked processed and visible in Vercel logs for manual replay, which is
+  // safer than the alternative (re-processing on every retry).
+  try {
+    const idemRes = await fetch(`${SUPABASE_URL}/rest/v1/processed_webhook_events`, {
+      method: 'POST',
+      headers: adminHeaders,
+      body: JSON.stringify({ event_id: event.id, event_type: event.type })
+    });
+    if (idemRes.status === 409) {
+      // Duplicate — return 200 so Stripe stops retrying
+      console.log(`Skipping duplicate webhook event ${event.id} (${event.type})`);
+      return res.status(200).json({ received: true, duplicate: true });
+    }
+    if (!idemRes.ok && idemRes.status !== 201) {
+      // Insert failed for some reason other than duplicate. Log and continue —
+      // we'd rather risk processing a duplicate than fail the whole webhook.
+      const errText = await idemRes.text();
+      console.error(`Idempotency insert returned ${idemRes.status} (continuing):`, errText);
+    }
+  } catch (idemErr) {
+    // Network failure on idempotency check. Log and continue.
+    console.error('Idempotency check threw (continuing):', idemErr);
+  }
+
   try {
     switch (event.type) {
 

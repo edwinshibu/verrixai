@@ -6,6 +6,17 @@ const MAX_TEXT_LENGTH = 60000;
 const ALLOWED_MODEL   = 'claude-sonnet-4-6';
 const MAX_TOKENS      = 4000;
 
+// ── CORS ───────────────────────────────────────────────────
+// Permitted origins — production plus any *.vercel.app preview deploys
+function corsOrigin(req) {
+  const origin = req.headers['origin'];
+  if (!origin) return ALLOWED_ORIGIN;
+  if (origin === ALLOWED_ORIGIN) return origin;
+  if (origin === 'https://www.verrixai.com') return origin;
+  if (/^https:\/\/verrixai-[a-z0-9-]+\.vercel\.app$/.test(origin)) return origin;
+  return ALLOWED_ORIGIN;
+}
+
 // ── Rate limiting ──────────────────────────────────────────
 // In-memory per serverless instance. Not shared across instances,
 // but provides meaningful protection against single-source abuse.
@@ -107,7 +118,7 @@ const KEY_MAP = { summary: 'SUMMARY', risks: 'RISKS', keypoints: 'KEY_POINTS', s
 export default async function handler(req, res) {
 
   // CORS headers on every response
-  res.setHeader('Access-Control-Allow-Origin',  ALLOWED_ORIGIN);
+  res.setHeader('Access-Control-Allow-Origin',  corsOrigin(req));
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 

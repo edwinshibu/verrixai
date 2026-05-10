@@ -248,7 +248,7 @@
         <div>
           <div class="scan-numbers">
             <span id="scansUsed">0</span>
-            <span> / <span id="scansTotal">5</span></span>
+            <span> / <span id="scansTotal">3</span></span>
           </div>
           <div class="scan-sub" id="scanSubLabel">scans used this account</div>
         </div>
@@ -422,7 +422,7 @@
 
     // Scan data
     const used  = profile?.scans_used  || 0;
-    const total = profile?.scans_limit || 5;
+    const total = profile?.scans_limit || 3;
     const rem   = Math.max(0, total - used);
     const pct   = Math.min(100, Math.round((used / total) * 100));
 

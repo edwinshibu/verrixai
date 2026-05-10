@@ -1,7 +1,17 @@
 const ALLOWED_ORIGIN = 'https://verrixai.com';
 
+// Permitted origins — production plus any *.vercel.app preview deploys
+function corsOrigin(req) {
+  const origin = req.headers['origin'];
+  if (!origin) return ALLOWED_ORIGIN;
+  if (origin === ALLOWED_ORIGIN) return origin;
+  if (origin === 'https://www.verrixai.com') return origin;
+  if (/^https:\/\/verrixai-[a-z0-9-]+\.vercel\.app$/.test(origin)) return origin;
+  return ALLOWED_ORIGIN;
+}
+
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
+  res.setHeader('Access-Control-Allow-Origin', corsOrigin(req));
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 

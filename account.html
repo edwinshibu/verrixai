@@ -348,6 +348,10 @@
   <div class="dialog">
     <h3>Delete your account?</h3>
     <p>This will permanently delete your account and all associated data. This action cannot be undone.</p>
+    <p id="deleteSubscriptionWarning" style="display:none;background:#FDECEA;border:1px solid #F0C5C2;border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.55;">
+      <strong>Your <span id="deleteSubPlanName">paid</span> subscription will be cancelled immediately.</strong> You will lose access to any remaining paid time and will not be refunded for the unused portion of your current billing period.
+    </p>
+    <p style="font-size:12px;color:var(--ink-muted);line-height:1.55;">If you change your mind later, you can create a new account at any time, but you'll start fresh — there's no automated reactivation of the deleted account.</p>
     <div class="dialog-actions">
       <button class="btn-nav" onclick="closeDeleteDialog()">Cancel</button>
       <button class="btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()" style="padding:10px 20px;">Yes, delete</button>
@@ -557,7 +561,19 @@
   }
 
   // ─── DELETE ACCOUNT ───────────────────────────────────────────
-  function openDeleteDialog()  { document.getElementById('deleteDialog').classList.add('visible'); }
+  function openDeleteDialog() {
+    // Show subscription-cancellation warning if the user is on a paid plan
+    const warn = document.getElementById('deleteSubscriptionWarning');
+    const plan = userProfile?.plan;
+    if (plan === 'starter' || plan === 'pro' || plan === 'pro2') {
+      const planLabel = plan === 'starter' ? 'Starter' : plan === 'pro' ? 'Pro' : 'Pro 2';
+      document.getElementById('deleteSubPlanName').textContent = planLabel;
+      warn.style.display = 'block';
+    } else {
+      warn.style.display = 'none';
+    }
+    document.getElementById('deleteDialog').classList.add('visible');
+  }
   function closeDeleteDialog() { document.getElementById('deleteDialog').classList.remove('visible'); }
 
   async function confirmDelete() {

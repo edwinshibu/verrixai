@@ -63,7 +63,8 @@ export default async function handler(req, res) {
       throw new Error(err.message || 'Failed to delete auth user');
     }
 
-    // 5. Send confirmation email to user
+    // 5. Send confirmation email to user (best-effort — failure here doesn't block the deletion response)
+    try {
     const html = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
 <body style="margin:0;padding:0;background:#F7F6F2;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
@@ -111,8 +112,13 @@ export default async function handler(req, res) {
         text
       })
     });
+    } catch (emailErr) {
+      // Non-fatal — account deletion already succeeded
+      console.error('Account-deleted user email failed (deletion still applied):', emailErr);
+    }
 
-    // 6. Notify admin
+    // 6. Notify admin (best-effort — failure here doesn't block the deletion response)
+    try {
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
@@ -123,6 +129,10 @@ export default async function handler(req, res) {
         text: `User ${email} (${user_id}) has deleted their VerrixAI account.`
       })
     });
+    } catch (adminErr) {
+      // Non-fatal — account deletion already succeeded
+      console.error('Account-deleted admin notify failed (deletion still applied):', adminErr);
+    }
 
     return res.status(200).json({ success: true });
 

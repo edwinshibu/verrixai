@@ -1,3 +1,5 @@
+import { timingSafeEqual } from 'node:crypto';
+
 const PLAN_SCANS = {
   starter: 50,
   pro:     100,
@@ -19,7 +21,13 @@ async function verifyStripeSignature(body, signature, secret) {
   );
   const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload));
   const computedSig = toHex(sig);
-  if (computedSig !== expectedSig) throw new Error('Invalid signature');
+  // Constant-time comparison — defends against timing side-channel attacks on the signature.
+  // timingSafeEqual throws if the two buffers differ in length, so guard that first.
+  const a = Buffer.from(computedSig, 'hex');
+  const b = Buffer.from(expectedSig || '', 'hex');
+  if (a.length !== b.length || !timingSafeEqual(a, b)) {
+    throw new Error('Invalid signature');
+  }
   if (Math.abs(Date.now() / 1000 - parseInt(timestamp)) > 300) throw new Error('Timestamp too old');
 }
 

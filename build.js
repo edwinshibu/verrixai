@@ -34,6 +34,7 @@ const COPY_AS_IS = [
   'favicon.svg', 'favicon.ico',
   'favicon-32.png', 'favicon-16.png', 'favicon-180.png',
   'logo_transparent.png',
+  'sitemap.xml',
 ];
 
 // HTML files to minify

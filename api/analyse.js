@@ -205,8 +205,15 @@ export default async function handler(req, res) {
   if (requestedKeys.includes('RISKS')) requestedKeys.push('RISKS_TRUNCATED');
   const dynamicInstruction = `Only include these keys in your JSON response: ${requestedKeys.join(', ')}.`;
 
-  // Prompt injection boundary — treats all user content as data, never instructions
-  const userContent = `${dynamicInstruction}\n\n--- DOCUMENT START ---\n${rawContent}\n--- DOCUMENT END ---`;
+  // Prompt injection boundary — treats all user content as data, never instructions.
+  // Strip any occurrence of the boundary markers from the raw content so a malicious
+  // document can't close the boundary early and inject instructions. Match flexible
+  // whitespace and dash counts (e.g. `--DOCUMENT END--`, `--- document end ---`).
+  const safeContent = rawContent.replace(
+    /\s*-{2,}\s*DOCUMENT\s+(START|END)\s*-{2,}\s*/gi,
+    ' [boundary marker removed] '
+  );
+  const userContent = `${dynamicInstruction}\n\n--- DOCUMENT START ---\n${safeContent}\n--- DOCUMENT END ---`;
 
   // ── Call Anthropic ─────────────────────────────────────
   try {

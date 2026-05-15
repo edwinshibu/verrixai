@@ -197,7 +197,7 @@ export default async function handler(req, res) {
 </td></tr>
 </table>
 </body></html>`;
-          const text = `You're on VerrixAI ${planLabel}.\n\nYour ${planLabel} ${billingLabel} subscription is now active. You have ${scansLimit} scans available this month.\n\nStart analysing: https://verrixai.com\n\nManage or cancel anytime: https://verrixai.com/account\n\nYour privacy: documents you upload are never stored on our servers. Only analysis results are saved.\n\n— VerrixAI`;
+          const text = `You're on VerrixAI ${planLabel}.\n\nYour ${planLabel} ${billingLabel} subscription is now active. You have ${scansLimit} scans available this month.\n\nStart analysing: https://verrixai.com\n\nManage or cancel anytime: https://verrixai.com/account\n\nYour privacy: documents you upload are never stored on our servers. Only analysis results are saved.\n\nThanks,\nVerrixAI`;
           await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
@@ -316,7 +316,7 @@ export default async function handler(req, res) {
 </td></tr>
 </table>
 </body></html>`;
-              const text = `Your VerrixAI ${oldPlanLabel} subscription has ended. You won't be charged again, and your account has been moved to the Free plan.\n\nYour Free plan:\n  - 3 scans available on your account\n  - All core analysis features\n  - No card on file, nothing to manage\n\nIf you'd like to subscribe again at any point, you can pick a plan from https://verrixai.com/pricing. Your account, history and settings are still here when you need them.\n\n— VerrixAI`;
+              const text = `Your VerrixAI ${oldPlanLabel} subscription has ended. You won't be charged again, and your account has been moved to the Free plan.\n\nYour Free plan:\n  - 3 scans available on your account\n  - All core analysis features\n  - No card on file, nothing to manage\n\nIf you'd like to subscribe again at any point, you can pick a plan from https://verrixai.com/pricing. Your account, history and settings are still here when you need them.\n\nThanks,\nVerrixAI`;
               await fetch('https://api.resend.com/emails', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },

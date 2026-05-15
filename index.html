@@ -11,7 +11,7 @@
 
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>VerrixAI — Understand Every Agreement</title>
+<title>VerrixAI | Understand Every Agreement</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
@@ -538,7 +538,7 @@
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">×</button>
     <h2 id="modalTitle">Create Account</h2>
-    <p class="modal-sub" id="modalSub">Get <strong>3 free scans</strong> — no credit card needed.</p>
+    <p class="modal-sub" id="modalSub">Get <strong>3 free scans</strong>. No credit card needed.</p>
     <div class="modal-error" id="modalError"></div>
     <div class="modal-success" id="modalSuccess"></div>
 
@@ -596,7 +596,7 @@
     <div class="pm-header">
       <div class="pm-eyebrow">✦ Upgrade your plan</div>
       <h2>You've used all your <em>free</em> scans</h2>
-      <p>Choose a plan to keep analysing documents — cancel anytime.</p>
+      <p>Choose a plan to keep analysing documents. Cancel anytime.</p>
       <!-- BILLING TOGGLE -->
       <div class="billing-toggle">
         <span class="toggle-label" id="pm-label-monthly">Monthly</span>
@@ -746,7 +746,7 @@
         </div>
         <div class="upgrade-icon">🔒</div>
         <h3 id="upgradeTitle">You've used your free scan</h3>
-        <p id="upgradeMsg">Create a free account to get 3 scans instantly — no credit card needed.</p>
+        <p id="upgradeMsg">Create a free account to get 3 scans instantly. No credit card needed.</p>
         <div class="upgrade-actions" id="upgradeActions"></div>
       </div>
     </div>
@@ -853,7 +853,7 @@
 <div class="how-section">
   <div class="how-header">
     <h2>How it works</h2>
-    <p>Three steps to complete clarity — in under 30 seconds.</p>
+    <p>Three steps to complete clarity, in under 30 seconds.</p>
   </div>
   <div class="how-grid">
     <div class="how-card"><div class="how-num">01</div><h3>Drop or paste your document</h3><p>Upload a PDF, DOCX, or simply paste the raw text of any agreement or legal document.</p></div>
@@ -867,7 +867,7 @@
   <div class="knowmore-card">
     <div class="knowmore-eyebrow">✦ For businesses</div>
     <h2>Want to know <em>more</em>?</h2>
-    <p>Enter your business name and email and we'll send you everything about VerrixAI — features, pricing, and how it can save your team time reviewing documents.</p>
+    <p>Enter your business name and email and we'll send you everything about VerrixAI: features, pricing, and how it can save your team time reviewing documents.</p>
     <div class="knowmore-form">
       <input class="knowmore-input" id="kmBusiness" type="text" placeholder="Business name" />
       <input class="knowmore-input" id="kmEmail" type="email" placeholder="Business email" />
@@ -936,7 +936,7 @@ async function submitKnowMore() {
     if (!res.ok) throw new Error(data.error || 'Something went wrong.');
 
     msg.className = 'knowmore-msg success';
-    msg.textContent = `Done! Check your inbox at ${email} — we've sent everything over.`;
+    msg.textContent = `Done! Check your inbox at ${email}. We've sent everything over.`;
     document.getElementById('kmBusiness').value = '';
     document.getElementById('kmEmail').value = '';
     btn.textContent = '✓ Sent!';
@@ -1148,7 +1148,7 @@ async function extractPdfText(file) {
         return;
       }
       await onSignIn(session.user);
-      showSuccessMoment("Email confirmed — welcome to VerrixAI!");
+      showSuccessMoment("Email confirmed. Welcome to VerrixAI!");
     } else if (event === 'SIGNED_OUT') {
       passwordRecoveryMode = false;
       currentUser = null; userProfile = null;
@@ -1195,7 +1195,7 @@ async function onSignIn(user) {
     // Has scans — show success moment then reset to input
     closeModal();
     document.getElementById('upgradeWall').style.display = 'none';
-    showSuccessMoment(isNewUser ? `You're in — ${remaining} scans unlocked` : `You're in`);
+    showSuccessMoment(isNewUser ? `You're in. ${remaining} scans unlocked` : `You're in`);
   }
 }
 
@@ -1361,7 +1361,7 @@ function showUpgradeWall() {
   wall.style.display = 'block';
   if (!currentUser) {
     document.getElementById('upgradeTitle').textContent = "Create a free account to get started";
-    document.getElementById('upgradeMsg').textContent   = "Sign up for free and get 3 scans instantly — no credit card needed.";
+    document.getElementById('upgradeMsg').textContent   = "Sign up for free and get 3 scans instantly. No credit card needed.";
     acts.innerHTML = `<button class="btn-upgrade primary" onclick="openModal('signup')">Create free account</button>
                       <button class="btn-upgrade secondary" onclick="openModal('login')">Sign in</button>
                       <button class="btn-upgrade secondary" onclick="openPricingModal()">View pricing</button>`;
@@ -1600,10 +1600,10 @@ function openPricingModal() {
   const sub = document.querySelector('#pricingModal .pm-header p');
   if (plan === 'guest') {
     h2.innerHTML    = 'Choose your <em>plan</em>';
-    sub.textContent = 'Start free — no credit card needed. Upgrade anytime.';
+    sub.textContent = 'Start free. No credit card needed. Upgrade anytime.';
   } else if (plan === 'free') {
     h2.innerHTML    = 'You\'ve used all your <em>free</em> scans';
-    sub.textContent = 'Choose a plan to keep analysing documents — cancel anytime.';
+    sub.textContent = 'Choose a plan to keep analysing documents. Cancel anytime.';
   } else {
     h2.innerHTML    = 'Manage your <em>plan</em>';
     sub.textContent = 'You\'re on a paid plan. Upgrade or manage below.';
@@ -1730,7 +1730,7 @@ function openModal(mode) {
     document.getElementById('modalSwitch').innerHTML     = '';
   } else {
     document.getElementById('modalTitle').textContent    = isSignup ? 'Create Account' : 'Welcome back';
-    document.getElementById('modalSub').innerHTML        = isSignup ? 'Get <strong>3 free scans</strong> — no credit card needed.' : 'Sign in to access your scans.';
+    document.getElementById('modalSub').innerHTML        = isSignup ? 'Get <strong>3 free scans</strong>. No credit card needed.' : 'Sign in to access your scans.';
     document.getElementById('authSubmitBtn').textContent = isSignup ? 'Create Account' : 'Sign in';
     document.getElementById('modalSwitch').innerHTML     = isSignup
       ? "Already have an account? <a onclick=\"switchModal('login')\">Sign in</a>"
@@ -2150,7 +2150,7 @@ async function startAnalysis() {
 
   const stillWorkingTimer = setTimeout(() => {
     if (analysisGen !== myGen) return;
-    if (msgEl) msgEl.textContent = 'Still working — large documents take a moment…';
+    if (msgEl) msgEl.textContent = 'Still working. Large documents take a moment…';
   }, 20000);
 
   // ── 5. Web Worker escape hatch at 40s ─────────────────────
@@ -2317,7 +2317,7 @@ function renderTimeout() {
       <span style="font-size:20px;flex-shrink:0;">⏱</span>
       <div style="flex:1;">
         <strong style="font-size:13px;color:var(--ink);display:block;margin-bottom:4px;">Analysis timed out</strong>
-        <span style="font-size:12px;color:var(--ink-muted);line-height:1.6;">This can happen with large documents or slow connections. Your file is still loaded — click Try Again below.</span>
+        <span style="font-size:12px;color:var(--ink-muted);line-height:1.6;">This can happen with large documents or slow connections. Your file is still loaded. Click Try Again below.</span>
         <div style="margin-top:12px;">
           <button onclick="retryAnalysis()" style="padding:9px 22px;background:var(--accent);color:white;border:none;border-radius:999px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='var(--accent-light)'" onmouseout="this.style.background='var(--accent)'">↺ Try Again</button>
         </div>
@@ -2470,7 +2470,7 @@ function updateBatchBtn() {
   }
 
   btn.disabled    = false;
-  btn.textContent = `Analyse ${n} document${n !== 1 ? 's' : ''} — ${n} scan${n !== 1 ? 's' : ''}`;
+  btn.textContent = `Analyse ${n} document${n !== 1 ? 's' : ''} (${n} scan${n !== 1 ? 's' : ''})`;
 }
 
 // ── Drag & drop for batch zone ─────────────────────────────
@@ -2560,7 +2560,7 @@ async function startBatchAnalysis() {
 
     // Update progress
     const pct = Math.round((i / filesToProcess.length) * 100);
-    document.getElementById('batchProgressLabel').textContent = `Analysing ${i + 1} of ${filesToProcess.length} — ${f.name}`;
+    document.getElementById('batchProgressLabel').textContent = `Analysing ${i + 1} of ${filesToProcess.length}: ${f.name}`;
     document.getElementById('batchProgressBar').style.width   = pct + '%';
     batchFiles[i].status = 'analysing';
     renderBatchFileList();

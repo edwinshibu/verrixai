@@ -99,7 +99,7 @@ export default async function handler(req, res) {
         <tr><td style="background:#1A3A2A;border-radius:16px 16px 0 0;padding:48px 48px 40px;text-align:center;">
           <p style="font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#B8963E;margin:0 0 16px;">For ${safeName}</p>
           <p style="font-family:Georgia,serif;font-size:30px;font-weight:500;color:#FFFFFF;margin:0 0 20px;line-height:1.25;letter-spacing:-0.3px;">Most businesses sign agreements<br/>they have never truly read.</p>
-          <p style="font-size:15px;color:rgba(255,255,255,0.65);margin:0;line-height:1.75;font-weight:300;">Buried in every contract, terms and conditions, or supplier agreement are clauses that can cost your business — financially, legally, and operationally. Most of the time, nobody catches them until it is too late.</p>
+          <p style="font-size:15px;color:rgba(255,255,255,0.65);margin:0;line-height:1.75;font-weight:300;">Buried in every contract, terms and conditions, or supplier agreement are clauses that can cost your business financially, legally, and operationally. Most of the time, nobody catches them until it is too late.</p>
         </td></tr>
 
       </table>
@@ -133,7 +133,7 @@ export default async function handler(req, res) {
         <tr><td style="background:#FFFFFF;border-radius:0 0 16px 16px;border:1px solid #E2E0D8;border-top:none;padding:40px 48px;">
 
           <p style="font-family:Georgia,serif;font-size:20px;font-weight:500;color:#1A1A18;margin:0 0 10px;">What VerrixAI does for your business</p>
-          <p style="font-size:14px;color:#6B6B62;margin:0 0 28px;line-height:1.75;">VerrixAI analyses any legal document — contracts, NDAs, supplier agreements, employment terms, software licences — and delivers a clear, structured breakdown in seconds. No legal training required. No waiting for a solicitor. Just instant clarity on what you are agreeing to.</p>
+          <p style="font-size:14px;color:#6B6B62;margin:0 0 28px;line-height:1.75;">VerrixAI analyses any legal document (contracts, NDAs, supplier agreements, employment terms, software licences) and delivers a clear, structured breakdown in seconds. No legal training required. No waiting for a solicitor. Just instant clarity on what you are agreeing to.</p>
 
           <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
             <tr><td style="padding:14px 18px;background:#F7F6F2;border-left:3px solid #B8963E;border-radius:0 8px 8px 0;">
@@ -143,12 +143,12 @@ export default async function handler(req, res) {
             <tr><td style="height:10px;"></td></tr>
             <tr><td style="padding:14px 18px;background:#F7F6F2;border-left:3px solid #C0392B;border-radius:0 8px 8px 0;">
               <p style="font-size:13px;font-weight:700;color:#1A1A18;margin:0 0 4px;">⚠️ Risk Flag Analysis</p>
-              <p style="font-size:13px;color:#6B6B62;margin:0;line-height:1.6;">High, medium, and low risk clauses identified and explained. Know exactly where the dangers are — auto-renewal traps, liability caps, termination penalties — before they catch you off guard.</p>
+              <p style="font-size:13px;color:#6B6B62;margin:0;line-height:1.6;">High, medium, and low risk clauses identified and explained. Know exactly where the dangers are (auto-renewal traps, liability caps, termination penalties) before they catch you off guard.</p>
             </td></tr>
             <tr><td style="height:10px;"></td></tr>
             <tr><td style="padding:14px 18px;background:#F7F6F2;border-left:3px solid #1A3A2A;border-radius:0 8px 8px 0;">
               <p style="font-size:13px;font-weight:700;color:#1A1A18;margin:0 0 4px;">🔑 Key Obligations Extracted</p>
-              <p style="font-size:13px;color:#6B6B62;margin:0;line-height:1.6;">The clauses that create obligations for your business — payment terms, notice periods, exclusivity, IP ownership — surfaced and clearly explained.</p>
+              <p style="font-size:13px;color:#6B6B62;margin:0;line-height:1.6;">The clauses that create obligations for your business (payment terms, notice periods, exclusivity, IP ownership) surfaced and clearly explained.</p>
             </td></tr>
             <tr><td style="height:10px;"></td></tr>
             <tr><td style="padding:14px 18px;background:#F7F6F2;border-left:3px solid #2E5C42;border-radius:0 8px 8px 0;">
@@ -160,14 +160,14 @@ export default async function handler(req, res) {
           <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;"><tr><td style="border-top:1px solid #E2E0D8;"></td></tr></table>
 
           <p style="font-family:Georgia,serif;font-size:20px;font-weight:500;color:#1A1A18;margin:0 0 10px;">Why businesses trust VerrixAI</p>
-          <p style="font-size:14px;color:#6B6B62;margin:0 0 20px;line-height:1.75;">We built VerrixAI specifically for the reality of modern business — where contracts arrive faster than your legal team can review them, and where a single overlooked clause can change everything.</p>
+          <p style="font-size:14px;color:#6B6B62;margin:0 0 20px;line-height:1.75;">We built VerrixAI specifically for the reality of modern business, where contracts arrive faster than your legal team can review them, and where a single overlooked clause can change everything.</p>
 
           <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
             <tr>
               <td width="28" style="vertical-align:top;padding-top:2px;"><div style="width:20px;height:20px;background:#EAF2EC;border-radius:50%;text-align:center;line-height:20px;font-size:11px;font-weight:700;color:#1A3A2A;">✓</div></td>
               <td style="padding-bottom:14px;">
                 <p style="font-size:13px;font-weight:700;color:#1A1A18;margin:0 0 3px;">Powered by enterprise-grade AI</p>
-                <p style="font-size:12px;color:#6B6B62;margin:0;line-height:1.6;">Built on Claude by Anthropic — the same AI trusted by leading companies globally for complex document analysis.</p>
+                <p style="font-size:12px;color:#6B6B62;margin:0;line-height:1.6;">Built on Claude by Anthropic, the same AI trusted by leading companies globally for complex document analysis.</p>
               </td>
             </tr>
             <tr>
@@ -188,7 +188,7 @@ export default async function handler(req, res) {
               <td width="28" style="vertical-align:top;padding-top:2px;"><div style="width:20px;height:20px;background:#EAF2EC;border-radius:50%;text-align:center;line-height:20px;font-size:11px;font-weight:700;color:#1A3A2A;">✓</div></td>
               <td>
                 <p style="font-size:13px;font-weight:700;color:#1A1A18;margin:0 0 3px;">Complement your existing legal team</p>
-                <p style="font-size:12px;color:#6B6B62;margin:0;line-height:1.6;">VerrixAI does not replace your solicitor — it makes every conversation with them more productive. Arrive informed, ask better questions, and make faster decisions.</p>
+                <p style="font-size:12px;color:#6B6B62;margin:0;line-height:1.6;">VerrixAI does not replace your solicitor. It makes every conversation with them more productive. Arrive informed, ask better questions, and make faster decisions.</p>
               </td>
             </tr>
           </table>
@@ -198,7 +198,7 @@ export default async function handler(req, res) {
           <p style="font-family:Georgia,serif;font-size:20px;font-weight:500;color:#1A1A18;margin:0 0 16px;">Simple, transparent pricing</p>
           <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;border-radius:12px;overflow:hidden;border:1px solid #E2E0D8;">
             <tr style="background:#EAF2EC;">
-              <td style="padding:12px 16px;border-bottom:1px solid #E2E0D8;"><p style="font-size:13px;font-weight:700;color:#1A3A2A;margin:0;">Free</p><p style="font-size:12px;color:#2E5C42;margin:2px 0 0;">3 scans — no credit card required</p></td>
+              <td style="padding:12px 16px;border-bottom:1px solid #E2E0D8;"><p style="font-size:13px;font-weight:700;color:#1A3A2A;margin:0;">Free</p><p style="font-size:12px;color:#2E5C42;margin:2px 0 0;">3 scans, no credit card required</p></td>
               <td style="padding:12px 16px;border-bottom:1px solid #E2E0D8;text-align:right;"><p style="font-family:Georgia,serif;font-size:18px;font-weight:600;color:#1A3A2A;margin:0;">A$0</p></td>
             </tr>
             <tr>
@@ -218,7 +218,7 @@ export default async function handler(req, res) {
           <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
             <tr><td align="center">
               <a href="https://verrixai.com" style="display:inline-block;background:#1A3A2A;color:#FFFFFF;font-family:Georgia,serif;font-size:16px;font-weight:500;text-decoration:none;padding:18px 48px;border-radius:12px;letter-spacing:0.02em;">
-                Try VerrixAI free — no card required →
+                Try VerrixAI free, no card required →
               </a>
             </td></tr>
           </table>

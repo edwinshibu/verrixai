@@ -137,7 +137,7 @@ export default async function handler(req) {
 </td></tr>
 </table>
 </body></html>`;
-        const text = `Your VerrixAI ${planLabel} subscription will end on ${formattedDate}. You won't be charged again.\n\nUntil then:\n  - You keep full ${planLabel} access\n  - Any remaining scans this period are yours to use\n  - After ${formattedDate}, your account moves to the Free plan automatically\n\nChanged your mind? Email admin@verrixai.com before ${formattedDate} and we'll reverse the cancellation.\n\n— VerrixAI`;
+        const text = `Your VerrixAI ${planLabel} subscription will end on ${formattedDate}. You won't be charged again.\n\nUntil then:\n  - You keep full ${planLabel} access\n  - Any remaining scans this period are yours to use\n  - After ${formattedDate}, your account moves to the Free plan automatically\n\nChanged your mind? Email admin@verrixai.com before ${formattedDate} and we'll reverse the cancellation.\n\nThanks,\nVerrixAI`;
         await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },

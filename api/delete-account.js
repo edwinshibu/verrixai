@@ -151,7 +151,7 @@ export default async function handler(req, res) {
 <p style="font-size:13px;color:#6B6B62;margin:0 0 6px;line-height:1.6;">→ Your profile (plan, scan history, settings)</p>
 <p style="font-size:13px;color:#6B6B62;margin:0;line-height:1.6;">→ Any associated records in our database</p>
 </td></tr></table>
-<p style="font-size:13px;color:#6B6B62;margin:0 0 24px;line-height:1.7;">Documents you analysed were never stored on our servers in the first place — they're processed in real time and discarded after each scan. Nothing additional to remove there.</p>
+<p style="font-size:13px;color:#6B6B62;margin:0 0 24px;line-height:1.7;">Documents you analysed were never stored on our servers in the first place. They're processed in real time and discarded after each scan. Nothing additional to remove there.</p>
 <p style="font-size:14px;color:#6B6B62;margin:0 0 28px;line-height:1.7;">If you change your mind, you're always welcome to create a new account at <a href="https://verrixai.com" style="color:#2E5C42;">verrixai.com</a>.</p>
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;"><tr><td style="background:#FDECEA;border:1px solid #F0C5C2;border-radius:10px;padding:14px 18px;">
 <p style="font-size:12px;color:#6B6B62;margin:0;line-height:1.6;"><strong style="color:#1A1A18;">Didn't request this deletion?</strong> Contact us immediately at <a href="mailto:admin@verrixai.com" style="color:#2E5C42;font-weight:500;">admin@verrixai.com</a>. While the data itself can't be recovered, we want to know if your account was compromised.</p>
@@ -169,7 +169,7 @@ export default async function handler(req, res) {
 </td></tr>
 </table>
 </body></html>`;
-    const text = `Your VerrixAI account has been deleted.\n\nWhat was deleted:\n  - Your account credentials and login\n  - Your profile (plan, scan history, settings)\n  - Any associated records in our database\n\nDocuments you analysed were never stored on our servers — they're processed in real time and discarded after each scan.\n\nIf you change your mind, you're always welcome to create a new account at https://verrixai.com.\n\nDidn't request this? Contact admin@verrixai.com immediately. While the data itself can't be recovered, we want to know if your account was compromised.\n\nThis is the last email you'll receive from us.`;
+    const text = `Your VerrixAI account has been deleted.\n\nWhat was deleted:\n  - Your account credentials and login\n  - Your profile (plan, scan history, settings)\n  - Any associated records in our database\n\nDocuments you analysed were never stored on our servers. They're processed in real time and discarded after each scan.\n\nIf you change your mind, you're always welcome to create a new account at https://verrixai.com.\n\nDidn't request this? Contact admin@verrixai.com immediately. While the data itself can't be recovered, we want to know if your account was compromised.\n\nThis is the last email you'll receive from us.`;
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
@@ -199,7 +199,7 @@ export default async function handler(req, res) {
         from: 'VerrixAI <admin@verrixai.com>',
         to: 'admin@verrixai.com',
         subject: stripeCancelStatus === 'failed'
-          ? `[ACTION REQUIRED] Account deleted: ${email} — Stripe cancel failed`
+          ? `[ACTION REQUIRED] Account deleted: ${email}. Stripe cancel failed`
           : `Account deleted: ${email}`,
         text: `User ${email} (${user_id}) has deleted their VerrixAI account.\n\n${stripeStatusLine}`
       })

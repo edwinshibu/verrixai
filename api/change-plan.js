@@ -199,7 +199,7 @@ export default async function handler(req) {
           ? new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(periodEnd))
           : null;
         const renewalLine = renewalDate
-          ? `Your billing cycle stays the same — your next renewal is on <strong>${renewalDate}</strong>.`
+          ? `Your billing cycle stays the same. Your next renewal is on <strong>${renewalDate}</strong>.`
           : `Your billing cycle stays the same as before.`;
         const html = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
@@ -235,7 +235,7 @@ export default async function handler(req) {
 </td></tr>
 </table>
 </body></html>`;
-        const text = `You're now on VerrixAI ${newPlanLabel}.\n\nYour subscription has been upgraded from ${oldPlanLabel} to ${newPlanLabel}. The change is effective immediately.\n\nWhat's changed:\n  - ${newScansLimit} scans available right now (your counter has been reset)\n  - A prorated charge for the rest of this billing period has been applied to your card\n  - ${renewalDate ? `Your billing cycle stays the same — your next renewal is on ${renewalDate}.` : `Your billing cycle stays the same as before.`}\n\nStart using ${newPlanLabel}: https://verrixai.com\n\nView invoices and manage billing: https://verrixai.com/account\n\n— VerrixAI`;
+        const text = `You're now on VerrixAI ${newPlanLabel}.\n\nYour subscription has been upgraded from ${oldPlanLabel} to ${newPlanLabel}. The change is effective immediately.\n\nWhat's changed:\n  - ${newScansLimit} scans available right now (your counter has been reset)\n  - A prorated charge for the rest of this billing period has been applied to your card\n  - ${renewalDate ? `Your billing cycle stays the same. Your next renewal is on ${renewalDate}.` : `Your billing cycle stays the same as before.`}\n\nStart using ${newPlanLabel}: https://verrixai.com\n\nView invoices and manage billing: https://verrixai.com/account\n\nThanks,\nVerrixAI`;
         await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },

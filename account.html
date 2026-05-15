@@ -11,7 +11,7 @@
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Account — VerrixAI</title>
+  <title>My Account | VerrixAI</title>
   <meta name="theme-color" content="#1A3A2A">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
@@ -351,7 +351,7 @@
     <p id="deleteSubscriptionWarning" style="display:none;background:#FDECEA;border:1px solid #F0C5C2;border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.55;">
       <strong>Your <span id="deleteSubPlanName">paid</span> subscription will be cancelled immediately.</strong> You will lose access to any remaining paid time and will not be refunded for the unused portion of your current billing period.
     </p>
-    <p style="font-size:12px;color:var(--ink-muted);line-height:1.55;">If you change your mind later, you can create a new account at any time, but you'll start fresh — there's no automated reactivation of the deleted account.</p>
+    <p style="font-size:12px;color:var(--ink-muted);line-height:1.55;">If you change your mind later, you can create a new account at any time, but you'll start fresh. There's no automated reactivation of the deleted account.</p>
     <div class="dialog-actions">
       <button class="btn-nav" onclick="closeDeleteDialog()">Cancel</button>
       <button class="btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()" style="padding:10px 20px;">Yes, delete</button>
@@ -471,7 +471,7 @@
         nudge.style.display    = 'block';
       } else if (planRaw === 'pro') {
         nudgeTitle.textContent = 'Upgrade to Pro 2';
-        nudgeSub.textContent   = '250 scans/mo + Batch Upload — from A$15/mo';
+        nudgeSub.textContent   = '250 scans/mo + Batch Upload, from A$15/mo';
         nudgeCta.textContent   = 'Upgrade to Pro 2 →';
         nudge.style.display    = 'block';
       } else {
@@ -482,7 +482,7 @@
       statusEl.style.color = 'var(--risk-high)';
       document.getElementById('upgradePrompt').style.display = 'flex';
     } else if (rem === 1) {
-      statusEl.textContent = '1 scan remaining — consider upgrading soon.';
+      statusEl.textContent = '1 scan remaining. Consider upgrading soon.';
       statusEl.style.color = 'var(--risk-med)';
       document.getElementById('upgradePrompt').style.display = 'flex';
     } else {
@@ -522,7 +522,7 @@
       const dateStr = currentPeriodEnd
         ? new Date(currentPeriodEnd).toLocaleDateString('en-AU', { day:'numeric', month:'long', year:'numeric' })
         : 'period end';
-      statusEl.textContent = `Cancelled — active until ${dateStr}`;
+      statusEl.textContent = `Cancelled. Active until ${dateStr}`;
       statusEl.style.color = '#E67E22';
       btnEl.style.display  = 'none';
     } else {

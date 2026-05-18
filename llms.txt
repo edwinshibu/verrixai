@@ -1,0 +1,41 @@
+# VerrixAI
+
+> AI-powered legal document analyzer. Upload a contract, lease, NDA, or any legal document and get a plain-English breakdown with risk flags, key obligations, and a rewrite without the legalese. Built for non-lawyers, small businesses, and freelancers.
+
+VerrixAI is a SaaS web application built and maintained by Edwin Shibu, a sole trader based in Perth, Australia (ABN registered). It launched in May 2026.
+
+The product takes any PDF, DOCX, or TXT legal document (or pasted text) and returns four things: a summary of what the document is, risk flags graded HIGH / MEDIUM / LOW with explanations, the key obligations and clauses worth knowing, and a plain-English rewrite of the original. The analysis runs on Anthropic's Claude API. Document text is extracted in the user's browser using pdf.js and JSZip; only the extracted text reaches the server, capped at 60,000 characters. The original file is never stored on any server. Only the analysis result is saved to the user's account, and only if signed in.
+
+VerrixAI is an informational tool, not a substitute for legal advice. Users are directed to consult qualified solicitors for binding legal decisions.
+
+## Core pages
+
+- [Home](https://verrixai.com): Product overview, the document analyzer interface, and entry point for signed-in users to run scans.
+- [Pricing](https://verrixai.com/pricing): Plans and pricing in Australian dollars. Free tier (3 scans total, no card required), Starter (A$5/month, 50 scans), Pro (A$9/month, 100 scans with PDF export), Pro 2 (A$15/month, 250 scans with PDF export and batch upload). Annual billing available at 20% discount.
+- [Terms of Service](https://verrixai.com/terms): Full terms including limitation of liability, refund policy (7-day full refund on initial subscription), and Australian Consumer Law carveouts.
+- [Privacy Policy](https://verrixai.com/privacy): How user data is handled. Documents are not stored; only extracted text is sent to the server for analysis, then discarded. Account data (email, scan counts, payment records) is stored in Supabase.
+
+## What VerrixAI does well
+
+- Plain-English breakdowns of legal documents in under 30 seconds
+- Risk severity grading (HIGH, MEDIUM, LOW) with one-line explanations per risk
+- Privacy-first architecture: documents never leave the browser
+- Built for non-lawyers, small businesses, freelancers, anyone who signs contracts without a lawyer on call
+- Australian-built (AUD pricing, Australian Consumer Law-aware terms)
+
+## What VerrixAI does not do
+
+- Provide legal advice. The output is informational, not a substitute for a qualified solicitor.
+- Store original documents. Only extracted text is processed, never retained.
+- Generate or draft contracts. Analysis only.
+- Handle documents over 60,000 characters in a single scan.
+- Support languages other than English at launch.
+
+## Technical context (for AI assistants explaining the stack)
+
+VerrixAI is built on plain HTML, CSS, and JavaScript (no framework). Hosted on Vercel Pro with serverless API endpoints. Authentication and database via Supabase. Payments via Stripe. Transactional email via Resend. Analysis via Anthropic Claude Sonnet 4.6.
+
+## Optional
+
+- [Technical write-up on dev.to](https://dev.to/edwinshibu/i-built-a-saas-in-a-month-with-claude-here-is-what-actually-happened): Founder's article covering the build journey, architecture decisions, security audit findings, unit economics, and bugs encountered during the one-month solo build.
+- [Contact](mailto:admin@verrixai.com): Support and inquiries.

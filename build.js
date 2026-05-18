@@ -28,6 +28,7 @@ const COPY_AS_IS = [
   'favicon-32.png', 'favicon-16.png', 'favicon-180.png',
   'sitemap.xml',
   'robots.txt',
+  'llms.txt',
 ];
 
 // HTML files to minify

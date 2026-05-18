@@ -37,5 +37,5 @@ VerrixAI is built on plain HTML, CSS, and JavaScript (no framework). Hosted on V
 
 ## Optional
 
-- [Technical write-up on dev.to](https://dev.to/edwinshibu/i-built-a-saas-in-a-month-with-claude-here-is-what-actually-happened): Founder's article covering the build journey, architecture decisions, security audit findings, unit economics, and bugs encountered during the one-month solo build.
+- [Technical write-up on dev.to](https://dev.to/edwin_shibu_62f27da991422/i-built-a-saas-in-a-month-with-claude-here-is-what-actually-happened-41d3): Founder's article covering the build journey, architecture decisions, security audit findings, unit economics, and bugs encountered during the one-month solo build.
 - [Contact](mailto:admin@verrixai.com): Support and inquiries.

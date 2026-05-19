@@ -486,6 +486,8 @@
   [data-theme="dark"] .pw-req { color: var(--ink-muted); }
   [data-theme="dark"] .pw-req.met { color: var(--accent-light); }
   [data-theme="dark"] .pw-req.met .pw-dot { color: var(--accent-light); }
+  [data-theme="dark"] .ph-badge-light { display: none; }
+  [data-theme="dark"] .ph-badge-dark  { display: inline-block !important; }
   </style>
 </head>
 <body>
@@ -881,6 +883,12 @@
 <footer>
   <div style="max-width:1100px;margin:0 auto;width:100%;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
     <div class="footer-logo"><img src="/favicon-32.png" alt="" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-right:8px;">Verrix<span>AI</span></div>
+    <div style="display:flex;align-items:center;">
+      <a href="https://www.producthunt.com/products/verrixai?utm_source=badge-follow&utm_medium=badge&utm_source=badge-verrixai" target="_blank" rel="noopener noreferrer" style="display:inline-block;line-height:0;">
+        <img src="https://api.producthunt.com/widgets/embed-image/v1/follow.svg?product_id=1227953&theme=light" alt="VerrixAI on Product Hunt" class="ph-badge ph-badge-light" style="width:200px;height:auto;" />
+        <img src="https://api.producthunt.com/widgets/embed-image/v1/follow.svg?product_id=1227953&theme=dark"  alt="VerrixAI on Product Hunt" class="ph-badge ph-badge-dark"  style="width:200px;height:auto;display:none;" />
+      </a>
+    </div>
     <div style="display:flex;gap:24px;align-items:center;">
       <a href="/privacy" style="color:var(--ink-muted);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-muted)'">Privacy Policy</a>
       <a href="/terms" style="color:var(--ink-muted);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-muted)'">Terms of Service</a>

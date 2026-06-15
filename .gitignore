@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment variables — never commit these
+.env
+.env.local
+.env.production
+.env.staging
+.env*.local
+
+# Vercel local dev
+.vercel/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary files
+*.tmp
+*.temp

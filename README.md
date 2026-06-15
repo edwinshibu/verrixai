@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="favicon-180.png" alt="VerrixAI" width="120" />
+</p>
+
 # VerrixAI
 
 AI-powered legal document analyzer. Upload a contract, lease, or NDA and get a plain-English breakdown with risk flags, key obligations, and a rewrite without the legalese.

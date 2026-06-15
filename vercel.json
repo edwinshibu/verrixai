@@ -43,7 +43,7 @@
   ],
   "crons": [
     {
-      "path": "/api/analyse",
+      "path": "/api/keepalive",
       "schedule": "0 12 * * *"
     }
   ],

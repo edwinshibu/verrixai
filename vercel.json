@@ -44,7 +44,7 @@
   "crons": [
     {
       "path": "/api/analyse",
-      "schedule": "* * * * *"
+      "schedule": "0 12 * * *"
     }
   ],
   "rewrites": [

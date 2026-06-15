@@ -97,7 +97,7 @@ Annual billing available at 20% discount.
 
 A detailed post covering the build journey, every bug caught, the security audit findings, and the unit economics:
 
-[I built a SaaS in a month with Claude. Here is what actually happened.](https://dev.to/edwinshibu/i-built-a-saas-in-a-month-with-claude-here-is-what-actually-happened-XXXX)
+[I built a SaaS in a month with Claude. Here is what actually happened.](https://dev.to/edwinshibu/i-built-a-saas-in-a-month-with-claude-here-is-what-actually-happened-41d3)
 
 ---
 
